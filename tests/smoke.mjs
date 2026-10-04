@@ -30,6 +30,9 @@ const city = check('createCity (full procedural build)', () => cityMod.createCit
 const specters = check('createSpecters', () => specMod.createSpecters(scene, { city, memories: contentMod.MEMORIES, onRestore: () => {} }));
 const shadows = check('createShadows', () => shadMod.createShadows(scene, { city }));
 const player = check('createPlayer', () => playerMod.createPlayer(camera, new FakeCanvas(), { city }));
+// The walk tests below drive the real player, so they need the real walls: without
+// these the autopilot strolls straight through the city's buildings.
+if (player && city) for (const c of city.colliders) player.addCollider(c.x, c.z, c.w, c.d, c.rot, c.baseY, c.topY);
 
 /* ── sanity checks on the generated world ── */
 if (city) {
@@ -132,34 +135,61 @@ if (city && player) {
 
 /* ── reachability: can the player actually walk/swim to every fragment? ── */
 if (city) {
-  check('every memory is reachable on foot or by swimming', () => {
+  check('every memory is reachable on foot or by swimming, with the buildings solid', () => {
     const STEP = 1.5, EXT = 112;
     const N = Math.ceil((EXT * 2) / STEP) + 1;
     const g = new Float32Array(N * N);
     for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
       g[i * N + j] = city.groundHeight(-EXT + i * STEP, -EXT + j * STEP);
     }
+    // the buildings are solid here too: this used to flood over the height field
+    // alone, which means it cheerfully reported the player could reach a district
+    // that a house had been built across the road to.
+    const solid = (x, z, gy) => {
+      const y = gy + 1.68;
+      for (const c of city.colliders) {
+        if (y > c.topY + 0.1 || y < c.baseY - 0.5) continue;
+        const dx = x - c.x, dz = z - c.z;
+        const lx = dx * Math.cos(c.rot) - dz * Math.sin(c.rot);
+        const lz = dx * Math.sin(c.rot) + dz * Math.cos(c.rot);
+        if (Math.abs(lx) <= c.w / 2 + 0.42 && Math.abs(lz) <= c.d / 2 + 0.42) return true;
+      }
+      return false;
+    };
+    const blocked = new Uint8Array(N * N);
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+      const gv = g[i * N + j];
+      if (gv > city.DEEP + 0.01 && solid(-EXT + i * STEP, -EXT + j * STEP, gv)) blocked[i * N + j] = 1;
+    }
     // step up to 0.55 m, walk/fall into any water, and haul yourself out of water
     // onto anything within arm's reach of the surface (a mantle, see player.js)
-    const canPass = (a, b) => (b - a) <= 0.55 || b < -1.4 || (a < -1.4 && b <= 1.1);
-    const seen = new Uint8Array(N * N);
-    const q = [];
-    const start = [Math.round((0 + EXT) / STEP), Math.round((13 + EXT) / STEP)];
-    const si = start[0] * N + start[1];
-    seen[si] = 1; q.push(si);
-    let head = 0;
-    while (head < q.length) {
-      const cur = q[head++];
-      const ci = Math.floor(cur / N), cj = cur % N;
-      for (const [di, dj] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-        const ni = ci + di, nj = cj + dj;
-        if (ni < 0 || nj < 0 || ni >= N || nj >= N) continue;
-        const nk = ni * N + nj;
-        if (seen[nk]) continue;
-        if (!canPass(g[cur], g[nk])) continue;
-        seen[nk] = 1; q.push(nk);
+    const canPass = (a, b) => (b - a) <= 0.8 || b < -1.4 || (a < -1.4 && b <= 1.1);
+    // Two floods, not one. A single flood from the plaza says "you can get there",
+    // which is not the same as "you can get back" — the amphitheatre floor was a
+    // 0.75 m bowl you could fall into and never climb out of, and the one-way flood
+    // happily reported it as reachable.
+    const flood = (reverse) => {
+      const seen2 = new Uint8Array(N * N);
+      const start = [Math.round((0 + EXT) / STEP), Math.round((13 + EXT) / STEP)];
+      const q = [start[0] * N + start[1]];
+      seen2[q[0]] = 1;
+      let head = 0;
+      while (head < q.length) {
+        const cur = q[head++];
+        const ci = Math.floor(cur / N), cj = cur % N;
+        for (const [di, dj] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+          const ni = ci + di, nj = cj + dj;
+          if (ni < 0 || nj < 0 || ni >= N || nj >= N) continue;
+          const nk = ni * N + nj;
+          if (seen2[nk] || blocked[nk]) continue;
+          if (!(reverse ? canPass(g[nk], g[cur]) : canPass(g[cur], g[nk]))) continue;
+          seen2[nk] = 1; q.push(nk);
+        }
       }
-    }
+      return seen2;
+    };
+    const seen = flood(false);
+    const back = flood(true);
     const unreachable = [];
     for (const m of contentMod.MEMORIES) {
       const a = city.shardAnchors[m.id];
@@ -181,8 +211,21 @@ if (city) {
       const i = Math.round((x + EXT) / STEP), j = Math.round((z + EXT) / STEP);
       if (!seen[i * N + j]) unreachable.push(`district:${id}`);
     }
+
+    // nothing may be a one-way trip: everywhere you can get to, you can get back from
+    const traps = [];
+    let trapped = 0;
+    for (let k = 0; k < N * N; k++) {
+      if (!seen[k] || back[k] || blocked[k]) continue;
+      trapped++;
+      if (traps.length < 5) traps.push(`(${(-EXT + Math.floor(k / N) * STEP).toFixed(0)}, ${(-EXT + (k % N) * STEP).toFixed(0)}) at ${g[k].toFixed(2)} m`);
+    }
     if (unreachable.length) throw new Error('unreachable: ' + unreachable.join(', '));
-    return `${q.length} reachable cells of ${N * N}`;
+    if (trapped > 2) throw new Error(`${trapped} cells are one-way traps — you can get in but not out: ${traps.join(', ')}`);
+
+    let count = 0;
+    for (let k = 0; k < N * N; k++) if (seen[k]) count++;
+    return `${count} cells you can reach, ${count - trapped} you can also get back from`;
   });
 }
 
@@ -193,9 +236,8 @@ if (city && player) {
 
   function walkTo(tx, tz, limitSeconds, label, { tide = 0 } = {}) {
     const frames = Math.round(limitSeconds * 60);
-    const t0 = process.hrtime.bigint();
     let reached = -1;
-    let stuck = 0, wiggle = 0;
+    let stuck = 0, wiggle = 0, detour = 1, aim = 0;
     for (let i = 0; i < frames; i++) {
       const dx = tx - player.position.x, dz = tz - player.position.z;
       const dist = Math.hypot(dx, dz);
@@ -206,18 +248,24 @@ if (city && player) {
       const swimming = player.state.swimming;
       key('ShiftLeft', !swimming && dist > 12);
       key('Space', swimming || (player.state.speed < 0.4 && i % 30 === 0));
-      // a person who walks into a corner turns and tries beside it; so does this
+      // A person who walks into a wall turns and looks for a way round, then walks
+      // it. (The old wiggle just jittered on the spot, which is why a walled-off
+      // market went unnoticed.)
       if (player.state.speed < 0.35) stuck++; else stuck = 0;
-      if (stuck > 45) { wiggle = 90; stuck = 0; }
+      if (stuck > 60 && wiggle <= 0) { wiggle = 150; detour = (i % 2 ? 1 : -1); stuck = 0; }
       if (wiggle > 0) {
         wiggle--;
-        player.state.yaw += 1.15 * (i % 2 ? 1 : -1) * (1 / 60) * 6;
+        if (wiggle > 60) player.state.yaw = aim + detour * 1.5;          // turn hard
+        else player.state.yaw = aim + detour * 1.5 * ((wiggle - 20) / 40); // and back
+        if (wiggle < 20) wiggle = 0;
+        player.update(1 / 60, { waterLevel: tide, time: i / 60 });
+        continue;
       }
+      aim = player.state.yaw;
       player.update(1 / 60, { waterLevel: tide, time: i / 60 });
       if (!isFinite(player.position.x) || player.position.y < -20) throw new Error(label + ': player fell out of the world at frame ' + i);
     }
     key('KeyW', false); key('Space', false); key('ShiftLeft', false);
-    void t0;
     if (reached < 0) throw new Error(`${label}: could not reach (${tx}, ${tz}) — stuck at (${player.position.x.toFixed(1)}, ${player.position.z.toFixed(1)}), ${Math.hypot(tx - player.position.x, tz - player.position.z).toFixed(1)} m short`);
     return `${label}: ${reached.toFixed(1)} s`;
   }

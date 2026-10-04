@@ -91,6 +91,33 @@ It checks:
    stand on.
 6. **Sanity** — most of the walkable city is dry at low tide.
 
+## `node tests/playthrough.mjs`
+
+Plays the game. Not "does the code run" — the other suites cover that — but a whole
+session through the real modules: the real city, the real player physics, the real
+interaction rules out of `src/progress.js`, and the real shadows.
+
+It walks to each of the six fragments *at whatever tide the previous memory left behind*,
+turns to look at it (the game wants ~70° of aim), holds E for the full 3.3 s channel, and
+applies the real rules. It then asserts that the finale unlocks, that the final tide is the
+one the story promises, that a stalking shadow costs you something without ending the run,
+that walking away works, that the lantern keeps them off, and that the last fragment can
+still be reached once the city is at its deepest. Finally it prints a session report:
+
+```
+memory 1 · market    20.5 s walking · tide now 0.13
+memory 2 · sky       51.6 s walking · tide now 0.26
+memory 3 · song      61.5 s walking · tide now 0.39
+memory 4 · bargain   66.9 s walking · tide now 0.52 · a shadow rises
+memory 5 · sealing   72.8 s walking · tide now 1.00 · a shadow rises
+memory 6 · self      34.8 s walking · tide now 1.13
+full playthrough: 308 s walking + 19.9 s listening ≈ 5.5 min
+```
+
+This is the suite that found the two real blockers in the shipped build: the market's
+western houses were built across the avenue that leads to them, and the amphitheatre floor
+was a 0.75 m bowl you could fall into and never climb out of.
+
 ## `node tests/tutorial.mjs`
 
 Onboarding, checked as behaviour rather than as copy. It asserts that the title screen and

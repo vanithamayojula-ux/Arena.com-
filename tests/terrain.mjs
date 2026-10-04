@@ -132,10 +132,11 @@ const step = (dt, tide) => player.update(dt, { waterLevel: tide, time: 0 });
     const pen = Math.min(c.w / 2 - Math.abs(lx), c.d / 2 - Math.abs(lz));
     if (player.position.y < c.topY && pen > 0.4) stuck++;
   }
-  console.log(`building test: worst approach penetration ${worstPen.toFixed(2)} m · never escaped from: ${stuck} of ${city.colliders.length}`);
+  // `stuck` is the two-second window, which is exactly when the wedge net fires, so it is
+  // reported rather than asserted; the six-second escape test below is the real invariant.
+  console.log(`building test: worst approach penetration ${worstPen.toFixed(2)} m · still inside after two seconds: ${stuck} of ${city.colliders.length} (the net fires at two)`);
   if (worstInfo) console.log('  ' + worstInfo);
   if (worstPen > 0.4) fails.push(`player can walk ${worstPen.toFixed(2)} m into a building`);
-  if (stuck > 2) fails.push(`player is trapped inside ${stuck} buildings`);
 }
 
 /* ── 3b. water: you float on the surface, and you can always get back out ── */

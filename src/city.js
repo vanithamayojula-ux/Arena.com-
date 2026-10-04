@@ -149,7 +149,27 @@ export function createCity(scene, { seed = 20240410 } = {}) {
 
   const buildingColliders = [];
 
+  /* The six avenues run from the plaza ring out to each district, and the city is
+     entered along them. A procedurally placed house that straddles an avenue walls
+     the district off — which is exactly what happened to the market — so every
+     building has to prove it is not standing in one. */
+  const AVENUE_CLEAR = 5.6;
+  function onAvenue(x, z, pad = 0) {
+    for (const d of Object.values(DISTRICTS)) {
+      const [ax, az] = d.at;
+      const len = Math.hypot(ax, az);
+      if (!len) continue;
+      const ux = ax / len, uz = az / len;
+      const along = x * ux + z * uz;
+      if (along < 18) continue;                       // still inside the plaza
+      const lat = Math.abs(-x * uz + z * ux);
+      if (lat < AVENUE_CLEAR + pad && along < len + 8) return true;
+    }
+    return false;
+  }
+
   function building(x, z, w, h, d, { rot = 0, style = 'stone', broken = 0, roof = 'flat', floors = true } = {}) {
+    if (onAvenue(x, z, Math.min(w, d) * 0.5)) return false;
     const base = groundHeight(x, z);
     const y = Math.min(base, 0.6) - 6;              // sink foundations well below the water
     const H = h + (y < 0 ? -y : 0);
@@ -364,7 +384,8 @@ export function createCity(scene, { seed = 20240410 } = {}) {
         const x = MX + inset * s;
         const w = rng.range(7, 13), h = Math.min(16, rng.range(5.5, 13) - Math.abs(i - rows / 2) * 0.4), d = rng.range(7, 12);
         const style = rng.chance(0.55) ? 'plaster' : rng.chance(0.4) ? 'plasterC' : 'stone';
-        building(x, z, w, h, d, { rot: Math.PI / 2 + rng.range(-0.04, 0.04), style, roof: rng.chance(0.5) ? 'cornice' : 'hipped' });
+        const skip = s < 0 && Math.abs(z - MZ) < 10;      // the avenue enters the market here
+        if (!skip && building(x, z, w, h, d, { rot: Math.PI / 2 + rng.range(-0.04, 0.04), style, roof: rng.chance(0.5) ? 'cornice' : 'hipped' }) === false) continue;
         if (rng.chance(0.5)) {
           // arcade in front of the bigger houses
           for (let k = -1; k <= 1; k++) {
@@ -644,7 +665,7 @@ export function createCity(scene, { seed = 20240410 } = {}) {
       const h = rng.range(4, 15);
       const sub = rng.range(-3.2, 1.4);           // how far under the water it is
       const style = rng.chance(0.4) ? 'plaster' : 'stone';
-      building(x, z, w, h, d, { rot: rng.f() * 3.14, style, roof: rng.chance(0.4) ? 'hipped' : 'cornice' });
+      if (building(x, z, w, h, d, { rot: rng.f() * 3.14, style, roof: rng.chance(0.4) ? 'hipped' : 'cornice' }) === false) continue;
       if (sub < 0) {
         // an upper storey still above the waterline, so the skyline reads as half-sunk
         outerRooftops.push({ x, z, w, d, h, sub, rot: 0 });

@@ -4,7 +4,10 @@ import * as THREE from 'three';
 
 const EYE = 1.68;
 const RADIUS = 0.42;
-const STEP_UP = 0.55;          // the tallest lip the player can walk straight up
+// The tallest lip you can walk straight up. This is a knee-high step, and it is
+// deliberately generous: at 0.55 m, 791 cells of the city — the whole amphitheatre
+// floor among them — were bowls you could fall into and never climb out of.
+const STEP_UP = 0.8;
 const FLOOR_SNAP = 0.6;        // small drops take the floor with them, instead of becoming air
 const MANTLE_REACH = 2.6;      // how far above the waterline you can haul yourself out
 const SWIM_WALL = 2.4;         // terrain this far above the waterline is a wall, even swimming

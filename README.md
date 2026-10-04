@@ -78,7 +78,7 @@ Vaelune explains itself without a lore dump, in four layers:
 ## What the slice does
 
 - **Terrain that holds up.** The floor under you is the highest plate you are standing on,
-  and it is a wall if it rises more than 0.55 m where you are — so you never walk inside a
+  and it is a wall if it rises more than 0.8 m where you are — so you never walk inside a
   tier or a building; in water you float on the surface instead of being dragged to the
   drowned floor; every ledge within 2.6 m of the waterline can be climbed out of with
   **space**; and the city's overlapping ruins can never wedge you. All four are enforced by
@@ -122,6 +122,8 @@ Vaelune explains itself without a lore dump, in four layers:
 | `src/audio.js` | the score and the soundscape, synthesised live in WebAudio |
 | `src/content.js` | all the writing: districts, memories, journal pages, the ending |
 | `src/ui.js` | HUD, journal, subtitles, prompts |
+| `src/progress.js` | the rules of remembering: the E channel, the tide, lucidity, the finale |
+| `src/tutorial.js` | the opening lesson and every contextual hint, as a testable state machine |
 | `src/rng.js` | seeded noise, so Vaelune is the same city every time |
 
 **The art direction is a system, not an asset pipeline.** The world is built from
@@ -144,6 +146,7 @@ python3 -m http.server 8000                 # play
 node tests/wiring.mjs                       # imports/exports/DOM ids all line up
 node tests/smoke.mjs                        # builds the whole world headlessly and walks it
 node tests/terrain.mjs                      # the ground: settling, walking, walls, water, shards
+node tests/playthrough.mjs                  # plays the whole game: 6 fragments, finale, tide
 node tests/tutorial.mjs                     # does the game actually teach itself?
 node tests/map.mjs                          # an ASCII map of the city from the height field
 ```

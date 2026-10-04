@@ -149,10 +149,23 @@ are treated as hard rules rather than taste:
 3. **Brightness is the player's, not the designer's.** A default lifted well above the
    original grade, a slider in three places, remembered between sessions, and a post-pass
    that *lifts the darks* as it rises instead of just blowing out the highlights.
-4. **Nothing important is only conveyed by contrast.** Interactables are also announced by
+4. **The avenues are kept clear.** Six avenues run from the plaza ring to the districts and
+   the player is meant to walk them, so no procedurally placed building may stand in one
+   (`onAvenue` in `src/city.js`). Vaelune's houses are placed by seeded randomness; the first
+   build put a row of them straight across the road to the market.
+5. **Nothing important is only conveyed by contrast.** Interactables are also announced by
    a prompt, a ring, a sound and a beam, so a player on a bad monitor still gets there.
-5. **Fog is for distance, not for the middle distance.** Density tuned so silhouettes stay
+6. **Fog is for distance, not for the middle distance.** Density tuned so silhouettes stay
    readable to ~150 m and the drowned skyline still reads as a skyline.
+
+### 5d. What lucidity is, and is not
+
+Lucidity is a *warning*, not a fail state. A shadow that reaches you takes 16 points, and
+regeneration is faster than a single shadow's damage, so one stalker can never wear you
+down; several, in deep water, at a high tide, can. The collapse exists (you wake on the
+plaza with your progress intact) but in a five-minute slice a player should have to work to
+see it. If this becomes a longer game, the numbers to change are in `src/progress.js`:
+`DRAIN_PER_HIT`, `LUCIDITY_CALM`, `LUCIDITY_FAR`, `LUCIDITY_DANGER`.
 
 ## 6. Systems
 
@@ -178,10 +191,16 @@ Water is free to enter and slow to cross; the deep basin is a swim. Nothing is e
 **Terrain rules the whole game obeys** (all four are enforced by `tests/terrain.mjs`):
 
 1. The floor under you is the highest plate covering you, and it may pull you *down* at most
-   0.6 m and push you *up* at most 0.55 m per step. Anything taller than that is a wall you
+   0.6 m and push you *up* at most 0.8 m per step (a knee-high ledge). Anything taller than that is a wall you
    cannot walk through — so you never end up inside a tier.
 2. While swimming, the floor may shove you up out of it but never drag you down: the tide
    always wins, and you always float.
+2b. **Nothing is a one-way trip.** Everywhere you can get to, you can get back from. This is
+   checked by flooding the whole city forwards *and* backwards from the plaza
+   (`tests/smoke.mjs`), because a single flood happily reports a bowl you cannot climb out
+   of as "reachable" — which is exactly how the amphitheatre floor shipped as a trap. The
+   step-up height is 0.8 m for the same reason: at 0.55 m, 791 cells of the city were
+   one-way.
 3. Collision pushes are applied in clamped steps over several iterations, because Vaelune's
    buildings overlap; jumping to the nearest face just lands you inside the next one.
 4. If the solver ever has you more than a metre inside geometry for two seconds, you are put

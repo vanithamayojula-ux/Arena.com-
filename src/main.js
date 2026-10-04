@@ -12,6 +12,7 @@ import { createPost } from './post.js';
 import { createUI } from './ui.js';
 import { Soundscape } from './audio.js';
 import { createTutorial } from './tutorial.js';
+import { createProgress, CHANNEL_SECONDS } from './progress.js';
 import { MEMORIES, CITY as CFG, PREVIEW, PROLOGUE, HINTS, FINALE } from './content.js';
 
 const STATE = {
@@ -46,14 +47,11 @@ const audio = new Soundscape();
 const sky = createSky(scene, { seed: 4 });
 const water = createWater(scene, { level: CFG.waterLevel });
 const city = createCity(scene, { seed: 20240410 });
-const specters = createSpecters(scene, {
-  city, memories: MEMORIES,
-  onRestore: (shard) => restoreMemory(shard),
-});
+const specters = createSpecters(scene, { city, memories: MEMORIES });
 const shadows = createShadows(scene, {
   city,
   onDrain: (amount, s) => {
-    lucidity = Math.max(0, lucidity - amount / 100);
+    flow.drain(amount / 100);
     player.addShake(1.2);
     flash = 0.55; flashColor.set('#ffdfe6');
     audio.heartbeat(1);
@@ -103,8 +101,6 @@ scene.add(ambient);
 let state = STATE.LOADING;
 let clock = new THREE.Clock();
 let elapsed = 0;
-let tide = CFG.waterLevel;
-let lucidity = 1;
 let flash = 0;
 let flashColor = new THREE.Color('#ffffff');
 let fade = 0;
@@ -114,11 +110,38 @@ let totality = 0.42;
 let danger = 0;
 let memoryGlow = 0;
 let memoryGlowColor = new THREE.Color('#8ffbe0');
-const restored = new Set();
+/* the rules of remembering (src/progress.js) — wired to the world below */
+const flow = createProgress({
+  events: {
+    onListenStart: (shard) => {
+      specters.setListening(shard, true);
+      ui.hideGoal();
+      ui.clearHint();
+    },
+    onListenStop: (shard) => specters.setListening(shard, false),
+    onListenEnd: () => { ui.setPrompt(false); ui.quiet(); },
+    sting: (kind) => audio.memorySting(kind),
+    whisper: (who) => audio.whisper(who),
+    onLine: (speaker, line, idx) => { ui.say(speaker, line); audio.chime(420 + idx * 110, 0.05); },
+    onProgress: (p) => ui.setPrompt(true, 'listening\u2026', p),
+    onRestore: (info) => applyRestoredMemory(info),
+    onDanger: (v) => { danger = Math.max(danger, v); },
+    onReverie: (mem) => enterReverie(mem),
+    onJournal: (set) => ui.renderJournal(MEMORIES, set, set.size / MEMORIES.length),
+    onFinaleReady: () => { ui.toast('The orrery turns. Vaelune is whole.', 6000); },
+    onCollapse: () => {
+      player.state.pos.set(0, city.PLAZA_Y + 1.68, 13);
+      player.state.vel.set(0, 0, 0);
+      flash = 1;
+      flashColor.set('#0a1420');
+      shadows.clear();
+      ui.say('', 'You come back to yourself on the plaza stones, the way you always do.', { instant: false });
+    },
+  },
+});
+const restored = flow.restored;
+const S = flow.state;            // tide, lucidity, danger, channel, reverie + finale timers
 let prologueIndex = 0;
-let channel = null;          // { shard, t, lineIndex }
-let reverieTimer = 0;
-let finaleTimer = 0;
 let boundaryLine = 0;
 let boundaryCooldown = 0;
 let averageFrame = 0;
@@ -179,55 +202,16 @@ function updateEclipse(dt) {
 
 /* ────────────────────────────── memory flow ────────────────────────────── */
 
-function beginChannel(shard) {
-  channel = { shard, t: 0, lineIndex: -1 };
-  ui.hideGoal();
-  ui.clearHint();
-  specters.setListening(shard, true);
-  audio.memorySting(shard.memory.kind);
-  audio.whisper(shard.memory.speaker);
-}
-
-function stepChannel(dt) {
-  if (!channel) return;
-  const { shard } = channel;
-  const dur = 3.3;
-  channel.t += dt;
-  const p = Math.min(1, channel.t / dur);
-  const lines = shard.memory.lines;
-  const idx = Math.min(lines.length - 1, Math.floor(p * lines.length));
-  if (idx !== channel.lineIndex) {
-    channel.lineIndex = idx;
-    ui.say(shard.memory.speaker, lines[idx]);
-    audio.chime(420 + idx * 110, 0.05);
-  }
-  ui.setPrompt(true, 'listening…', p);
-  if (p >= 1) {
-    const s = channel.shard;
-    channel = null;
-    ui.setPrompt(false);
-    specters.restore(s);
-  }
-}
-
-function cancelChannel() {
-  if (!channel) return;
-  specters.setListening(channel.shard, false);
-  channel = null;
-  ui.setPrompt(false);
-  ui.quiet();
-}
-
-function restoreMemory(shard) {
-  const mem = shard.memory;
-  restored.add(mem.id);
+/** Everything a restored memory does to the world itself. The rules (tide, oil,
+ *  lucidity, the finale) live in src/progress.js; this is the theatre. */
+function applyRestoredMemory(info) {
+  const { mem, shard, dark } = info;
+  specters.restore(shard);                 // the stone goes quiet and rises
   city.setMemoryRestored(mem.id, true);
   water.setMemories(restored.size);
-  tide = CFG.waterLevel + restored.size * CFG.tidePerMemory + (restored.has('sealing') ? 0.35 : 0);
-  water.setLevel(tide);
-  audio.setTide(tide);
+  water.setLevel(S.tide);
+  audio.setTide(S.tide);
   player.setOil(100);
-  lucidity = Math.min(1, lucidity + 0.25);
 
   city.effects.place(shard.position.x, shard.position.y, shard.position.z, mem.accent, 180);
   water.ripple(shard.position.x, shard.position.z, 1.4);
@@ -238,43 +222,28 @@ function restoreMemory(shard) {
   memoryGlow = 1;
   memoryGlowColor.set(mem.accent);
 
-  enterReverie(mem);
-
-  if (mem.kind === 'dark' || mem.id === 'sealing') {
-    // dark memories leave something behind
-    const p = mem.id === 'bargain'
+  for (const spawn of info.spawns) {
+    const at = spawn.at === 'shadowSpawn'
       ? city.effects.shadowSpawn.clone()
-      : city.landmarks.gates.clone().add(new THREE.Vector3(Math.random() * 20 - 10, 2, -6));
-    shadows.spawnAt(p, mem.id);
-    if (mem.id === 'sealing') {
-      shadows.spawnAt(city.landmarks.gates.clone().add(new THREE.Vector3(-14, 2, 4)), 'sealing');
-      audio.gateGroan();
-    }
-    danger = 0.55;
-    water.setStain(Math.min(0.5, restored.size * 0.09));
-    ui.toast(mem.toast, 7000);
-  } else {
-    ui.toast(mem.toast, 6500);
+      : city.landmarks.gates.clone().add(new THREE.Vector3(...spawn.offset));
+    shadows.spawnAt(at, spawn.kind);
   }
-
-  ui.renderJournal(MEMORIES, restored, restored.size / MEMORIES.length);
-  checkFinale();
+  if (dark) {
+    water.setStain(Math.min(0.5, restored.size * 0.09));
+    if (mem.id === 'sealing') audio.gateGroan();
+  }
+  ui.toast(mem.toast, dark ? 7000 : 6500);
 }
 
 function enterReverie(mem) {
   state = STATE.REVERIE;
-  reverieTimer = 4.4;
+  flow.startReverie(4.4);
   player.freeze(true);
   camera.rotation.z = 0;
   flash = 0.85;
   ui.setPrompt(false);
   ui.say('', mem.journal, { instant: false });
   memoryGlow = 1;
-}
-
-function checkFinale() {
-  if (restored.size < MEMORIES.length) return;
-  finaleTimer = 0.1;
 }
 
 /* ────────────────────────────── the opening lesson ────────────────────────────── */
@@ -343,13 +312,14 @@ function frame() {
   // ── eclipse + world ──
   updateEclipse(dt);
   water.update(dt, camera.position);
-  water.setLevel(tide);
+  water.setLevel(S.tide);
   sky.update(dt, camera);
   city.update(dt, elapsed, player.position);
   shadows.update(dt, elapsed, player.position, {
-    lanternOn: player.state.lanternOn, lanternPos: camera.position, sanity: lucidity,
+    lanternOn: player.state.lanternOn, lanternPos: camera.position, sanity: S.lucidity,
   });
-  danger += ((shadows.threat * 0.8 + (1 - lucidity) * 0.6) - danger) * Math.min(1, dt * 0.8);
+  danger += ((shadows.threat * 0.8 + (1 - S.lucidity) * 0.6) - danger) * Math.min(1, dt * 0.8);
+  flow.setDanger(danger);          // the rules read the same number the screen shows
   audio.setDanger(danger);
 
   // keep the shadow-casting sun and its box centred on the player
@@ -360,7 +330,7 @@ function frame() {
   // ── player ──
   if (playing) {
     player.update(dt, {
-      waterLevel: tide,
+      waterLevel: S.tide,
       time: elapsed,
       danger,
       onBoundary: () => {
@@ -404,26 +374,23 @@ function frame() {
         }
       }
     } else if (aimed) {
-      const s = aimed;
       ui.setAim(true);
-      const blocked = s.memory.id === 'self' && restored.size < MEMORIES.length - 1;
-      if (blocked) {
+      if (!flow.canListen(aimed.memory)) {
         ui.setPrompt(true, 'not yet — the city is not finished remembering', 0);
       } else {
-        ui.setPrompt(true, 'hold E — listen', channel && channel.shard === s ? Math.min(1, channel.t / 3.3) : 0);
-        if (keys.has('KeyE')) { if (!channel) beginChannel(s); }
-        else if (channel && channel.shard === s) cancelChannel();
+        ui.setPrompt(true, 'hold E — listen', S.channel && S.channel.shard === aimed ? Math.min(1, S.channel.t / CHANNEL_SECONDS) : 0);
+        flow.interact(aimed, keys.has('KeyE'));
       }
     } else {
       ui.setAim(false);
       ui.setPrompt(false);
-      if (channel) cancelChannel();
+      flow.interact(null, false);
     }
   } else {
     ui.setPrompt(false);
   }
 
-  if (channel && state === STATE.PLAY) stepChannel(dt);
+  if (S.channel && state === STATE.PLAY) flow.stepChannel(dt);
 
   // ── specters ──
   specters.update(dt, elapsed, camera.position, camera.position);
@@ -437,7 +404,7 @@ function frame() {
     const bearing = Math.atan2(tgt.at.x - player.position.x, tgt.at.z - player.position.z);
     ui.setObjective(`fragment ${tgt.mem.order} · ${tgt.mem.district}`, tgt.dist, bearing, player.state.yaw);
     ui.setGuideObjective(
-      channel ? 'listening\u2026 keep holding E'
+      S.channel ? 'listening\u2026 keep holding E'
         : tgt.dist < 9 ? 'stand in the light and hold E'
           : `head for ${tgt.mem.district} \u2014 ${Math.round(tgt.dist)} m, follow the compass`
     );
@@ -449,7 +416,7 @@ function frame() {
     ui.setGuideObjective('follow the compass to the next fragment');
   }
   ui.setStats({
-    lucidity,
+    lucidity: S.lucidity,
     oil: player.oil / 100,
     eclipse: 1 - totality,
   });
@@ -457,52 +424,35 @@ function frame() {
 
   // ── the epilogue: the water keeps coming, slowly, and there is nothing to do about it ──
   if (state === STATE.EPILOGUE) {
-    tide += dt * 0.05;
-    water.setLevel(tide);
-    audio.setTide(tide);
+    S.tide += dt * 0.05;
+    water.setLevel(S.tide);
+    audio.setTide(S.tide);
   }
 
-  // ── lucidity ──
+  // ── lucidity: the rules tick it, and the collapse is the rules' decision ──
   const nearRestored = specters.shards.some((s) => s.restored && s.position.distanceTo(player.position) < 26);
   const calm = state === STATE.REVERIE || state === STATE.FINALE || state === STATE.EPILOGUE;
-  lucidity += ((nearRestored || calm ? 0.028 : 0.012) - danger * 0.05) * dt;
-  lucidity = Math.max(0, Math.min(1, lucidity));
-  if (lucidity <= 0.001 && state === STATE.PLAY) {
-    // carried back to the plaza, lighter than before
-    player.state.pos.set(0, city.PLAZA_Y + 1.68, 13);
-    player.state.vel.set(0, 0, 0);
-    lucidity = 0.42;
-    flash = 1;
-    flashColor.set('#0a1420');
-    shadows.clear();
-    ui.say('', 'You come back to yourself on the plaza stones, the way you always do.', { instant: false });
-  }
+  if (state === STATE.PLAY || calm) flow.tick(dt, { nearRestored, calm });
 
   // ── states ──
-  if (state === STATE.REVERIE) {
-    reverieTimer -= dt;
-    if (reverieTimer <= 0) {
-      state = STATE.PLAY;
-      player.freeze(false);
-      ui.quiet();
-    }
+  if (state === STATE.REVERIE && flow.updateReverie(dt)) {
+    state = STATE.PLAY;
+    player.freeze(false);
+    ui.quiet();
   }
-  if (finaleTimer > 0 && state === STATE.PLAY) {
-    finaleTimer += dt;
-    if (finaleTimer > 1.6) {
-      finaleTimer = 0;
-      state = STATE.FINALE;
-      player.freeze(true);
-      shadows.clear();
-      ui.showFinale(FINALE.title, FINALE.lines);
-      audio.memorySting('self');
-      audio.droneSwell(1);
-      tide = CFG.waterLevel + 1.15;
-      fadeColor.set('#04070a');
-      setTimeout(() => {
-        ui.setEpilogue(FINALE.card + '\n\n' + FINALE.epilogue, true);
-      }, 9000);
-    }
+  if (flow.finaleWanted(dt, state === STATE.PLAY)) {
+    // the city is whole: the water keeps coming, slowly, and there is nothing to do about it
+    state = STATE.FINALE;
+    player.freeze(true);
+    shadows.clear();
+    ui.showFinale(FINALE.title, FINALE.lines);
+    audio.memorySting('self');
+    audio.droneSwell(1);
+    S.tide = CFG.waterLevel + 1.15;
+    fadeColor.set('#04070a');
+    setTimeout(() => {
+      ui.setEpilogue(FINALE.card + '\n\n' + FINALE.epilogue, true);
+    }, 9000);
   }
 
   // ── post ──
@@ -611,7 +561,7 @@ function beginPrologue() {
   ui.showPrologue(PROLOGUE, prologueIndex);
   audio.start().then(() => {
     specters.attachAudio();
-    audio.setTide(tide);
+    audio.setTide(S.tide);
   });
 }
 
@@ -680,7 +630,7 @@ function pause() {
   player.freeze(true);
   ui.toggleJournal(false);
   document.exitPointerLock?.();
-  ui.showPause(`${restored.size} of ${MEMORIES.length} fragments restored · tide ${tide.toFixed(1)} m`);
+  ui.showPause(`${restored.size} of ${MEMORIES.length} fragments restored · tide ${S.tide.toFixed(1)} m`);
 }
 
 function resume() {
