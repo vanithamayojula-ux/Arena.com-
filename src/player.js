@@ -37,7 +37,7 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
   };
 
   const keys = new Set();
-  const mouse = { dx: 0, dy: 0, locked: false };
+  const mouse = { dx: 0, dy: 0, locked: false, dragging: false };
 
   /* ── lantern ── */
   const lantern = new THREE.SpotLight(0xffd7a0, 0, 34, 0.62, 0.45, 1.6);
@@ -89,13 +89,20 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
 
   function onMouseMove(e) {
     if (!state.enabled || state.frozen) return;
-    if (document.pointerLockElement !== dom && !mouse.locked) return;
+    // pointer lock is the good case; click-and-drag is the fallback for when the
+    // page is embedded somewhere that refuses to give it to us
+    const locked = document.pointerLockElement === dom || mouse.locked;
+    if (!locked && !mouse.dragging) return;
     const s = 0.0022;
     state.yaw -= e.movementX * s;
     state.pitch -= e.movementY * s;
     state.pitch = Math.max(-1.45, Math.min(1.45, state.pitch));
   }
   window.addEventListener('mousemove', onMouseMove);
+  const onMouseDown = () => { if (document.pointerLockElement !== dom) mouse.dragging = true; };
+  const onMouseUp = () => { mouse.dragging = false; };
+  dom.addEventListener('mousedown', onMouseDown);
+  window.addEventListener('mouseup', onMouseUp);
 
   function toggleLantern(on = !state.lanternOn) {
     if (on && state.oil <= 0.5) { audio?.chime(180, 0.05); return; }
@@ -127,8 +134,11 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
     if (!frozen) {
       if (keys.has('KeyW') || keys.has('ArrowUp')) desired.add(fwd);
       if (keys.has('KeyS') || keys.has('ArrowDown')) desired.sub(fwd);
-      if (keys.has('KeyD') || keys.has('ArrowRight')) desired.add(right);
-      if (keys.has('KeyA') || keys.has('ArrowLeft')) desired.sub(right);
+      if (keys.has('KeyD')) desired.add(right);
+      if (keys.has('KeyA')) desired.sub(right);
+      // arrows steer too, so the game is playable without a mouse at all
+      const turn = (keys.has('ArrowLeft') ? 1 : 0) - (keys.has('ArrowRight') ? 1 : 0);
+      if (turn) state.yaw += turn * 1.9 * dt;
     }
     const wantSpeed = desired.lengthSq() > 0;
     if (wantSpeed) desired.normalize();
@@ -313,6 +323,8 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      dom.removeEventListener('mousedown', onMouseDown);
     },
   };
 }

@@ -498,9 +498,19 @@ async function begin() {
   setTimeout(() => ui.toast('Hold E beside anyone who is still here. The city answers with its own lights.', 8000), 9000);
 }
 
+let pointerWarned = false;
 function lockPointer() {
-  canvas.requestPointerLock?.({ unadjustedMovement: false });
+  try {
+    const p = canvas.requestPointerLock?.({ unadjustedMovement: false });
+    if (p && typeof p.catch === 'function') p.catch(pointerLockFailed);
+  } catch (_e) { pointerLockFailed(); }
 }
+function pointerLockFailed() {
+  if (pointerWarned) return;
+  pointerWarned = true;
+  ui.toast('Pointer lock is blocked here — hold the mouse button down to look around, or steer with the arrow keys.', 11000);
+}
+document.addEventListener('pointerlockerror', pointerLockFailed);
 
 function pause() {
   if (state !== STATE.PLAY && state !== STATE.JOURNAL) return;

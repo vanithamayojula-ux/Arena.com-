@@ -27,7 +27,8 @@ generated procedurally while it loads — there is not a single binary asset in 
 | key | |
 |---|---|
 | **W A S D** | wade, walk, swim |
-| **mouse** | look (click to capture the pointer) |
+| **mouse** | look (click to capture the pointer; click-and-drag works if the page refuses to lock) |
+| **arrow keys** | walk and steer, if you have no mouse |
 | **shift** | hurry — only where the water is shallow |
 | **space** | step up / rise in water / climb out onto a ledge |
 | **C** | dive (swimming) |
