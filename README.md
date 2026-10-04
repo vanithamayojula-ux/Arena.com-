@@ -43,6 +43,21 @@ Touch devices get an on-screen joystick plus **RUN** / **BITE** buttons.
   ending the run is game over.
 - **Combo.** Quick successive catches multiply your score, up to x8.
 
+## Feel & feedback
+
+Movement and rendering are tuned so the hunt reads and *feels* alive:
+
+- **Weighty-but-responsive rex.** Sprint builds up on a ramp instead of snapping,
+  a bite is a short lunge that closes distance, and the body banks into turns.
+- **Living herds.** Prey meander while grazing and flee in serpentine zig-zags
+  (tightest in panic), blowing their stamina so chases end in a stumble.
+- **Layered dinosaur art.** Base silhouette + belly shadow + dorsal highlight +
+  outline, with gait, head-bob, speed-tied tail swish and sprint stretch.
+- **Ground feedback.** Fading footprints, water ripples when wading, rustled
+  leaves in ferns, dust, animated water shimmer and sprint speed-lines.
+- **Readable valley.** Sparse, translucent tree canopies so the chase is never
+  hidden under foliage.
+
 ## Structure
 
 | File | Purpose |

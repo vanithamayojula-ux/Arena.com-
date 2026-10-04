@@ -16,6 +16,8 @@ class Steerable {
     this.speed = 0;
     this.phase = Math.random() * TAU; // limb animation phase
     this.flash = 0;
+    this.turnLean = 0; // smoothed angular velocity, rendered as a banking lean
+    this.stepCount = 0; // increments on each footfall, for footprints / steps
   }
 
   get moving() {
@@ -26,7 +28,14 @@ class Steerable {
     const sx = this.vx * this.vx + this.vy * this.vy;
     if (sx > 0.0001) {
       const target = Math.atan2(this.vy, this.vx);
+      const before = this.angle;
       this.angle = approachAngle(this.angle, target, turnRate * dt);
+      const angVel = angleDiff(before, this.angle) / Math.max(dt, 1e-4);
+      // normalised to ~[-1,1] at full turn; smoothed so the lean feels weighty
+      const leanTarget = clamp(angVel / 7, -1, 1);
+      this.turnLean += (leanTarget - this.turnLean) * clamp(dt * 8, 0, 1);
+    } else {
+      this.turnLean += (0 - this.turnLean) * clamp(dt * 6, 0, 1);
     }
     this.speed = Math.sqrt(sx);
     const over = this.speed - maxSpeed;
@@ -38,7 +47,13 @@ class Steerable {
     }
     this.x += this.vx * dt;
     this.y += this.vy * dt;
-    this.phase += dt * (2.5 + this.speed * 0.045);
+
+    // gait phase; a footfall happens every PI of phase while moving
+    const prevPhase = this.phase;
+    this.phase += dt * (2.5 + this.speed * 0.05);
+    if (this.moving && Math.floor(this.phase / Math.PI) !== Math.floor(prevPhase / Math.PI)) {
+      this.stepCount++;
+    }
     if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 3.2);
   }
 }
@@ -63,6 +78,7 @@ export class Player extends Steerable {
     this.iFrames = 0;
     this.scale = 1.55;
     this.lunge = 0;
+    this.sprintRamp = 0; // eased 0..1 so sprinting builds up instead of snapping
   }
 
   /** True during the strike frames of a bite (after the short windup). */
@@ -110,11 +126,17 @@ export class Player extends Steerable {
       }
     }
 
+    // --- sprint builds up and bleeds off smoothly rather than snapping
+    const rampTarget = this.sprinting ? 1 : 0;
+    const rampRate = this.sprinting ? 3.2 : 5.5;
+    this.sprintRamp += (rampTarget - this.sprintRamp) * clamp(rampRate * dt, 0, 1);
+
     // --- thrust: acceleration is derived from the current speed cap so the cap
     //     is actually reachable. A flat accel/drag pair would top out at
     //     accel/drag and make sprinting pointless.
-    let maxSpeed = (this.sprinting ? PLAYER.sprintMax : PLAYER.maxSpeed) *
-      world.terrainSpeed(this.x, this.y);
+    const terrain = world.terrainSpeed(this.x, this.y);
+    const maxSpeed =
+      (PLAYER.maxSpeed + (PLAYER.sprintMax - PLAYER.maxSpeed) * this.sprintRamp) * terrain;
 
     let ax = 0;
     let ay = 0;
@@ -122,7 +144,9 @@ export class Player extends Steerable {
       const nx = ix / mag;
       const ny = iy / mag;
       const power = Math.min(1, mag);
-      const accel = PLAYER.drag * maxSpeed * PLAYER.accelResponse;
+      // a bite is a lunge: brief extra drive so strikes close the distance
+      const lunge = this.biting ? 1.75 : 1;
+      const accel = PLAYER.drag * maxSpeed * PLAYER.accelResponse * lunge;
       ax = nx * accel * power;
       ay = ny * accel * power;
     }
@@ -202,6 +226,8 @@ export class Prey extends Steerable {
     this.nibble = 0;
     this.alert = 0;
     this.jitter = rand.range(0, TAU);
+    this.seedPhase = rand.range(0, TAU); // stable per-animal offset for wander
+    this.wander = rand.range(0, 10); // continuous clock for organic meander
     this.repick = rand.range(0, 3);
     this.mul = 1; // per-wave speed multiplier
     this.sightMul = 1; // per-wave alertness multiplier
@@ -215,6 +241,7 @@ export class Prey extends Steerable {
 
   update(dt, world, threats, herd) {
     const cfg = this.cfg;
+    this.wander += dt * (this.state === 'graze' ? 1 : 1.8);
     this.alert = Math.max(0, this.alert - dt * 1.6);
 
     // --- find the nearest threat
@@ -279,12 +306,14 @@ export class Prey extends Steerable {
         this.nibble -= dt;
         this.jitter += dt * 3;
       } else if (this.target) {
-        const a = angleTo(this.x, this.y, this.target.x, this.target.y);
+        // meander toward the grazing spot instead of beelining
+        const base = angleTo(this.x, this.y, this.target.x, this.target.y);
+        const a = base + Math.sin(this.wander * 1.6 + this.seedPhase) * 0.55;
         dx += Math.cos(a) * cfg.grazeSpeed * this.mul;
         dy += Math.sin(a) * cfg.grazeSpeed * this.mul;
       }
     } else {
-      // flee directly away, biased sideways so herds fan out
+      // flee away from the threat, fanned sideways so herds spread out
       let a = angleTo(threat.x, threat.y, this.x, this.y);
       if (!isFinite(a)) a = this.angle;
       const side = this.herdId % 2 === 0 ? 1 : -1;
@@ -298,6 +327,12 @@ export class Prey extends Steerable {
           : cfg.fleeSpeed) * this.mul;
       dx += Math.cos(a) * spd;
       dy += Math.sin(a) * spd;
+
+      // serpentine zig-zag, strongest in panic — harder to line up a bite
+      const panic = this.state === 'panic' && !this.blown;
+      const serp = Math.sin(this.wander * (panic ? 9 : 5) + this.seedPhase) * (panic ? 0.55 : 0.25);
+      dx += Math.cos(a + Math.PI / 2) * spd * serp;
+      dy += Math.sin(a + Math.PI / 2) * spd * serp;
 
       // herd cohesion: run with your neighbours
       if (herd) {
@@ -485,6 +520,46 @@ const MAX_PARTICLES = 420;
 export class Particles {
   constructor() {
     this.list = [];
+    this.decals = []; // fading footprints left on the ground
+    this.ripples = []; // expanding rings where something crosses water
+  }
+
+  addFootprint(x, y, angle, size, color) {
+    if (this.decals.length > 380) this.decals.shift();
+    this.decals.push({ x, y, angle, size, color, life: 1, maxLife: 4.5 });
+  }
+
+  addRipple(x, y) {
+    if (this.ripples.length > 90) this.ripples.shift();
+    this.ripples.push({ x, y, r: 3, life: 1, maxLife: 0.9 });
+  }
+
+  /** Footprints + ripples sit on the ground, under the animals. */
+  drawGround(g) {
+    for (const d of this.decals) {
+      const a = clamp(d.life, 0, 1) * 0.28;
+      g.save();
+      g.translate(d.x, d.y);
+      g.rotate(d.angle);
+      g.globalAlpha = a;
+      g.fillStyle = d.color || 'rgba(40,34,22,1)';
+      const off = d.size * 0.55;
+      for (const s of [-1, 1]) {
+        g.beginPath();
+        g.ellipse(0, s * off, d.size * 0.5, d.size * 0.32, 0, 0, TAU);
+        g.fill();
+      }
+      g.restore();
+    }
+    for (const r of this.ripples) {
+      g.globalAlpha = clamp(r.life, 0, 1) * 0.4;
+      g.strokeStyle = 'rgba(215,240,240,1)';
+      g.lineWidth = 1.6;
+      g.beginPath();
+      g.arc(r.x, r.y, r.r, 0, TAU);
+      g.stroke();
+    }
+    g.globalAlpha = 1;
   }
 
   spawn(p) {
@@ -545,6 +620,17 @@ export class Particles {
   }
 
   update(dt) {
+    for (let i = this.decals.length - 1; i >= 0; i--) {
+      const d = this.decals[i];
+      d.life -= dt / d.maxLife;
+      if (d.life <= 0) this.decals.splice(i, 1);
+    }
+    for (let i = this.ripples.length - 1; i >= 0; i--) {
+      const r = this.ripples[i];
+      r.life -= dt / r.maxLife;
+      r.r += dt * 70;
+      if (r.life <= 0) this.ripples.splice(i, 1);
+    }
     for (let i = this.list.length - 1; i >= 0; i--) {
       const p = this.list[i];
       p.life -= dt / p.maxLife;

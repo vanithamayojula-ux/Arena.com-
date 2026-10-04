@@ -69,16 +69,17 @@ export class World {
     }
 
     // --- Trees (trunk blocks, canopy overhangs above everything).
+    //     Kept sparse + modest so the chase is never hidden under foliage.
     this.trees = [];
-    for (let i = 0; i < 46; i++) {
+    for (let i = 0; i < 30; i++) {
       const x = rand.range(90, WORLD.w - 90);
       const y = rand.range(90, WORLD.h - 90);
-      if (dist2(x, y, WORLD.w / 2, WORLD.h / 2) < 210 * 210) continue;
+      if (dist2(x, y, WORLD.w / 2, WORLD.h / 2) < 240 * 240) continue;
       this.trees.push({
         x,
         y,
-        trunk: rand.range(9, 15),
-        canopy: rand.range(46, 74),
+        trunk: rand.range(8, 13),
+        canopy: rand.range(36, 54),
         rot: rand.range(0, Math.PI * 2),
         seed: rand.int(0, 9999),
       });
@@ -403,7 +404,7 @@ export class World {
         const ox = Math.cos(a) * t.canopy * 0.45;
         const oy = Math.sin(a) * t.canopy * 0.38;
         g.fillStyle = i % 2 ? COLORS.tree : COLORS.treeLight;
-        g.globalAlpha = 0.94;
+        g.globalAlpha = 0.86; // translucent so animals stay readable beneath
         g.beginPath();
         g.ellipse(ox, oy, rr, rr * 0.86, r.range(0, 3), 0, Math.PI * 2);
         g.fill();

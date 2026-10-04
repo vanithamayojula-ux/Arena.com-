@@ -103,21 +103,33 @@ const noopSfx = new Proxy({}, { get: () => () => {} });
   api.setView({ w: W, h: H, dpr: 1 });
   api.start();
 
-  // run ~9 seconds of real simulation, hunting to the right
-  for (let i = 0; i < 540; i++) {
-    api.setInputStateRef({
-      x: 0.85,
-      y: 0.25,
-      sprint: i % 3 !== 0,
-      bite: i % 70 === 0,
-      aim: 0,
-      aimActive: false,
-    });
+  // run ~10s with a hunting autopilot so the frame shows a live chase:
+  // footprints, dust, speed lines, panic-fleeing herds
+  const { dist, angleTo, angleDiff } = await import('../src/utils.js');
+  const pl = api.game.player;
+  for (let i = 0; i < 600; i++) {
+    let best = null;
+    let bestD = Infinity;
+    for (const p of api.game.prey) {
+      const d = dist(pl.x, pl.y, p.x, p.y);
+      if (d < bestD) {
+        bestD = d;
+        best = p;
+      }
+    }
+    let ix = 0.8, iy = 0.2, bite = false;
+    if (best) {
+      const a = angleTo(pl.x, pl.y, best.x, best.y);
+      ix = Math.cos(a);
+      iy = Math.sin(a);
+      if (bestD < 70 && Math.abs(angleDiff(pl.angle, a)) < 0.4) bite = true;
+    }
+    api.setInputStateRef({ x: ix, y: iy, sprint: bestD > 130, bite, aim: 0, aimActive: false });
     api.update(1 / 60);
     api.updateCamera(1 / 60);
     if (api.game.state !== 'playing') break;
   }
-  api.draw(9.4);
+  api.draw(10.2);
 
   // label what happened
   const g = canvas.getContext('2d');

@@ -350,6 +350,50 @@ export class RasterCtx {
   }
 
   clip() {}
+
+  /** Blit another raster canvas through the current (scale+translate) matrix. */
+  drawImage(img, ...args) {
+    const src = img && img._ctx ? img._ctx : null;
+    if (!src) return;
+    let sx, sy, sw, sh, dx, dy, dw, dh;
+    if (args.length === 8) [sx, sy, sw, sh, dx, dy, dw, dh] = args;
+    else if (args.length === 2) {
+      [dx, dy] = args;
+      sx = 0;
+      sy = 0;
+      sw = img.width;
+      sh = img.height;
+      dw = sw;
+      dh = sh;
+    } else return;
+
+    const [a, , , d, e, f] = this.m; // assume no rotation/shear for blits
+    const x0 = Math.max(0, Math.floor(a * dx + e));
+    const x1 = Math.min(this.width - 1, Math.ceil(a * (dx + dw) + e));
+    const y0 = Math.max(0, Math.floor(d * dy + f));
+    const y1 = Math.min(this.height - 1, Math.ceil(d * (dy + dh) + f));
+    const sp = src.pixels;
+    const dp = this.pixels;
+    for (let py = y0; py <= y1; py++) {
+      const wy = (py - f) / d - dy;
+      const sv = Math.floor(sy + (wy / dh) * sh);
+      if (sv < 0 || sv >= src.height) continue;
+      for (let px = x0; px <= x1; px++) {
+        const wx = (px - e) / a - dx;
+        const su = Math.floor(sx + (wx / dw) * sw);
+        if (su < 0 || su >= src.width) continue;
+        const si = (sv * src.width + su) * 4;
+        const sa = sp[si + 3] / 255;
+        if (sa <= 0) continue;
+        const di = (py * this.width + px) * 4;
+        dp[di] = sp[si] * sa + dp[di] * (1 - sa);
+        dp[di + 1] = sp[si + 1] * sa + dp[di + 1] * (1 - sa);
+        dp[di + 2] = sp[si + 2] * sa + dp[di + 2] * (1 - sa);
+        dp[di + 3] = Math.max(dp[di + 3], sp[si + 3]);
+      }
+    }
+  }
+
   fillRect(x, y, w, h) {
     this.beginPath();
     this.rect(x, y, w, h);
@@ -393,7 +437,6 @@ export class RasterCtx {
   createPattern() {
     return null;
   }
-  drawImage() {}
   measureText(t) {
     return { width: String(t).length * 6 };
   }

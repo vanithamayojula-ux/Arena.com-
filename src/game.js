@@ -4,7 +4,14 @@
 import { WORLD, PLAYER, PREY, RAPTOR, WAVES, COMBO, HERD } from './config.js';
 import { World } from './world.js';
 import { Player, Prey, Raptor, Particles, FloatText } from './entities.js';
-import { drawCreature, drawShadow, drawBiteCone, drawAim } from './render.js';
+import {
+  drawCreature,
+  drawShadow,
+  drawBiteCone,
+  drawAim,
+  drawSpeedLines,
+  drawWaterFX,
+} from './render.js';
 import { clamp, dist2, makeRandom, TAU } from './utils.js';
 
 export function createGame({ canvas, minimap, hud, sfx, makeCanvas: canvasFactory }) {
@@ -250,6 +257,37 @@ export function createGame({ canvas, minimap, hud, sfx, makeCanvas: canvasFactor
     sfx.screech?.();
   }
 
+  /** Footprints on each footfall + water ripples while wading. */
+  function emitTracks(e, dt) {
+    if (e._lastStep === undefined) e._lastStep = e.stepCount;
+    if (e.stepCount !== e._lastStep) {
+      e._lastStep = e.stepCount;
+      if (e.speed > 40 && !game.world.inWater(e.x, e.y)) {
+        game.particles.addFootprint(e.x, e.y, e.angle, e.radius * 0.5, 'rgba(44,38,25,1)');
+      }
+    }
+    e._rippleT = (e._rippleT || 0) - dt;
+    if (e._rippleT <= 0 && e.speed > 50 && game.world.inWater(e.x, e.y)) {
+      e._rippleT = 0.2;
+      game.particles.addRipple(e.x, e.y);
+    }
+  }
+
+  /** Kick up leaves when crashing through a fern clump. */
+  function maybeRustleFerns(e, dt) {
+    if (!e.moving || e.speed < 130) return;
+    e._rustleT = (e._rustleT || 0) - dt;
+    if (e._rustleT > 0) return;
+    for (const f of game.world.ferns) {
+      const rr = f.r + e.radius;
+      if (dist2(e.x, e.y, f.x, f.y) < rr * rr) {
+        e._rustleT = 0.16;
+        game.particles.leaves(f.x, f.y, game.rand);
+        break;
+      }
+    }
+  }
+
   // --------------------------------------------------------------------- update
 
   function updateHerdStats() {
@@ -403,7 +441,7 @@ export function createGame({ canvas, minimap, hud, sfx, makeCanvas: canvasFactor
         const a = Math.atan2(r.y - pl.y, r.x - pl.x);
         r.vx += Math.cos(a) * 200;
         r.vy += Math.sin(a) * 200;
-        r.retreat = 0.8;
+        r.retreat = 1.1; // back off after landing a hit so packs don't shred
       }
       // raptors steal prey out from under you
       for (const p of livePrey) {
@@ -418,6 +456,12 @@ export function createGame({ canvas, minimap, hud, sfx, makeCanvas: canvasFactor
     }
     game.raptors = game.raptors.filter((r) => r.alive);
     game.prey = game.prey.filter((p) => p.alive);
+
+    // ground feedback: footprints, ripples, rustling foliage
+    emitTracks(pl, dt);
+    maybeRustleFerns(pl, dt);
+    for (const p of game.prey) emitTracks(p, dt);
+    for (const r of game.raptors) emitTracks(r, dt);
 
     // Keep the valley populated: if a wave's worth is nearly gone, send more in.
     if (game.prey.length < 4) {
@@ -518,6 +562,10 @@ export function createGame({ canvas, minimap, hud, sfx, makeCanvas: canvasFactor
     if (sw > 0 && sh > 0) {
       g.drawImage(game.world.terrain, left, top, sw, sh, left, top, sw, sh);
     }
+
+    // ground-level feedback under the animals: footprints + animated water
+    game.particles.drawGround(g);
+    drawWaterFX(g, game.world, time, { left, top, right: left + sw, bottom: top + sh });
 
     // gather everything drawable and sort by depth
     const drawList = [];
