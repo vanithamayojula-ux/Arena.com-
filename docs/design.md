@@ -136,6 +136,24 @@ at most twice, and nothing is ever explained while the player is mid-interaction
 opening lesson is a state machine in `src/tutorial.js` rather than being tangled into the
 frame loop, which is what makes it testable — see `tests/tutorial.mjs`.
 
+## 5c. Legibility — the rules that keep it playable
+
+An eclipse-lit watercolour city is one bad decision away from being unplayable, so these
+are treated as hard rules rather than taste:
+
+1. **A shaft of light marks every unrestored fragment.** 46 m tall, additive, visible from
+   the far side of the city, fading out within 7 m so it never sits in the middle of the
+   view. The compass gives bearing and distance; the beam gives "over there".
+2. **The eclipse dims the world; it never blinds it.** Totality costs ~30% of the ambient
+   light and a fraction of the colour, not the 70%+ that "atmospheric" would normally mean.
+3. **Brightness is the player's, not the designer's.** A default lifted well above the
+   original grade, a slider in three places, remembered between sessions, and a post-pass
+   that *lifts the darks* as it rises instead of just blowing out the highlights.
+4. **Nothing important is only conveyed by contrast.** Interactables are also announced by
+   a prompt, a ring, a sound and a beam, so a player on a bad monitor still gets there.
+5. **Fog is for distance, not for the middle distance.** Density tuned so silhouettes stay
+   readable to ~150 m and the drowned skyline still reads as a skyline.
+
 ## 6. Systems
 
 ### 6.1 Memory restoration

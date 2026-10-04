@@ -100,3 +100,9 @@ row and then asks for **E**; that each contextual hint fires exactly once — in
 awkward ones (the mantle hint only when you are genuinely stuck against a ledge in water,
 the low-oil warning only once per tank, re-arming after a refill); and that a two-minute
 session never repeats a hint more than twice.
+
+Onboarding is checked for *legibility* as well as copy: that the quick-start card has three
+real steps naming the keys, that the always-on field guide lists every control, that
+brightness is adjustable and remembered, and — the useful one — that **every key the game
+listens for appears somewhere the player can read it**, so a control can never quietly
+become undocumented.
