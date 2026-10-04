@@ -1,0 +1,6 @@
+# tests need a `three` package pointing at the vendored copy (see tests/README.md)
+node_modules/
+
+# scratch
+*.log
+.DS_Store
