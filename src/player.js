@@ -4,10 +4,15 @@ import * as THREE from 'three';
 
 const EYE = 1.68;
 const RADIUS = 0.42;
+const STEP_UP = 0.55;          // the tallest lip the player can walk straight up
+const FLOOR_SNAP = 0.6;        // small drops take the floor with them, instead of becoming air
+const MANTLE_REACH = 2.6;      // how far above the waterline you can haul yourself out
+const SWIM_WALL = 2.4;         // terrain this far above the waterline is a wall, even swimming
 
 export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = {}) {
   const state = {
     pos: new THREE.Vector3(0, city.PLAZA_Y + EYE, -26),
+    // (safePos is set to the spawn below, so the wedge net always has somewhere to go)
     vel: new THREE.Vector3(),
     yaw: Math.PI, pitch: -0.05,
     onGround: false,
@@ -28,6 +33,10 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
     fallTime: 0,
     breath: 0,
     rippleTimer: 0,
+    blocked: false,
+    safePos: new THREE.Vector3(0, 0, 0),
+    safeTimer: 0,
+    stuckFor: 0,
     mantleT: 0,
     mantleDur: 0.45,
     mantleCooldown: 0,
@@ -38,6 +47,8 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
 
   const keys = new Set();
   const mouse = { dx: 0, dy: 0, locked: false, dragging: false };
+
+  state.safePos.copy(state.pos);
 
   /* ── lantern ── */
   const lantern = new THREE.SpotLight(0xffd7a0, 0, 34, 0.62, 0.45, 1.6);
@@ -54,24 +65,57 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
     colliders.push({ x, z, hw: w / 2, hd: d / 2, rot, baseY, topY, c: Math.cos(rot), s: Math.sin(rot) });
   }
 
-  function resolveCollisions(p) {
-    for (let i = 0; i < colliders.length; i++) {
-      const c = colliders[i];
-      if (p.y > c.topY + 0.1) continue;                 // standing on the roof
-      const dx = p.x - c.x, dz = p.z - c.z;
-      if (Math.abs(dx) > c.hw + c.hd + 2 || Math.abs(dz) > c.hw + c.hd + 2) continue;
-      const lx = dx * c.c - dz * c.s;
-      const lz = dx * c.s + dz * c.c;
-      const ox = c.hw + RADIUS - Math.abs(lx);
-      const oz = c.hd + RADIUS - Math.abs(lz);
-      if (ox <= 0 || oz <= 0) continue;
-      // push out along the axis of least penetration
-      let nlx = lx, nlz = lz;
-      if (ox < oz) nlx = Math.sign(lx || 1) * (c.hw + RADIUS);
-      else nlz = Math.sign(lz || 1) * (c.hd + RADIUS);
-      p.x = c.x + nlx * c.c + nlz * c.s;
-      p.z = c.z - nlx * c.s + nlz * c.c;
+  /** Is the floor at (x, z) more than `limit` above the player's feet? */
+  function blockedAt(x, z, feetY, limit = STEP_UP) {
+    const g = city.groundHeight(x, z);
+    return g > city.DEEP + 0.01 && g - feetY > limit;
+  }
+
+  /**
+   * Push out of any building box we are inside of. The push is applied in small
+   * clamped steps over several iterations: the city's buildings overlap each
+   * other, so jumping straight to the nearest face just lands you inside the
+   * next one and two boxes can bat the player back and forth forever.
+   */
+  function resolveCollisions(p, vel) {
+    let hits = 0;
+    let deepest = 0;
+    for (let pass = 0; pass < 8; pass++) {
+      let moved = false;
+      for (let i = 0; i < colliders.length; i++) {
+        const c = colliders[i];
+        if (p.y > c.topY + 0.1) continue;                 // above the roofline
+        if (p.y < c.baseY - 0.5) continue;                // underneath the foundations
+        const dx = p.x - c.x, dz = p.z - c.z;
+        const r = c.hw + c.hd + 2;
+        if (Math.abs(dx) > r || Math.abs(dz) > r) continue;
+        const lx = dx * c.c - dz * c.s;
+        const lz = dx * c.s + dz * c.c;
+        const ox = c.hw + RADIUS - Math.abs(lx);
+        const oz = c.hd + RADIUS - Math.abs(lz);
+        if (ox <= 0 || oz <= 0) continue;
+        if (pass === 0) deepest = Math.max(deepest, Math.min(ox, oz));
+        // leave by the nearest face, a clamped step at a time
+        const push = Math.min(Math.min(ox, oz), 0.3);
+        let nlx = lx, nlz = lz;
+        const alongX = ox < oz;
+        if (alongX) nlx = Math.sign(lx || 1) * (Math.abs(lx) + push);
+        else nlz = Math.sign(lz || 1) * (Math.abs(lz) + push);
+        p.x = c.x + nlx * c.c + nlz * c.s;
+        p.z = c.z - nlx * c.s + nlz * c.c;
+        moved = true; hits++;
+        if (vel) {
+          // world-space normal of the face we were pushed out of
+          const nx = alongX ? Math.sign(nlx) * c.c : Math.sign(nlz) * c.s;
+          const nz = alongX ? -Math.sign(nlx) * c.s : Math.sign(nlz) * c.c;
+          const into = vel.x * nx + vel.z * nz;
+          if (into < 0) { vel.x -= into * nx; vel.z -= into * nz; }
+        }
+      }
+      if (!moved) break;
     }
+    resolveCollisions.depth = deepest;
+    return hits;
   }
 
   /* ── input ── */
@@ -112,6 +156,7 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
 
   /* ── per-frame ── */
   const fwd = new THREE.Vector3();
+  const tmpSafe = new THREE.Vector3();
   const right = new THREE.Vector3();
   const desired = new THREE.Vector3();
   const probe = new THREE.Vector3();
@@ -185,8 +230,8 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
       const probeX = state.pos.x + fwd.x * 1.05;
       const probeZ = state.pos.z + fwd.z * 1.05;
       const ledge = city.groundHeight(probeX, probeZ);
-      const feetNow = state.pos.y - EYE;
-      if (ledge > feetNow + 0.22 && ledge < feetNow + 2.6 && ledge > waterLevel - 0.7) {
+      const above = ledge - waterLevel;
+      if (ledge > city.DEEP + 0.01 && above > 0.15 && above < MANTLE_REACH) {
         state.mantleDur = 0.45;
         state.mantleT = state.mantleDur;
         state.mantleFrom = state.pos.clone();
@@ -208,25 +253,70 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
       state.vel.y -= 19 * dt;
     }
 
-    // integrate + collide
-    const prev = state.pos.clone();
-    probe.copy(state.pos).addScaledVector(state.vel, dt);
-    resolveCollisions(probe);
+    // ── integrate: the height field and the buildings are both walls ──
+    // Terrain has no side faces, so a plate that steps up more than the player can
+    // climb has to block horizontal movement — otherwise you walk inside the city.
+    const feetY = state.pos.y - EYE;
+    // swimming, "too high to reach" has to be measured from the waterline, not
+    // from the bottom you are floating over
+    const stepLimit = (swimming || state.mantleT > 0) ? (waterLevel + SWIM_WALL - feetY) : STEP_UP;
+    const wantedX = state.pos.x + state.vel.x * dt;
+    const wantedZ = state.pos.z + state.vel.z * dt;
+    let nx = state.pos.x, nz = state.pos.z;
+    if (!blockedAt(wantedX, wantedZ, feetY, stepLimit)) {
+      nx = wantedX; nz = wantedZ;
+    } else if (!blockedAt(wantedX, state.pos.z, feetY, stepLimit)) {
+      nx = wantedX; state.vel.z = 0;                     // slide along the wall
+    } else if (!blockedAt(state.pos.x, wantedZ, feetY, stepLimit)) {
+      nz = wantedZ; state.vel.x = 0;
+    } else {
+      state.vel.x = 0; state.vel.z = 0;
+    }
+    probe.set(nx, state.pos.y + state.vel.y * dt, nz);
+    const hits = resolveCollisions(probe, state.vel);
     state.pos.copy(probe);
-    if (probe.distanceTo(state.pos) > 0.0001) { /* collided */ }
+    state.blocked = hits > 0;
+
+    // Wedge net. Touching a wall is normal (the solver leaves us just outside it),
+    // but being *inside* geometry for a couple of seconds means the city's
+    // overlapping boxes are fighting over us — go back to the last clean spot.
+    if (resolveCollisions.depth > 1.0) {
+      state.stuckFor += dt;
+      if (state.stuckFor > 2.0) {
+        state.pos.copy(state.safePos);
+        state.vel.set(0, 0, 0);
+        state.stuckFor = 0;
+        audio?.splash?.(0.3);
+      }
+    } else {
+      state.stuckFor = 0;
+      state.safeTimer -= dt;
+      if (state.safeTimer <= 0) {
+        state.safeTimer = 0.4;
+        if (resolveCollisions(tmpSafe.copy(state.pos), null) === 0) state.safePos.copy(state.pos);
+      }
+    }
 
     // ground / step-up
     const gNow = city.groundHeight(state.pos.x, state.pos.z);
     state.onGround = false;
     const feet = state.pos.y - EYE;
     const rise = gNow - feet;
-    if (gNow > city.DEEP + 0.01) {
-      if (rise <= 0.02) {
+    if (gNow > city.DEEP + 0.01 && swimming) {
+      // floating: the bottom can shove you up out of it, but it must never drag
+      // you back down — that is how you end up standing on a drowned city floor
+      if (gNow > feet) {
+        state.pos.y = gNow + EYE;
+        state.vel.y = Math.max(0, state.vel.y);
+      }
+      state.onGround = false;
+    } else if (gNow > city.DEEP + 0.01) {
+      if (rise <= FLOOR_SNAP) {
         // walked into the floor
         state.pos.y = gNow + EYE;
         if (state.vel.y < 0) state.vel.y = 0;
         state.onGround = true;
-      } else if (rise <= 0.55 && state.vel.y <= 0.6) {
+      } else if (rise <= STEP_UP && state.vel.y <= 0.6) {
         // a step, a kerb, a stair — climb it smoothly
         state.pos.y += Math.min(rise, dt * 6.2);
         state.vel.y = Math.max(0, state.vel.y);
@@ -308,7 +398,7 @@ export function createPlayer(camera, dom, { city, audio, onFootstep, onSwim } = 
     lantern.intensity += (lTarget - lantern.intensity) * Math.min(1, dt * 6);
     lanternGlow.intensity = lantern.intensity * 0.16;
     state.breath = 0.5 + 0.5 * Math.sin(time * 0.7 + Math.sin(time * 0.23) * 2);
-    void prev; void danger;
+    void danger;
   }
 
   return {

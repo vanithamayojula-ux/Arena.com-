@@ -163,14 +163,17 @@ if (city) {
     const unreachable = [];
     for (const m of contentMod.MEMORIES) {
       const a = city.shardAnchors[m.id];
-      // look for any reachable cell within 8 m of the shard's footprint
+      // the exact cell the player stands on to reach this fragment must be
+      // reachable — "somewhere in the district" is not good enough
+      const i0 = Math.round((a.x + EXT) / STEP), j0 = Math.round((a.z + EXT) / STEP);
       let found = false;
-      for (let i = 0; i < N && !found; i++) for (let j = 0; j < N; j++) {
-        if (!seen[i * N + j]) continue;
-        const x = -EXT + i * STEP, z = -EXT + j * STEP;
-        if (Math.hypot(x - a.x, z - a.z) < 8) { found = true; break; }
+      for (let di = -1; di <= 1 && !found; di++) for (let dj = -1; dj <= 1; dj++) {
+        const i = i0 + di, j = j0 + dj;
+        if (i < 0 || j < 0 || i >= N || j >= N) continue;
+        // standing beside the shard is fine as long as the eye can see it
+        if (seen[i * N + j] && Math.abs(city.groundHeight(-EXT + i * STEP, -EXT + j * STEP) - city.groundHeight(a.x, a.z)) < 3.5) { found = true; break; }
       }
-      if (!found) unreachable.push(`${m.id} (${a.x.toFixed(0)}, ${a.z.toFixed(0)})`);
+      if (!found) unreachable.push(`${m.id} (${a.x.toFixed(0)}, ${a.z.toFixed(0)}, ground ${city.groundHeight(a.x, a.z).toFixed(2)})`);
     }
     // and the districts themselves
     for (const [id, d] of Object.entries(city.districts)) {
@@ -192,6 +195,7 @@ if (city && player) {
     const frames = Math.round(limitSeconds * 60);
     const t0 = process.hrtime.bigint();
     let reached = -1;
+    let stuck = 0, wiggle = 0;
     for (let i = 0; i < frames; i++) {
       const dx = tx - player.position.x, dz = tz - player.position.z;
       const dist = Math.hypot(dx, dz);
@@ -202,6 +206,13 @@ if (city && player) {
       const swimming = player.state.swimming;
       key('ShiftLeft', !swimming && dist > 12);
       key('Space', swimming || (player.state.speed < 0.4 && i % 30 === 0));
+      // a person who walks into a corner turns and tries beside it; so does this
+      if (player.state.speed < 0.35) stuck++; else stuck = 0;
+      if (stuck > 45) { wiggle = 90; stuck = 0; }
+      if (wiggle > 0) {
+        wiggle--;
+        player.state.yaw += 1.15 * (i % 2 ? 1 : -1) * (1 / 60) * 6;
+      }
       player.update(1 / 60, { waterLevel: tide, time: i / 60 });
       if (!isFinite(player.position.x) || player.position.y < -20) throw new Error(label + ': player fell out of the world at frame ' + i);
     }

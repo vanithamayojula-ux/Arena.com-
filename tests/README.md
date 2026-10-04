@@ -69,3 +69,24 @@ the drowned basin, wading depth, dry stone, platforms and tiers, with the six me
 numbered. It is the quickest sanity check after moving anything: the plaza should sit in
 the middle with five avenues radiating out to the districts, and every memory number
 should be sitting on something you can stand on.
+
+## `node tests/terrain.mjs`
+
+The ground itself, checked directly. This is the suite that catches "the terrain feels
+broken" bugs, and it earned its keep: it found the player walking *into* walls, being
+dragged to the bottom of deep water instead of floating, buildings that overlapped into
+unclimbable corners, and an invisible 3 m shelf that shadowed the whole temple.
+
+It checks:
+
+1. **Settling** — 3000+ walkable cells, player dropped above each one: never falls through,
+   never hovers over dry stone.
+2. **Walking** — 48,000 frames of randomised walking: the player's feet never end up below
+   the floor they are standing on.
+3. **Buildings** — walking at 157 buildings from four directions never gets you inside;
+   dropped inside one, you always get out.
+4. **Water** — in the drowned plaza basin the player floats at the surface (eye 0.12 m above
+   the waterline), and can always haul themselves back onto the ring.
+5. **Shards** — all six memory anchors sit within interaction range of ground the player can
+   stand on.
+6. **Sanity** — most of the walkable city is dry at low tide.

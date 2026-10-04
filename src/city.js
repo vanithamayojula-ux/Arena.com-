@@ -507,14 +507,27 @@ export function createCity(scene, { seed = 20240410 } = {}) {
         B.stone.box(0.7, bh, t.d + 1.2, TX + (t.w / 2 + 0.6) * s, t.y, TZ, 0, 2);
       }
       if (i < 3) {
-        // the flight has to cross the exposed border of this tier and finish
-        // exactly at the wall of the next one, or it leads nowhere
-        const zA = TZ - (t.d / 2 - 0.1);
-        const zB = TZ - T[i + 1].d / 2;
-        steps(TX, (zA + zB) / 2, 9.5, Math.abs(zB - zA) + 0.5, t.y, T[i + 1].y, 0, 'z');
+        // The flights must start and finish exactly on the *walkable* plate edges
+        // (the plates are inset by the balustrade), or the last step leaves an
+        // unclimbable lip and the tier above is unreachable.
+        // The flights are as wide as the tier you are climbing *from*, so the
+        // whole face is stairs: there is no corner beside them where you can be
+        // stopped by a wall you are not allowed to climb.
+        const zA = TZ - (t.d - 1.2) / 2;              // this tier's plate edge
+        const zB = TZ - (T[i + 1].d - 1.2) / 2;       // the next tier's plate edge
+        steps(TX, (zA + zB) / 2, t.w - 1.2, Math.abs(zB - zA) + 0.5, t.y, T[i + 1].y, 0, 'z');
+        // and a second flight facing the avenue, because that is the way the city
+        // is entered and nobody wants to walk all the way round the temple
+        const xA = TX + (t.w - 1.2) / 2;
+        const xB = TX + (T[i + 1].w - 1.2) / 2;
+        steps((xA + xB) / 2, TZ, xA - xB + 0.5, t.d - 1.2, T[i + 1].y, t.y, 0, 'x');
+        for (const sz of [-1, 1]) {
+          const lx = TX + (t.w - 1.2) / 2 - 1.5;
+          const lz = TZ + sz * 6.2;
+          avenueLamps.push(lampPost(lx, groundHeight(lx, lz), lz, 4.2));
+        }
       }
     });
-    plateCircle(TX, TZ, 30, 3.0);
     // colonnade on the third tier
     for (let i = 0; i < 12; i++) {
       const a = (i / 12) * Math.PI * 2;
@@ -790,10 +803,23 @@ export function createCity(scene, { seed = 20240410 } = {}) {
     }
   }
 
+  // Two ruins can occupy the same footprint in the outer city. A box entirely
+  // inside another one can never be touched by the player, and leaving it in the
+  // collision list only makes the solver fight itself, so drop those.
+  const colliders = buildingColliders.filter((a) => !buildingColliders.some((b) => {
+    if (a === b) return false;
+    if (Math.abs(a.rot - b.rot) > 0.02) return false;
+    if (a.baseY < b.baseY - 0.5 || a.topY > b.topY + 0.5) return false;
+    const pad = 0.25;
+    return a.w <= b.w + pad && a.d <= b.d + pad
+      && Math.hypot(a.x - b.x, a.z - b.z) + Math.hypot(a.w, a.d) * 0.5
+         <= Math.hypot(b.w, b.d) * 0.5 - Math.hypot(a.w, a.d) * 0.5 + 1.4;
+  }));
+
   return {
     group, plates, groundHeight, shardAnchors, effects, M, state,
     districts: DISTRICTS, DEEP,
-    colliders: buildingColliders,
+    colliders,
     landmarks: {
       orrery: new THREE.Vector3(0, BASIN_Y, 0),
       observatory: new THREE.Vector3(OX, OBS_Y, OZ),

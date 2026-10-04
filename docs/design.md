@@ -125,11 +125,23 @@ Water is free to enter and slow to cross; the deep basin is a swim. Nothing is e
 
 ### 6.3 Water traversal
 - **Wade** — up to 1.35 m: movement slows up to 62%, footsteps become splashes.
-- **Swim** — deeper: the eye rides the surface, space rises, **C** dives. Diving is the
-  only way to see the drowned lower city under your feet.
-- **Mantle** — space at a ledge hauls you out of deep water onto anything within reach.
-  This is what keeps open water from ever being a trap, and it is why the six districts
-  connect.
+- **Swim** — deeper: the body floats with the eye just above the waterline, space rises,
+  **C** dives. Diving is the only way to see the drowned lower city under your feet.
+- **Mantle** — space at a ledge hauls you out of deep water onto anything within 2.6 m of
+  the waterline. This is what keeps open water from ever being a trap, and it is why the
+  six districts connect.
+
+**Terrain rules the whole game obeys** (all four are enforced by `tests/terrain.mjs`):
+
+1. The floor under you is the highest plate covering you, and it may pull you *down* at most
+   0.6 m and push you *up* at most 0.55 m per step. Anything taller than that is a wall you
+   cannot walk through — so you never end up inside a tier.
+2. While swimming, the floor may shove you up out of it but never drag you down: the tide
+   always wins, and you always float.
+3. Collision pushes are applied in clamped steps over several iterations, because Vaelune's
+   buildings overlap; jumping to the nearest face just lands you inside the next one.
+4. If the solver ever has you more than a metre inside geometry for two seconds, you are put
+   back on the last spot that was clean. No wedge is ever permanent.
 
 ### 6.4 Lucidity and the lantern
 Lucidity is your grip on the memory you are walking through. Proximity to a shadow drains
