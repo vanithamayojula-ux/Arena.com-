@@ -61,3 +61,11 @@ amphitheatre.
 identifiers, unreachable code, duplicate keys and bad `typeof`, which is what actually
 catches bugs in a codebase this size. It needs `eslint` and `globals` installed
 (`npm i -D eslint globals`) but nothing in the game imports them.
+
+## `node tests/map.mjs`
+
+Prints an ASCII map of the whole city sampled out of `city.groundHeight()` — deep water,
+the drowned basin, wading depth, dry stone, platforms and tiers, with the six memories
+numbered. It is the quickest sanity check after moving anything: the plaza should sit in
+the middle with five avenues radiating out to the districts, and every memory number
+should be sitting on something you can stand on.
