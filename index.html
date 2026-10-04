@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Umbral Tide — a memory of Vaelune</title>
+<meta name="description" content="A first-person exploration mystery set in a half-sunken, bioluminescent city that only appears during solar eclipses." />
+<link rel="stylesheet" href="./styles.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<!-- ───────────────────────────── HUD ───────────────────────────── -->
+<div id="hud" class="hidden">
+  <div id="objective">
+    <div class="obj-arrow" id="objArrow">▲</div>
+    <div class="obj-label" id="objLabel">the plaza</div>
+    <div class="obj-dist" id="objDist"></div>
+  </div>
+
+  <div id="stats">
+    <div class="stat-line">
+      <span class="stat-key">lucidity</span>
+      <span class="stat-bar"><i id="lucidityFill"></i></span>
+    </div>
+    <div class="stat-line">
+      <span class="stat-key">oil</span>
+      <span class="stat-bar"><i id="oilFill" class="oil"></i></span>
+    </div>
+    <div class="stat-line">
+      <span class="stat-key">eclipse</span>
+      <span class="stat-bar eclipse"><i id="eclipseFill"></i></span>
+    </div>
+  </div>
+
+  <div id="crosshair"><span></span></div>
+
+  <div id="prompt" class="hidden">
+    <div class="prompt-key">hold <b>E</b></div>
+    <div class="prompt-text" id="promptText">listen</div>
+    <div class="prompt-ring"><svg viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="17"/><circle class="fg" id="promptRing" cx="20" cy="20" r="17"/></svg></div>
+  </div>
+
+  <div id="subtitle" class="hidden">
+    <div class="sub-who" id="subWho"></div>
+    <div class="sub-line" id="subLine"></div>
+  </div>
+
+  <div id="toast" class="hidden"></div>
+
+  <div id="hint">[tab] memories &nbsp;·&nbsp; [f] lantern &nbsp;·&nbsp; [esc] pause</div>
+</div>
+
+<!-- ───────────────────────────── JOURNAL ───────────────────────────── -->
+<div id="journal" class="hidden">
+  <div class="journal-inner">
+    <h1>The Last Day of Vaelune</h1>
+    <p class="journal-lede" id="journalLede">Six memories remain in the water. Find the ones who still remember, and listen until the city feels them again.</p>
+    <ul id="memoryList"></ul>
+    <div class="journal-foot" id="journalFoot"></div>
+    <p class="journal-close">[tab] to close</p>
+  </div>
+</div>
+
+<!-- ───────────────────────────── START ───────────────────────────── -->
+<div id="start">
+  <div class="start-inner">
+    <div class="eyebrow">an eclipse-city requiem</div>
+    <h1>UMBRAL<span>TIDE</span></h1>
+    <p class="tagline">Vaelune only surfaces when the sun is eaten.<br/>You have until totality to remember it.</p>
+    <div class="controls">
+      <div><b>W A S D</b><span>wade &amp; walk</span></div>
+      <div><b>shift</b><span>hurry (not in deep water)</span></div>
+      <div><b>space</b><span>step up / rise</span></div>
+      <div><b>mouse</b><span>look</span></div>
+      <div><b>E</b><span>hold to listen to a memory</span></div>
+      <div><b>F</b><span>raise the lantern (shadows recoil)</span></div>
+      <div><b>TAB</b><span>memories restored</span></div>
+      <div><b>ESC</b><span>pause</span></div>
+    </div>
+    <button id="beginBtn">Enter the eclipse</button>
+    <p class="warn">headphones recommended · contains dark water, whispers, and things that follow</p>
+  </div>
+</div>
+
+<!-- ───────────────────────────── PAUSE ───────────────────────────── -->
+<div id="pause" class="hidden">
+  <div class="pause-inner">
+    <h2>held in the water</h2>
+    <p id="pauseStats"></p>
+    <p class="small" id="pauseControls"></p>
+    <button id="resumeBtn">Return</button>
+    <p class="small dim">the eclipse waits</p>
+  </div>
+</div>
+
+<!-- ───────────────────────────── FINALE ───────────────────────────── -->
+<div id="finale" class="hidden">
+  <div class="finale-inner">
+    <h1 id="finaleTitle"></h1>
+    <p id="finaleText"></p>
+    <button id="remainBtn" class="hidden">Remain in the memory</button>
+  </div>
+</div>
+
+<div id="loading">waking the water…</div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
