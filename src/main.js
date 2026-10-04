@@ -15,8 +15,8 @@ import { createTutorial } from './tutorial.js';
 import { MEMORIES, CITY as CFG, PREVIEW, PROLOGUE, HINTS, FINALE } from './content.js';
 
 const STATE = {
-  LOADING: 'loading', START: 'start', PROLOGUE: 'prologue', PLAY: 'play',
-  PAUSED: 'paused', JOURNAL: 'journal', HELP: 'help', REVERIE: 'reverie',
+  LOADING: 'loading', START: 'start', PROLOGUE: 'prologue', QUICKSTART: 'quickstart',
+  PLAY: 'play', PAUSED: 'paused', JOURNAL: 'journal', HELP: 'help', REVERIE: 'reverie',
   FINALE: 'finale', EPILOGUE: 'epilogue',
 };
 
@@ -28,13 +28,13 @@ const DPR = Math.min(window.devicePixelRatio || 1, 1.65);
 renderer.setPixelRatio(DPR);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 1.25;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x14303a, 0.0088);
+scene.fog = new THREE.FogExp2(0x1d4450, 0.0058);
 
 const camera = new THREE.PerspectiveCamera(71, window.innerWidth / window.innerHeight, 0.06, 920);
 camera.position.set(0, 2, 13);
@@ -79,9 +79,9 @@ post.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
 
 /* ────────────────────────────── lights ────────────────────────────── */
 
-const hemi = new THREE.HemisphereLight(0x6f92a8, 0x0a1a1c, 0.7);
+const hemi = new THREE.HemisphereLight(0x93b6cc, 0x16303a, 1.05);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffe3c0, 0.9);
+const sun = new THREE.DirectionalLight(0xffe3c0, 1.15);
 sun.position.copy(city.sunDir).multiplyScalar(120);
 sun.castShadow = true;
 sun.shadow.mapSize.set(1024, 1024);
@@ -92,10 +92,10 @@ sun.shadow.camera.top = 70; sun.shadow.camera.bottom = -70;
 sun.shadow.bias = -0.0012;
 scene.add(sun);
 scene.add(sun.target);   // the shadow box travels with the player
-const moonFill = new THREE.DirectionalLight(0x6ea6c8, 0.22);
+const moonFill = new THREE.DirectionalLight(0x8fbede, 0.45);
 moonFill.position.set(60, 90, -40);
 scene.add(moonFill);
-const ambient = new THREE.AmbientLight(0x223038, 0.6);
+const ambient = new THREE.AmbientLight(0x2e4450, 0.95);
 scene.add(ambient);
 
 /* ────────────────────────────── game state ────────────────────────────── */
@@ -122,10 +122,26 @@ let finaleTimer = 0;
 let boundaryLine = 0;
 let boundaryCooldown = 0;
 let averageFrame = 0;
+
+/* ── how bright the world is drawn. Stored, and adjustable in the pause menu ── */
+const BRIGHTNESS_DEFAULT = 1.15;         // 1.0 = the original, quite gloomy grade
+let brightness = BRIGHTNESS_DEFAULT;
+try {
+  const saved = parseFloat(localStorage.getItem('vaelune.brightness'));
+  if (isFinite(saved) && saved >= 0.7 && saved <= 2.0) brightness = saved;
+} catch (_e) { /* private mode, no matter */ }
+
+function applyBrightness(k, remember = true) {
+  brightness = Math.max(0.7, Math.min(2.0, k));
+  // 0.7 → 0, 1.6 → 1: the shader lift tracks the exposure
+  post.setBrightness((brightness - 0.75) / 0.85);
+  if (remember) { try { localStorage.setItem('vaelune.brightness', String(brightness)); } catch (_e) { /* ignore */ } }
+}
 const camFwd = new THREE.Vector3();
 
 const ui = createUI({
   onBegin: () => beginPrologue(),
+  onQuickStartDone: () => dismissQuickStart(),
   onPrologueNext: () => advancePrologue(),
   onPrologueSkip: () => startPlaying(true),
   onResume: () => resume(),
@@ -154,10 +170,11 @@ function updateEclipse(dt) {
   totality = THREE.MathUtils.smoothstep(coverage, 0.25, 0.92);
   sky.setEclipse(coverage, totality);
   audio.setTotality(totality);
-  hemi.intensity = 0.7 - totality * 0.36;
-  sun.intensity = 0.9 * (1 - totality * 0.76);
-  ambient.intensity = 0.6 - totality * 0.22;
-  renderer.toneMappingExposure = 1.0 + totality * 0.12;
+  // totality still dims the world, but never below what the player needs to walk it
+  hemi.intensity = 1.05 - totality * 0.34;
+  sun.intensity = 1.15 * (1 - totality * 0.7);
+  ambient.intensity = 0.95 - totality * 0.22;
+  renderer.toneMappingExposure = (1.25 + totality * 0.16) * brightness;
 }
 
 /* ────────────────────────────── memory flow ────────────────────────────── */
@@ -298,6 +315,21 @@ function nextTarget() {
   return best ? { mem: best, dist: bestD, at: city.shardAnchors[best.id] } : null;
 }
 
+applyBrightness(brightness, false);      // set the saved/default grade before the first frame
+ui.onBrightness((v) => applyBrightness(v));
+ui.setBrightnessValue(brightness);
+
+function dismissQuickStart() {
+  ui.hideQuickStart();
+  if (state !== STATE.QUICKSTART) return;
+  state = STATE.PLAY;
+  player.freeze(false);
+  lockPointer();
+  // the field guide is also the "what next" panel, so point at the first job
+  tutorial.start();
+  setTimeout(() => { if (state === STATE.PLAY) ui.hint('W A S D', HINTS.move, 9000); }, 2600);
+}
+
 /* ────────────────────────────── main loop ────────────────────────────── */
 
 function frame() {
@@ -404,8 +436,17 @@ function frame() {
   if (tgt && state !== STATE.FINALE && state !== STATE.EPILOGUE) {
     const bearing = Math.atan2(tgt.at.x - player.position.x, tgt.at.z - player.position.z);
     ui.setObjective(`fragment ${tgt.mem.order} · ${tgt.mem.district}`, tgt.dist, bearing, player.state.yaw);
+    ui.setGuideObjective(
+      channel ? 'listening\u2026 keep holding E'
+        : tgt.dist < 9 ? 'stand in the light and hold E'
+          : `head for ${tgt.mem.district} \u2014 ${Math.round(tgt.dist)} m, follow the compass`
+    );
+  } else if (restored.size >= MEMORIES.length) {
+    ui.setObjective(null);
+    ui.setGuideObjective('the city is whole \u2014 go to the orrery in the drowned plaza');
   } else {
     ui.setObjective(null);
+    ui.setGuideObjective('follow the compass to the next fragment');
   }
   ui.setStats({
     lucidity,
@@ -478,7 +519,7 @@ function frame() {
     fadeColor,
     memory: memoryGlow * (restored.size > 0 ? 1 : 0),
     memoryColor: memoryGlowColor,
-    bloomStrength: 0.78 + restored.size * 0.07,
+    bloomStrength: (0.62 + restored.size * 0.06) * (1 - (brightness - 1.15) * 0.12),
   });
 
   // adaptive quality: the painter is the expensive part
@@ -511,6 +552,21 @@ window.addEventListener('keydown', (e) => {
   }
 
   keys.add(e.code);
+
+  // the quick-start card closes on any of the obvious keys
+  if (state === STATE.QUICKSTART) {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'Escape' || e.code === 'KeyH') {
+      e.preventDefault();
+      dismissQuickStart();
+    }
+    return;
+  }
+
+  // the field guide panel, toggled with G
+  if (e.code === 'KeyG' && state === STATE.PLAY) {
+    ui.toggleGuide();
+    return;
+  }
 
   // how to play, any time
   if (e.code === 'KeyH' && (state === STATE.PLAY || state === STATE.HELP)) {
@@ -567,6 +623,9 @@ function advancePrologue() {
   audio.chime(300 + prologueIndex * 90, 0.05);
 }
 
+let seenGuide = false;
+try { seenGuide = localStorage.getItem('vaelune.seenGuide') === 'yes'; } catch (_e) { /* ignore */ }
+
 async function startPlaying(skipped) {
   ui.hidePrologue();
   ui.loadingDone();
@@ -574,6 +633,22 @@ async function startPlaying(skipped) {
   player.setEnabled(true);
   player.freeze(false);
   lockPointer();
+
+  // the field guide is on unless the player turned it off
+  let guideOn = true;
+  try { guideOn = localStorage.getItem('vaelune.guidePanel') !== 'off'; } catch (_e) { /* ignore */ }
+  ui.showGuide(guideOn);
+
+  // first time through, hold their hand properly before letting go
+  if (!seenGuide) {
+    seenGuide = true;
+    try { localStorage.setItem('vaelune.seenGuide', 'yes'); } catch (_e) { /* ignore */ }
+    state = STATE.QUICKSTART;
+    player.freeze(true);
+    document.exitPointerLock?.();
+    ui.showQuickStart();
+    return;
+  }
   if (skipped) ui.say('the Archivist', 'Six fragments. Find the light, stand close, hold E.', { instant: false });
   else audio.memorySting('still');
   audio.chime(520, 0.06);

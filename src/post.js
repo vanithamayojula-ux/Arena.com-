@@ -23,7 +23,7 @@ export function createPost(renderer, scene, camera, { pixelRatio = 1 } = {}) {
   const renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
 
-  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.78, 0.72, 0.55);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.62, 0.7, 0.68);
   composer.addPass(bloom);
 
   const WatercolourShader = {
@@ -45,8 +45,9 @@ export function createPost(renderer, scene, camera, { pixelRatio = 1 } = {}) {
       uFadeColor: { value: new THREE.Color('#04070a') },
       uMemory: { value: 0 },
       uMemoryColor: { value: new THREE.Color('#8ffbe0') },
-      uVignette: { value: 0.42 },
+      uVignette: { value: 0.22 },
       uWetness: { value: 0.7 },
+      uBright: { value: 0.55 },      // 0 = as gloomy as it gets, 1 = full daylight-ish lift
       uPixelRatio: { value: pixelRatio },
     },
     vertexShader: /* glsl */`
@@ -58,7 +59,7 @@ export function createPost(renderer, scene, camera, { pixelRatio = 1 } = {}) {
       uniform sampler2D tDiffuse, uPaper;
       uniform vec2 uResolution;
       uniform float uTime, uRadius, uEdge, uGrain, uSaturate, uUnderwater, uTotality,
-                    uDanger, uFlash, uFade, uMemory, uVignette, uWetness, uPixelRatio;
+                    uDanger, uFlash, uFade, uMemory, uVignette, uWetness, uPixelRatio, uBright;
       uniform vec3 uFlashColor, uFadeColor, uMemoryColor;
 
       vec3 toS(vec3 c){ return pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2)); }
@@ -138,20 +139,26 @@ export function createPost(renderer, scene, camera, { pixelRatio = 1 } = {}) {
         // ── grade: cold shadows, warm lights, a little paper ──
         float l = luma(col);
         col = mix(vec3(l), col, uSaturate);
-        col = mix(col, vec3(0.05, 0.10, 0.13) + col * 0.9, (1.0 - smoothstep(0.05, 0.55, l)) * 0.32);
-        col += vec3(0.045, 0.028, 0.0) * smoothstep(0.6, 1.0, l);
-        col = mix(col, pow(col, vec3(1.12)), 0.5);
+        // bright mode lifts the darks instead of just blowing out the lights
+        float lift = uBright * 0.5;
+        col = mix(col, vec3(0.05, 0.10, 0.13) + col * 0.95, (1.0 - smoothstep(0.05, 0.55, l)) * 0.18);
+        col += lift * 0.05 * (1.0 - smoothstep(0.0, 0.7, l));
+        col += vec3(0.05, 0.032, 0.0) * smoothstep(0.6, 1.0, l);
+        col = mix(col, pow(col, vec3(1.12)), 0.25);
 
         vec2 puv = uv * (uResolution / (512.0 * uPixelRatio)) + vec2(uTime * 0.0035, -uTime * 0.0021);
         float paper = texture2D(uPaper, puv).r;
         float paper2 = texture2D(uPaper, puv * 0.37 + 0.31).r;
-        col *= mix(1.0, 0.86 + paper * 0.30, uGrain);
-        col += (paper2 - 0.5) * 0.035 * uGrain;
-        col *= 1.0 - (1.0 - paper) * 0.06 * uGrain;
+        float grain = uGrain * (1.0 - lift * 0.6);
+        col *= mix(1.0, 0.94 + paper * 0.22, grain);
+        col += (paper2 - 0.5) * 0.03 * grain;
+        col *= 1.0 - (1.0 - paper) * 0.05 * grain;
 
-        // the eclipse itself cools everything and steals the colour
-        col = mix(col, vec3(luma(col)) * vec3(0.72, 0.86, 1.05), uTotality * 0.42);
-        col *= mix(1.0, 0.88, uTotality * 0.6);
+        // the eclipse itself cools everything and steals some colour — but never
+        // so much that the player cannot see where they are going
+        float dark = uTotality * (1.0 - uBright * 0.55);
+        col = mix(col, vec3(luma(col)) * vec3(0.80, 0.90, 1.05), dark * 0.32);
+        col *= mix(1.0, 0.94, dark * 0.6);
 
         // restored memories bloom warm at the edges of the frame
         col += uMemoryColor * uMemory * 0.08;
@@ -162,11 +169,11 @@ export function createPost(renderer, scene, camera, { pixelRatio = 1 } = {}) {
         col = mix(col, vec3(0.5, 0.06, 0.12), uDanger * 0.12);
 
         // underwater tint + wobbling light
-        col = mix(col, col * vec3(0.32, 0.72, 0.78) + vec3(0.0, 0.035, 0.05), uUnderwater * 0.85);
+        col = mix(col, col * vec3(0.55, 0.85, 0.9) + vec3(0.01, 0.05, 0.07), uUnderwater * 0.8);
 
-        // vignette
-        float v = 1.0 - uVignette * pow(clamp(dgrad * 1.42, 0.0, 1.0), 2.3);
-        col *= mix(1.0, v, 1.0);
+        // vignette, softened by the brightness control
+        float v = 1.0 - uVignette * (1.0 - uBright * 0.65) * pow(clamp(dgrad * 1.42, 0.0, 1.0), 2.3);
+        col *= v;
 
         col = mix(col, uFlashColor, clamp(uFlash, 0.0, 1.0));
         col = mix(col, uFadeColor, clamp(uFade, 0.0, 1.0));
@@ -208,5 +215,10 @@ export function createPost(renderer, scene, camera, { pixelRatio = 1 } = {}) {
       composer.render(dt);
     },
     setRadius(r) { u.uRadius.value = r; },
+    /** 0 … 1; also scales tone-mapping exposure through the caller */
+    setBrightness(k) {
+      u.uBright.value = Math.max(0, Math.min(1, k));
+      u.uVignette.value = 0.18 + (1 - k) * 0.2;
+    },
   };
 }

@@ -35,7 +35,25 @@ generated procedurally while it loads — there is not a single binary asset in 
 | **E** (hold) | listen to a memory |
 | **F** | raise the lantern — oil burns, shadows recoil |
 | **TAB** | the journal: memories restored |
+| **H** | how to play (full reference) |
+| **G** | show/hide the field guide panel |
 | **ESC** | pause |
+
+## On screen while you play
+
+Two panels mean you never have to remember anything:
+
+- **The field guide** — bottom-left, on screen the whole time: what to do *right now*, the
+  full key list, and a brightness slider. Hide it with **G**; a chip brings it back.
+- **The quick-start card** — the first time you start playing, three numbered steps:
+  *walk to a light*, *hold **E***, *keep your lamp lit*. Space, click or the button closes it.
+
+**Visibility is treated as a feature, not a mood.** A tall shaft of bioluminescent light
+stands over every fragment you have not restored yet — visible from the far side of the
+city, fading out as you arrive — on top of the arrow-and-distance compass. And brightness
+is adjustable from the field guide, the quick-start card and the **H** reference, and is
+remembered between sessions: the default is already lifted well above the original grade,
+and the slider runs from "properly gloomy" up to "you can see everything".
 
 ## What the game tells you, and when
 

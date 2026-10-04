@@ -1,7 +1,11 @@
 // Does the game actually teach itself? This drives the opening lesson through a
 // whole session's worth of player states and asserts what it told the player, and when.
+import { readFileSync } from 'node:fs';
 import { createTutorial } from '../src/tutorial.js';
 import { HINTS, PROLOGUE, PREVIEW } from '../src/content.js';
+
+const ROOT = new URL('..', import.meta.url);
+const HTML = readFileSync(new URL('index.html', ROOT), 'utf8');
 
 const fails = [];
 const check = (label, fn) => {
@@ -43,6 +47,65 @@ check('every contextual hint has text', () => {
   assert(keys.length >= 7, `only ${keys.length} hints defined`);
   for (const k of keys) assert(HINTS[k].length > 12, `hint "${k}" is too short to be useful`);
   return keys.join(', ');
+});
+
+/* ── the panels themselves: is the game teachable from the screen? ── */
+check('the quick-start card walks through the three things you do', () => {
+  const qs = HTML.slice(HTML.indexOf('id="quickstart"'), HTML.indexOf('<!-- ───────────────────────────── HOW TO PLAY'));
+  assert(qs.length > 200, 'there is no quick-start panel in index.html');
+  const steps = (qs.match(/<li>/g) || []).length;
+  assert(steps >= 3, `the quick-start card has ${steps} steps, expected 3`);
+  for (const word of ['W A S D', 'hold E', 'lantern', 'TAB']) {
+    assert(qs.includes(word), `the quick-start card never mentions "${word}"`);
+  }
+  return `${steps} steps`;
+});
+
+check('the field guide panel is on screen while playing and lists the keys', () => {
+  const g = HTML.slice(HTML.indexOf('id="guide"'), HTML.indexOf('id="guideChip"'));
+  assert(g.length > 200, 'there is no field guide panel');
+  for (const k of ['W A S D', 'mouse', 'space', 'E', 'F', 'TAB', 'H']) {
+    assert(new RegExp(`<b>\\s*${k.replace(' ', '\\s*')}\\s*</b>`).test(g), `the field guide does not list "${k}"`);
+  }
+  assert(g.includes('guideObjective'), 'the field guide has no "what to do right now" line');
+  return 'keys + current objective';
+});
+
+check('brightness can be raised from three places and is remembered', () => {
+  const sliders = (HTML.match(/class="bright"/g) || []).length;
+  assert(sliders >= 3, `only ${sliders} brightness controls`);
+  const main = readFileSync(new URL('src/main.js', ROOT), 'utf8');
+  assert(/vaelune\.brightness/.test(main), 'the brightness setting is not remembered');
+  assert(/BRIGHTNESS_DEFAULT\s*=\s*1\.\d+/.test(main), 'the default brightness is not raised above 1');
+  return `${sliders} controls, default ${main.match(/BRIGHTNESS_DEFAULT = ([\d.]+)/)[1]}`;
+});
+
+check('every control the game listens for is written down somewhere the player sees it', () => {
+  const corpus = [HTML, ...Object.values(HINTS), PROLOGUE.flatMap((p) => p.lines)].join(' ');
+  const GAME = readFileSync(new URL('src/main.js', ROOT), 'utf8') + readFileSync(new URL('src/player.js', ROOT), 'utf8');
+  const codes = new Set();
+  for (const m of GAME.matchAll(/['"](Key[A-Z]|Space|ShiftLeft|ShiftRight|Tab|Escape|Arrow(?:Up|Down|Left|Right)|Enter)['"]/g)) codes.add(m[1]);
+  const DOC = {
+    KeyW: 'W A S D', KeyA: 'W A S D', KeyS: 'W A S D', KeyD: 'W A S D',
+    Space: 'space', ShiftLeft: 'shift', ShiftRight: 'shift', KeyC: 'C to dive',
+    KeyE: 'E', KeyF: 'F', Tab: 'TAB', KeyH: 'H', KeyG: 'G', Escape: 'ESC',
+    ArrowUp: 'arrow', ArrowDown: 'arrow', ArrowLeft: 'arrow', ArrowRight: 'arrow',
+    Enter: 'Enter',
+  };
+  const missing = [];
+  for (const code of codes) {
+    const needle = DOC[code];
+    if (!needle) { missing.push(`${code} (no label in the test)`); continue; }
+    if (!corpus.toLowerCase().includes(needle.toLowerCase())) missing.push(`${code} → "${needle}"`);
+  }
+  assert(missing.length === 0, 'undocumented controls: ' + missing.join(', '));
+  return `${codes.size} keys, all documented`;
+});
+
+check('the camera can be looked around without pointer lock', () => {
+  const player = readFileSync(new URL('src/player.js', ROOT), 'utf8');
+  assert(/mouse\.dragging/.test(player), 'there is no drag-to-look fallback');
+  assert(/started dragging|onMouseDown/.test(player), 'nothing starts a drag look');
 });
 
 /* ── the lesson itself ── */

@@ -63,7 +63,33 @@
 
   <div id="toast" class="hidden"></div>
 
-  <div id="hint">[tab] memories &nbsp;·&nbsp; [f] lantern &nbsp;·&nbsp; [esc] pause</div>
+  <!-- ── the field guide: always on screen, so nobody has to remember keys ── -->
+  <div id="guide">
+    <div class="guide-head">
+      <span class="guide-title">how to play</span>
+      <button id="guideHide" class="guide-x" title="hide the guide">hide&nbsp;(G)</button>
+    </div>
+    <div class="guide-now">
+      <span class="guide-now-kicker">right now</span>
+      <span id="guideObjective">follow the compass to the fragment</span>
+    </div>
+    <ul class="guide-keys">
+      <li><b>W A S D</b><span>walk, wade, swim</span></li>
+      <li><b>mouse</b><span>look &mdash; click to capture, or drag</span></li>
+      <li><b>space</b><span>step up &middot; rise &middot; climb out of water</span></li>
+      <li><b>E</b><span><em>hold</em> beside a light to listen</span></li>
+      <li><b>F</b><span>lantern &mdash; shadows keep away from it</span></li>
+      <li><b>TAB</b><span>journal of what you remember</span></li>
+      <li><b>H</b><span>the full how-to-play panel</span></li>
+    </ul>
+    <div class="guide-bright">
+      <label for="brightGuide">brightness</label>
+      <input id="brightGuide" class="bright" type="range" min="0.7" max="1.8" step="0.05" value="1.15" />
+    </div>
+  </div>
+  <button id="guideChip" class="hidden">[G] show the guide</button>
+
+  <div id="hint">[tab] memories &nbsp;·&nbsp; [f] lantern &nbsp;·&nbsp; [h] how to play &nbsp;·&nbsp; [esc] pause</div>
 </div>
 
 <!-- ───────────────────────────── JOURNAL ───────────────────────────── -->
@@ -121,6 +147,50 @@
   </div>
 </div>
 
+<!-- ───────────────────────────── QUICK START ───────────────────────────── -->
+<div id="quickstart" class="hidden">
+  <div class="qs-inner">
+    <div class="eyebrow">three things, and then the city is yours</div>
+    <h2>How to play</h2>
+    <ol class="qs-steps">
+      <li>
+        <span class="qs-n">1</span>
+        <div>
+          <h3>Walk to a light</h3>
+          <p><b>W A S D</b> to walk, wade and swim &mdash; water slows you, deep water makes you
+          swim. Move the mouse to look (click first to capture it, or drag). Follow the
+          compass at the top of the screen, and the <b>shaft of light</b> standing over the
+          fragment you are looking for.</p>
+        </div>
+      </li>
+      <li>
+        <span class="qs-n">2</span>
+        <div>
+          <h3>Hold E to listen</h3>
+          <p>Stand in the glow of a fragment and <b>hold E</b> until the ring around your
+          cursor fills. One of Vaelune's people will remember part of the last day out loud
+          &mdash; and the city changes around you as they do.</p>
+        </div>
+      </li>
+      <li>
+        <span class="qs-n">3</span>
+        <div>
+          <h3>Keep your lamp lit</h3>
+          <p><b>F</b> raises the lantern: it burns oil, it lights the way, and nothing dark
+          will come near it. Restoring a memory refills it. <b>TAB</b> is your journal,
+          <b>H</b> brings this panel back, <b>ESC</b> pauses.</p>
+        </div>
+      </li>
+    </ol>
+    <div class="qs-bright">
+      <label for="brightQuick">brightness</label>
+      <input id="brightQuick" class="bright" type="range" min="0.7" max="1.8" step="0.05" value="1.15" />
+      <span class="qs-bright-hint">too dark? drag this right</span>
+    </div>
+    <button id="qsGo">Got it &mdash; let me play</button>
+  </div>
+</div>
+
 <!-- ───────────────────────────── HOW TO PLAY ───────────────────────────── -->
 <div id="help" class="hidden">
   <div class="help-inner">
@@ -152,6 +222,11 @@
         <p>Every fragment you restore <b>raises the tide</b>. Routes you walked dry at the start
         will be chest-deep by the end. The city goes under at totality.</p>
       </section>
+    </div>
+    <div class="help-bright">
+      <label for="brightHelp">brightness</label>
+      <input id="brightHelp" class="bright" type="range" min="0.7" max="1.8" step="0.05" value="1.15" />
+      <span>the eclipse is meant to be dim &mdash; it is not meant to be unreadable</span>
     </div>
     <p class="help-close">press <b>H</b> or <b>ESC</b> to go back</p>
   </div>

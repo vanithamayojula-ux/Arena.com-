@@ -8,17 +8,17 @@ export function createWater(scene, { level = 0 } = {}) {
   const uniforms = {
     uTime: { value: 0 },
     uLevel: { value: level },
-    uDeep: { value: new THREE.Color('#08161d') },
-    uShallow: { value: new THREE.Color('#16414a') },
-    uGlow: { value: new THREE.Color('#5ff0cf') },
+    uDeep: { value: new THREE.Color('#0e2531') },
+    uShallow: { value: new THREE.Color('#22606c') },
+    uGlow: { value: new THREE.Color('#7ff7dc') },
     uBlood: { value: new THREE.Color('#ff5f7e') },   // dark memories stain the water
     uBloodAmt: { value: 0.0 },
     uMemories: { value: 0 },
     uSunDir: { value: new THREE.Vector3(-0.42, 0.2, -0.78).normalize() },
     uRipples: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector4(0, 0, 99, 0)) },
-    uFogColor: { value: new THREE.Color('#14303a') },
-    uFogNear: { value: 14 },
-    uFogFar: { value: 155 },
+    uFogColor: { value: new THREE.Color('#1d4450') },
+    uFogNear: { value: 16 },
+    uFogFar: { value: 205 },
     uCamPos: { value: new THREE.Vector3() },
     uFogMask: { value: 1 },
   };
@@ -88,11 +88,11 @@ export function createWater(scene, { level = 0 } = {}) {
 
         // colour: deep in the middle of the basin, greener where the city rises
         vec3 col = mix(uDeep, uShallow, clamp(0.35 + (1.0 - vWorld.y * 0.4) * 0.2, 0.0, 1.0));
-        col += uGlow * (0.035 + uMemories * 0.016);
+        col += uGlow * (0.06 + uMemories * 0.02);
 
         // bioluminescent algae stirred by movement
-        float algae = smoothstep(0.42, 0.95, fbm(p * 0.16 + vec2(uTime * 0.03, -uTime * 0.02)));
-        col += uGlow * algae * (0.09 + 0.05 * uMemories);
+        float algae = smoothstep(0.34, 0.92, fbm(p * 0.16 + vec2(uTime * 0.03, -uTime * 0.02)));
+        col += uGlow * algae * (0.16 + 0.06 * uMemories);
 
         // sun / moon reflection
         vec3 r = reflect(-view, nrm);
@@ -110,7 +110,7 @@ export function createWater(scene, { level = 0 } = {}) {
           float front = smoothstep(0.0, 1.0, 1.0 - abs(d - age * 2.4) * 0.55);
           rip += front * exp(-age * 0.9) * R.w;
         }
-        col += uGlow * rip * 0.55;
+        col += uGlow * rip * 0.75;
 
         // the player's own wake
         float wake = exp(-length(p - uCamPos.xz) * 0.22) * 0.10;
@@ -127,7 +127,7 @@ export function createWater(scene, { level = 0 } = {}) {
         fog = pow(fog, 0.8) * uFogMask;
         col = mix(col, uFogColor, fog);
 
-        gl_FragColor = vec4(col, 0.93);
+        gl_FragColor = vec4(col, 0.95);
       }`,
   });
 

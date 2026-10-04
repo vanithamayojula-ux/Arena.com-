@@ -34,6 +34,11 @@ export function createUI(handlers = {}) {
   const proDots = $('proDots');
   const help = $('help');
   const start = $('start');
+  const guide = $('guide');
+  const guideChip = $('guideChip');
+  const guideObjective = $('guideObjective');
+  const quickstart = $('quickstart');
+  const brightSliders = Array.from(document.querySelectorAll('input.bright'));
   const pause = $('pause');
   const finale = $('finale');
   const finaleTitle = $('finaleTitle');
@@ -45,7 +50,7 @@ export function createUI(handlers = {}) {
   let typeTimer = null;
   let goalTimer = null;
   let ctxTimer = null;
-  const last = { obj: '', objDist: '', prompt: '', progress: -1, stats: {} };
+  const last = { obj: '', objDist: '', prompt: '', progress: -1, stats: {}, guideObjective: '' };
   const ringLen = 2 * Math.PI * 17;
 
   promptRing.style.strokeDasharray = ringLen;
@@ -55,6 +60,37 @@ export function createUI(handlers = {}) {
     els: { hud, start, pause, journal, finale, prologue, help, goal, context },
 
     loadingDone() { loading.classList.add('hidden'); },
+
+    /* ── the field guide, always on screen while you play ── */
+    setGuideObjective(text) {
+      if (last.guideObjective === text) return;
+      last.guideObjective = text;
+      guideObjective.textContent = text;
+    },
+    showGuide(on) {
+      guide.classList.toggle('gone', !on);
+      guideChip.classList.toggle('hidden', on);
+      try { localStorage.setItem('vaelune.guidePanel', on ? 'on' : 'off'); } catch (_e) { /* ignore */ }
+    },
+    guideVisible() { return !guide.classList.contains('gone'); },
+    toggleGuide() {
+      const on = !ui.guideVisible();
+      ui.showGuide(on);
+      return on;
+    },
+
+    /* ── the quick-start card: what to do, in order ── */
+    showQuickStart() { quickstart.classList.remove('hidden'); },
+    hideQuickStart() { quickstart.classList.add('hidden'); },
+    quickStartOpen() { return !quickstart.classList.contains('hidden'); },
+
+    /* ── one brightness control, mirrored in three places ── */
+    setBrightnessValue(v) {
+      for (const el of brightSliders) if (parseFloat(el.value) !== v) el.value = String(v);
+    },
+    onBrightness(fn) {
+      for (const el of brightSliders) el.addEventListener('input', () => fn(parseFloat(el.value)));
+    },
 
     /* ── prologue: three panels that say what this is and what you do ── */
     showPrologue(panels, index) {
@@ -260,6 +296,9 @@ export function createUI(handlers = {}) {
   };
 
   $('beginBtn').addEventListener('click', () => handlers.onBegin?.());
+  $('qsGo').addEventListener('click', () => handlers.onQuickStartDone?.());
+  $('guideHide').addEventListener('click', (e) => { e.stopPropagation(); ui.showGuide(false); });
+  guideChip.addEventListener('click', () => ui.showGuide(true));
   // the whole panel is clickable, so the button must not also bubble into it
   $('proNext').addEventListener('click', (e) => { e.stopPropagation(); handlers.onPrologueNext?.(); });
   $('proSkip').addEventListener('click', (e) => { e.stopPropagation(); handlers.onPrologueSkip?.(); });

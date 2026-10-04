@@ -16,8 +16,8 @@ export function createSky(scene, { seed = 4 } = {}) {
       uSunDir: { value: sunDir.clone() },
       uCoverage: { value: 0.35 },   // 0 = open sun, 1 = total eclipse
       uTotality: { value: 0.2 },    // darkness of the world
-      uZenith: { value: new THREE.Color('#0b1622') },
-      uHorizon: { value: new THREE.Color('#22303c') },
+      uZenith: { value: new THREE.Color('#152a3c') },
+      uHorizon: { value: new THREE.Color('#33505f') },
       uGlowColor: { value: new THREE.Color('#6ff0d4') },
       uSunColor: { value: new THREE.Color('#ffe7c2') },
       uNoise: { value: paperTexture(seed + 3, 512) },
@@ -49,11 +49,11 @@ export function createSky(scene, { seed = 4 } = {}) {
 
         // slow breathing of the sky, like wet paper drying
         float grain = texture2D(uNoise, dir.xz * 1.6 + uTime * 0.004).r;
-        col *= 0.86 + grain * 0.32;
+        col *= 0.92 + grain * 0.30;
 
         // bioluminescent horizon: the city's glow leaking up into the weather
         float horiz = exp(-max(dir.y, 0.0) * 7.5);
-        col += uGlowColor * horiz * (0.10 + 0.5 * uTotality) * (0.6 + grain * 0.8);
+        col += uGlowColor * horiz * (0.20 + 0.6 * uTotality) * (0.6 + grain * 0.8);
 
         // the sun, being eaten
         float ang = acos(clamp(dot(dir, normalize(uSunDir)), -1.0, 1.0));
@@ -73,7 +73,7 @@ export function createSky(scene, { seed = 4 } = {}) {
 
         col = col * mix(1.0, 0.35, uTotality * (1.0 - exp(-ang * 3.0)));  // darken around the sun
         col += sunCol * inner * 0.9;
-        col = mix(col, vec3(0.008, 0.012, 0.02), disc * 0.985);
+        col = mix(col, vec3(0.03, 0.045, 0.07), disc * 0.965);
         col += cor + uSunColor * halo;
 
         // a thin bright rim at the edge of the moon
@@ -81,7 +81,7 @@ export function createSky(scene, { seed = 4 } = {}) {
         col += uSunColor * rim;
 
         // deep-water grime at the very bottom of the sky
-        col = mix(col, vec3(0.02, 0.045, 0.055), smoothstep(0.05, -0.25, dir.y) * 0.85);
+        col = mix(col, vec3(0.06, 0.11, 0.13), smoothstep(0.05, -0.25, dir.y) * 0.80);
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -194,10 +194,10 @@ export function createSky(scene, { seed = 4 } = {}) {
   moon.lookAt(0, 0, 0);
   group.add(moon);
 
-  const ZENITH_DARK = new THREE.Color('#0b1622');
-  const ZENITH_LIT = new THREE.Color('#1a2636');
-  const HORIZON_DARK = new THREE.Color('#22303c');
-  const HORIZON_LIT = new THREE.Color('#3a4657');
+  const ZENITH_DARK = new THREE.Color('#152a3c');
+  const ZENITH_LIT = new THREE.Color('#2b4358');
+  const HORIZON_DARK = new THREE.Color('#33505f');
+  const HORIZON_LIT = new THREE.Color('#5b7488');
   const state = { totality: 0, coverage: 0.35 };
   const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
     map: glowSprite(7, 256, 40, 1), blending: THREE.AdditiveBlending, transparent: true,

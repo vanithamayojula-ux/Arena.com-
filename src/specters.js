@@ -81,8 +81,39 @@ export function createSpecters(scene, { city, audio, memories, onRestore } = {})
     }));
     glow.scale.setScalar(4.2);
     shardGroup.add(glow);
-    const light = new THREE.PointLight(accent.getHex(), 6, 16, 2);
+    const light = new THREE.PointLight(accent.getHex(), 9, 20, 2);
     shardGroup.add(light);
+
+    // A shaft of light standing over the fragment: visible across the whole city,
+    // so "where do I go" is never a guess.
+    const beamH = 46;
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.55, 2.1, beamH, 14, 1, true),
+      new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        uniforms: {
+          uTime: { value: 0 }, uOpacity: { value: 0.5 },
+          uColor: { value: accent.clone() },
+        },
+        vertexShader: /* glsl */`
+          varying vec2 vUv;
+          void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: /* glsl */`
+          precision highp float;
+          uniform float uTime, uOpacity; uniform vec3 uColor;
+          varying vec2 vUv;
+          void main(){
+            float up = vUv.y;
+            float a = pow(1.0 - up, 1.5) * 0.85 + 0.15;
+            a *= 0.55 + 0.45 * sin(uTime * 1.1 + up * 6.0);
+            a *= smoothstep(0.0, 0.12, up);            // fade out at the very top
+            gl_FragColor = vec4(uColor, a * uOpacity * 0.42);
+          }`,
+      })
+    );
+    beam.position.set(pos.x, beamH / 2 - 2, pos.z);
+    group.add(beam);
 
     /* ── the one who remembers ── */
     const wraith = new THREE.Group();
@@ -160,7 +191,7 @@ export function createSpecters(scene, { city, audio, memories, onRestore } = {})
     shards.push({
       id: mem.id, memory: mem, accent,
       position: pos.clone(),
-      group: shardGroup, stone, shell, glow, light,
+      group: shardGroup, stone, shell, glow, light, beam,
       wraith, shroudMat, eyes,
       echoes, echoMat,
       listening: false, progress: 0, restored: false,
@@ -221,8 +252,16 @@ export function createSpecters(scene, { city, audio, memories, onRestore } = {})
       const near = cameraPos ? Math.max(0, 1 - tmp.copy(s.position).sub(cameraPos).length() / 55) : 0;
       const pulse = 0.6 + Math.sin(time * 1.6 + s.bob) * 0.18 + near * 0.5;
       const listeningBoost = s.listening ? 1.4 : 0;
-      s.glow.material.opacity = 0.35 + pulse * 0.4 + listeningBoost * 0.4;
-      s.glow.scale.setScalar(3.6 + pulse * 1.4 + listeningBoost);
+      s.glow.material.opacity = 0.45 + pulse * 0.45 + listeningBoost * 0.4;
+      s.glow.scale.setScalar(4.4 + pulse * 1.6 + listeningBoost);
+
+      // the beacon reads from far away and gets out of the way when you arrive
+      const distToPlayer = cameraPos ? tmp.copy(s.position).sub(cameraPos).length() : 40;
+      const beamWant = s.restored ? 0 : Math.min(1, Math.max(0, (distToPlayer - 7) / 22));
+      const beamNow = s.beam.material.uniforms.uOpacity.value;
+      s.beam.material.uniforms.uOpacity.value = beamNow + (beamWant * 0.75 - beamNow) * Math.min(1, dt * 1.4);
+      s.beam.material.uniforms.uTime.value = time;
+      s.beam.visible = s.beam.material.uniforms.uOpacity.value > 0.01;
 
       if (s.restored) {
         s.ascend += dt;

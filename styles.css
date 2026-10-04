@@ -231,3 +231,94 @@ button.ghost:hover{opacity:1; background:rgba(255,255,255,.05); box-shadow:none;
   #goal{top:76px; padding:10px 14px;}
   #context{bottom:96px; max-width:92vw;}
 }
+
+/* ══════════════ the field guide: always on screen while you play ══════════════ */
+#guide{
+  position:absolute; left:22px; bottom:104px; width:264px;
+  background:linear-gradient(180deg, rgba(5,14,17,.72), rgba(4,10,12,.62));
+  border:1px solid rgba(127,240,216,.18); border-left:2px solid rgba(127,240,216,.55);
+  padding:13px 14px 12px; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  box-shadow:0 10px 40px rgba(0,0,0,.5); text-shadow:0 1px 8px rgba(0,0,0,.8);
+  transition:opacity .4s ease, transform .4s ease;
+}
+#guide.gone{opacity:0; transform:translateX(-14px); pointer-events:none;}
+.guide-head{display:flex; align-items:baseline; justify-content:space-between; gap:8px;}
+.guide-title{font-size:9px; letter-spacing:.36em; text-transform:uppercase; color:var(--bio); opacity:.9;}
+.guide-x{
+  background:none; border:0; padding:0; color:var(--palepaint); opacity:.42;
+  font-size:9px; letter-spacing:.16em; text-transform:uppercase; cursor:pointer;
+}
+.guide-x:hover{opacity:.85; box-shadow:none; transform:none;}
+.guide-now{margin-top:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.08);}
+.guide-now-kicker{display:block; font-size:8px; letter-spacing:.34em; text-transform:uppercase; opacity:.42;}
+#guideObjective{display:block; font-family:var(--serif); font-size:14px; line-height:1.45; margin-top:4px; color:#eafaf5;}
+.guide-keys{list-style:none; margin-top:9px;}
+.guide-keys li{display:flex; gap:9px; align-items:baseline; padding:3.5px 0; font-size:11.5px; opacity:.82;}
+.guide-keys b{
+  flex:0 0 58px; font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--bio); font-weight:600;
+}
+.guide-keys em{color:#fff2d8; font-style:normal; border-bottom:1px dotted rgba(255,214,150,.6);}
+.guide-bright{display:flex; align-items:center; gap:9px; margin-top:11px; padding-top:10px; border-top:1px solid rgba(255,255,255,.08);}
+.guide-bright label{font-size:8.5px; letter-spacing:.26em; text-transform:uppercase; opacity:.5; white-space:nowrap;}
+input.bright{
+  -webkit-appearance:none; appearance:none; flex:1; height:3px; background:rgba(255,255,255,.18);
+  outline:none; cursor:pointer;
+}
+input.bright::-webkit-slider-thumb{
+  -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+  background:var(--bio); box-shadow:0 0 10px rgba(127,240,216,.7); cursor:pointer;
+}
+input.bright::-moz-range-thumb{width:13px; height:13px; border:0; border-radius:50%; background:var(--bio); cursor:pointer;}
+
+#guideChip{
+  position:absolute; left:22px; bottom:104px; padding:8px 13px;
+  background:rgba(4,12,14,.6); border:1px solid rgba(127,240,216,.2); color:var(--bio);
+  font-size:9px; letter-spacing:.24em; text-transform:uppercase; cursor:pointer;
+  pointer-events:auto;
+}
+#guideChip:hover{background:rgba(127,240,216,.1); box-shadow:none; transform:none;}
+
+/* ══════════════ quick start ══════════════ */
+#quickstart{
+  position:fixed; inset:0; z-index:39; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 100% at 50% 40%, rgba(7,18,22,.7), rgba(2,5,7,.94));
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); overflow:auto;
+}
+.qs-inner{max-width:760px; padding:44px 40px;}
+.qs-inner h2{font-family:var(--serif); font-weight:400; font-size:clamp(28px,4vw,44px); letter-spacing:.06em; margin-top:10px;}
+.qs-steps{list-style:none; margin-top:28px;}
+.qs-steps li{display:flex; gap:20px; padding:18px 0; border-top:1px solid rgba(255,255,255,.09);}
+.qs-n{
+  flex:0 0 34px; height:34px; border-radius:50%; border:1px solid rgba(127,240,216,.45);
+  color:var(--bio); display:flex; align-items:center; justify-content:center;
+  font-family:var(--serif); font-size:16px;
+}
+.qs-steps h3{font-family:var(--serif); font-weight:400; font-size:20px; letter-spacing:.03em; margin-bottom:7px;}
+.qs-steps p{font-family:var(--serif); font-size:14.5px; line-height:1.75; opacity:.76; max-width:62ch;}
+.qs-steps b{color:var(--bio); font-family:var(--sans); font-size:12px; letter-spacing:.1em;}
+.qs-bright{display:flex; align-items:center; gap:16px; margin:30px 0 26px; padding-top:22px; border-top:1px solid rgba(255,255,255,.09);}
+.qs-bright label{font-size:9px; letter-spacing:.3em; text-transform:uppercase; opacity:.55;}
+.qs-bright input.bright{max-width:260px;}
+.qs-bright-hint{font-size:10px; letter-spacing:.16em; text-transform:uppercase; opacity:.4;}
+#qsGo{display:block; margin:0 auto;}
+.help-bright{display:flex; align-items:center; gap:16px; margin-top:40px; padding-top:22px; border-top:1px solid rgba(255,255,255,.09);}
+.help-bright label{font-size:9px; letter-spacing:.3em; text-transform:uppercase; opacity:.55;}
+.help-bright input.bright{max-width:240px;}
+.help-bright span{font-size:10.5px; letter-spacing:.1em; opacity:.4;}
+
+/* ══════════════ bigger, more legible HUD ══════════════ */
+#objective .obj-label{font-size:17px; letter-spacing:.2em;}
+#objective .obj-arrow{font-size:14px;}
+#objective .obj-dist{font-size:11.5px; letter-spacing:.26em; opacity:.6;}
+#objective{background:rgba(4,12,14,.42); padding:8px 20px 10px; border:1px solid rgba(255,255,255,.06);}
+#prompt .prompt-text{font-size:19px;}
+#prompt .prompt-key{font-size:10px;}
+#subtitle .sub-line{font-size:clamp(16px,1.7vw,22px);}
+#subtitle .sub-who{font-size:11px;}
+.stat-key{font-size:9.5px; width:60px; opacity:.65;}
+#hint{font-size:9.5px; opacity:.34;}
+@media (max-width:900px){
+  #guide{display:none;}
+  #guideChip{display:none;}
+}
