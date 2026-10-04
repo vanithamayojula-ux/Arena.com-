@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+*.log
+
+# generated previews (regenerate with: node tools/render-preview.mjs)
+art/

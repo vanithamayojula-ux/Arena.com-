@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>APEX — The Cretaceous Chase</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d2b1a'/%3E%3Cpath d='M6 22c3-1 5-3 7-6 2-3 5-5 9-5 3 0 4 2 4 4 0 3-3 4-5 4h-2l-1 3h-2l1-3c-3 0-5-1-7-3-2 2-4 3-4 3z' fill='%23e0b64a'/%3E%3Ccircle cx='22' cy='14' r='1.4' fill='%231d2b1a'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game" width="960" height="600" aria-label="Game canvas"></canvas>
+
+  <!-- Heads-up display -->
+  <div id="hud" class="hidden">
+    <div class="hud-row hud-top">
+      <div class="panel stat-panel">
+        <div class="stat">
+          <span class="label">Score</span>
+          <span class="value" id="hud-score">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Combo</span>
+          <span class="value accent" id="hud-combo">x1</span>
+        </div>
+        <div class="stat">
+          <span class="label">Wave</span>
+          <span class="value" id="hud-wave">1</span>
+        </div>
+      </div>
+
+      <div class="panel quota-panel">
+        <div class="quota-line">
+          <span id="hud-quota-label">Hunt quota</span>
+          <span id="hud-quota">0 / 6</span>
+        </div>
+        <div class="bar quota-bar"><i id="hud-quota-fill"></i></div>
+        <div class="timer-line"><span id="hud-timer">45s</span></div>
+      </div>
+
+      <div class="panel map-panel">
+        <canvas id="minimap" width="150" height="112"></canvas>
+      </div>
+    </div>
+
+    <div class="hud-row hud-bottom">
+      <div class="panel meters">
+        <div class="meter">
+          <span class="meter-label">Stamina</span>
+          <div class="bar"><i id="hud-stamina"></i></div>
+        </div>
+        <div class="meter">
+          <span class="meter-label">Health</span>
+          <div class="bar health"><i id="hud-health"></i></div>
+        </div>
+        <div class="meter">
+          <span class="meter-label">Hunger</span>
+          <div class="bar hunger"><i id="hud-hunger"></i></div>
+        </div>
+      </div>
+      <div class="panel hint" id="hud-hint">WASD move &middot; Shift sprint &middot; Space bite</div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <!-- Title / menu overlay -->
+  <div id="menu" class="overlay">
+    <div class="overlay-inner">
+      <h1 class="title"><span class="title-main">APEX</span><span class="title-sub">The Cretaceous Chase</span></h1>
+      <p class="blurb">
+        Sixty-six million years ago, being the biggest thing in the valley was not enough —
+        you still had to <em>catch</em> dinner. Run the herds down before your hunger runs you down.
+      </p>
+
+      <div class="controls-grid">
+        <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>&#8592;&#8593;&#8595;&#8594;</kbd><span>Move</span></div>
+        <div><kbd>Shift</kbd><span>Sprint (burns stamina)</span></div>
+        <div><kbd>Space</kbd> / <kbd>Click</kbd><span>Bite</span></div>
+        <div><kbd>Mouse</kbd><span>Aim your jaws</span></div>
+        <div><kbd>P</kbd><span>Pause</span></div>
+        <div><kbd>M</kbd><span>Mute</span></div>
+      </div>
+
+      <div class="beasts">
+        <div class="beast"><b class="b-gazelle"></b><span><strong>Gazelles &amp; Parasaurs</strong> — flee in herds and tire after a hard sprint. Chase them until they blow.</span></div>
+        <div class="beast"><b class="b-trike"></b><span><strong>Triceratops</strong> — takes three bites and will gore you if you get greedy.</span></div>
+        <div class="beast"><b class="b-raptor"></b><span><strong>Raptor pack</strong> — steals your kills and bites back.</span></div>
+      </div>
+
+      <button id="btn-start" class="btn primary">Begin the hunt</button>
+      <p class="fineprint">Best played with sound on.</p>
+    </div>
+  </div>
+
+  <!-- Pause overlay -->
+  <div id="pause" class="overlay hidden">
+    <div class="overlay-inner compact">
+      <h2 class="title small">Paused</h2>
+      <button id="btn-resume" class="btn primary">Resume</button>
+      <button id="btn-quit" class="btn">Give up the valley</button>
+    </div>
+  </div>
+
+  <!-- Game over overlay -->
+  <div id="gameover" class="overlay hidden">
+    <div class="overlay-inner compact">
+      <h2 class="title small" id="go-title">The valley wins</h2>
+      <p class="go-reason" id="go-reason">Your hunger got the better of you.</p>
+      <div class="go-stats">
+        <div><span class="label">Score</span><span class="value" id="go-score">0</span></div>
+        <div><span class="label">Best combo</span><span class="value" id="go-combo">x1</span></div>
+        <div><span class="label">Prey caught</span><span class="value" id="go-caught">0</span></div>
+        <div><span class="label">Wave</span><span class="value" id="go-wave">1</span></div>
+      </div>
+      <button id="btn-again" class="btn primary">Hunt again</button>
+    </div>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="touch" class="hidden">
+    <div id="stick" class="stick"><div id="stick-knob" class="knob"></div></div>
+    <button id="btn-bite" class="touch-btn">BITE</button>
+    <button id="btn-sprint" class="touch-btn sprint">RUN</button>
+  </div>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
