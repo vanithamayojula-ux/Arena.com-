@@ -11,9 +11,14 @@ import { createPlayer } from './player.js';
 import { createPost } from './post.js';
 import { createUI } from './ui.js';
 import { Soundscape } from './audio.js';
-import { MEMORIES, CITY as CFG, INTRO, FINALE } from './content.js';
+import { createTutorial } from './tutorial.js';
+import { MEMORIES, CITY as CFG, PREVIEW, PROLOGUE, HINTS, FINALE } from './content.js';
 
-const STATE = { LOADING: 'loading', START: 'start', PLAY: 'play', PAUSED: 'paused', JOURNAL: 'journal', REVERIE: 'reverie', FINALE: 'finale', EPILOGUE: 'epilogue' };
+const STATE = {
+  LOADING: 'loading', START: 'start', PROLOGUE: 'prologue', PLAY: 'play',
+  PAUSED: 'paused', JOURNAL: 'journal', HELP: 'help', REVERIE: 'reverie',
+  FINALE: 'finale', EPILOGUE: 'epilogue',
+};
 
 /* ────────────────────────────── renderer / scene ────────────────────────────── */
 
@@ -110,6 +115,7 @@ let danger = 0;
 let memoryGlow = 0;
 let memoryGlowColor = new THREE.Color('#8ffbe0');
 const restored = new Set();
+let prologueIndex = 0;
 let channel = null;          // { shard, t, lineIndex }
 let reverieTimer = 0;
 let finaleTimer = 0;
@@ -119,7 +125,9 @@ let averageFrame = 0;
 const camFwd = new THREE.Vector3();
 
 const ui = createUI({
-  onBegin: () => begin(),
+  onBegin: () => beginPrologue(),
+  onPrologueNext: () => advancePrologue(),
+  onPrologueSkip: () => startPlaying(true),
   onResume: () => resume(),
   onRemain: () => {
     // stay in the memory: the city drowns around you and you keep walking it
@@ -156,6 +164,8 @@ function updateEclipse(dt) {
 
 function beginChannel(shard) {
   channel = { shard, t: 0, lineIndex: -1 };
+  ui.hideGoal();
+  ui.clearHint();
   specters.setListening(shard, true);
   audio.memorySting(shard.memory.kind);
   audio.whisper(shard.memory.speaker);
@@ -248,6 +258,25 @@ function enterReverie(mem) {
 function checkFinale() {
   if (restored.size < MEMORIES.length) return;
   finaleTimer = 0.1;
+}
+
+/* ────────────────────────────── the opening lesson ────────────────────────────── */
+
+const tutorial = createTutorial({
+  setGoal: (text, kicker) => ui.setGoal(text, kicker),
+  hint: (key, text, ms) => ui.hint(key, text, ms),
+  say: (who, line) => ui.say(who, line),
+});
+
+function updateTutorial(dt) {
+  if (state !== STATE.PLAY) return;
+  const tgt = nextTarget();
+  tutorial.update(dt, {
+    player: player.state,
+    nearest: tgt ? { mem: tgt.mem, dist: tgt.dist, at: tgt.at } : null,
+    restoredSize: restored.size,
+    shadows: shadows.count,
+  });
 }
 
 /* ────────────────────────────── objective ────────────────────────────── */
@@ -367,6 +396,9 @@ function frame() {
   // ── specters ──
   specters.update(dt, elapsed, camera.position, camera.position);
 
+  // ── the opening lesson ──
+  updateTutorial(dt);
+
   // ── objective + HUD ──
   const tgt = nextTarget();
   if (tgt && state !== STATE.FINALE && state !== STATE.EPILOGUE) {
@@ -469,7 +501,38 @@ function to2(cam, target) {
 
 const keys = new Set();
 window.addEventListener('keydown', (e) => {
+  // the prologue advances on space, like a page — and must not queue up a jump
+  if (state === STATE.PROLOGUE) {
+    if (e.code === 'Space' || e.code === 'Enter' || e.code === 'Escape') {
+      e.preventDefault();
+      advancePrologue();
+    }
+    return;
+  }
+
   keys.add(e.code);
+
+  // how to play, any time
+  if (e.code === 'KeyH' && (state === STATE.PLAY || state === STATE.HELP)) {
+    const open = ui.toggleHelp();
+    if (open) {
+      state = STATE.HELP;
+      player.freeze(true);
+      document.exitPointerLock?.();
+    } else {
+      state = STATE.PLAY;
+      player.freeze(false);
+      lockPointer();
+    }
+    return;
+  }
+  if (state === STATE.HELP && e.code === 'Escape') {
+    ui.toggleHelp(false);
+    state = STATE.PAUSED;
+    ui.showPause(`${restored.size} of ${MEMORIES.length} fragments restored`);
+    return;
+  }
+
   if (e.code === 'Tab') {
     e.preventDefault();
     if (state === STATE.PLAY || state === STATE.JOURNAL) {
@@ -482,20 +545,44 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => keys.delete(e.code));
 
-async function begin() {
+function beginPrologue() {
   ui.hideStart();
+  ui.loadingDone();
+  prologueIndex = 0;
+  state = STATE.PROLOGUE;
+  player.freeze(true);
+  player.setEnabled(true);
+  ui.showPrologue(PROLOGUE, prologueIndex);
+  audio.start().then(() => {
+    specters.attachAudio();
+    audio.setTide(tide);
+  });
+}
+
+function advancePrologue() {
+  if (state !== STATE.PROLOGUE) return;
+  prologueIndex++;
+  if (prologueIndex >= PROLOGUE.length) { startPlaying(false); return; }
+  ui.showPrologue(PROLOGUE, prologueIndex);
+  audio.chime(300 + prologueIndex * 90, 0.05);
+}
+
+async function startPlaying(skipped) {
+  ui.hidePrologue();
   ui.loadingDone();
   state = STATE.PLAY;
   player.setEnabled(true);
+  player.freeze(false);
   lockPointer();
-  await audio.start();
-  specters.attachAudio();
-  audio.setTide(tide);
+  if (skipped) ui.say('the Archivist', 'Six fragments. Find the light, stand close, hold E.', { instant: false });
+  else audio.memorySting('still');
+  audio.chime(520, 0.06);
+
+  // the two opening goals, stated plainly, then the first control hint
+  tutorial.start();
   setTimeout(() => {
-    ui.toast(INTRO.title, 5200);
-    ui.say('the Archivist', INTRO.body.split('\n').filter(Boolean).join(' '), { instant: false });
-  }, 700);
-  setTimeout(() => ui.toast('Hold E beside anyone who is still here. The city answers with its own lights.', 8000), 9000);
+    if (state === STATE.PLAY && tutorial.state.step === 0) ui.hint('W A S D', HINTS.move, 9000);
+  }, 3000);
 }
 
 let pointerWarned = false;
@@ -548,6 +635,27 @@ window.addEventListener('resize', () => {
 });
 
 /* ────────────────────────────── boot ────────────────────────────── */
+
+// the title screen copy lives in content.js with the rest of the writing
+(function paintStartScreen() {
+  const startEl = document.getElementById('start');
+  if (!startEl) return;
+  const eyebrow = startEl.querySelector('.eyebrow');
+  const tagline = startEl.querySelector('.tagline');
+  const premise = startEl.querySelector('.premise');
+  const cta = document.getElementById('beginBtn');
+  if (eyebrow) eyebrow.textContent = PREVIEW.eyebrow;
+  if (tagline) tagline.innerHTML = PREVIEW.tagline.replace('\n', '<br/>');
+  if (cta) cta.textContent = PREVIEW.cta;
+  if (premise) {
+    premise.innerHTML = '';
+    for (const para of PREVIEW.premise) {
+      const el = document.createElement('p');
+      el.textContent = para;
+      premise.appendChild(el);
+    }
+  }
+})();
 
 sky.setPixelRatio(DPR);
 specters.setPixelRatio(DPR);

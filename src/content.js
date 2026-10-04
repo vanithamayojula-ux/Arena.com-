@@ -144,13 +144,64 @@ export const MEMORIES = [
 
 export const memoryById = (id) => MEMORIES.find((m) => m.id === id);
 
-export const INTRO = {
-  title: 'The eclipse thins the water',
-  body:
-    'Vaelune sank with the sun eaten out of the sky, and it surfaces the same way —\n' +
-    'only in the minutes of an eclipse, only while somebody remembers it.\n\n' +
-    'You are the one who stayed awake. Walk it. Six of its people are still here,\n' +
-    'holding the pieces. Listen to them and the city will start to remember itself.',
+/* ── the pitch, told in three panels before the player takes a step ── */
+export const PREVIEW = {
+  eyebrow: 'an eclipse-city requiem',
+  tagline: 'Vaelune only surfaces during a solar eclipse.\nYou have until totality to remember it.',
+  premise: [
+    'A half-sunken city of lamps and markets, glowing from underneath, that appears only during a solar eclipse — and only while somebody remembers it truly.',
+    'You are the Archivist, the one who stayed awake. Six of Vaelune\u2019s people are still down there, each holding one fragment of its final day.',
+  ],
+  cta: 'Enter the eclipse',
+};
+
+export const PROLOGUE = [
+  {
+    title: 'Vaelune',
+    kicker: 'the city',
+    lines: [
+      'Vaelune was a trading city on a shallow shelf of the sea, lit by oil lamps and bioluminescent weeds.',
+      'It sank in a single afternoon, with the sun eaten out of the sky \u2014 and it comes back the same way.',
+      'Only during an eclipse. Only while somebody remembers it truly.',
+    ],
+  },
+  {
+    title: 'The Archivist',
+    kicker: 'you',
+    lines: [
+      'Someone had to stay awake and keep the record, so the city would have a way back up.',
+      'That is you, and it has been you for a long time. You walk Vaelune once per eclipse, and lose a little of it every time.',
+      'Six of its people are still down there, holding the last day between them. They cannot tell you what happened \u2014 they can only remember it at you.',
+    ],
+  },
+  {
+    title: 'What you do',
+    kicker: 'the work',
+    lines: [
+      'Walk the city and find the light of a fragment. Stand close, hold E, and listen until it gives.',
+      'What you remember comes back: the market returns as stalls, awnings and voices. The observatory lamp turns again.',
+      'Something dark costs something to hold: those memories leave shadows behind that would rather you put your lamp out.',
+      'The tide rises with every fragment you restore. By totality the city goes under \u2014 whichever city you have rebuilt.',
+    ],
+  },
+];
+
+/* ── the first two things to do, stated plainly ── */
+export const OPENING_GOALS = [
+  'follow the compass to the market row',
+  'stand in the light and hold E to listen',
+];
+
+/* ── contextual hints: shown at the moment the key matters ── */
+export const HINTS = {
+  move: 'W A S D to wade \u00b7 move the mouse to look \u00b7 shift to hurry on dry stone',
+  swim: 'space to rise \u00b7 C to dive \u00b7 space at a ledge to haul yourself out',
+  mantle: 'hold space to haul yourself out of the water',
+  lantern: 'F raises the lantern \u2014 oil burns, and shadows will not come near the light',
+  lowOil: 'the oil is running low',
+  tide: 'the tide comes up with every memory you restore',
+  journal: 'TAB opens the journal: what you have remembered, and what is still missing',
+  lost: 'lucidity gone \u2014 you wake on the plaza, lighter than before',
 };
 
 export const FINALE = {

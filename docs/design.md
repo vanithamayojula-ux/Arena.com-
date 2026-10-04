@@ -110,6 +110,32 @@ lower quarter to buy the rest of the city an hour. What is left below is a city 
 its lamps on, waiting for the next shadow to thin the water — and one Archivist who stayed
 awake to keep the record, losing everyone a little more with every eclipse.
 
+## 5b. Onboarding — teaching a game with no HUD tutorial
+
+The brief for this game is atmospheric and oblique, which is exactly the kind of game that
+loses players in its first three minutes. The rule adopted: **the game speaks at the moment
+a key starts to matter, and then shuts up.**
+
+| when | what the player is told | how |
+|---|---|---|
+| title screen | what Vaelune is, that it appears during eclipses, who the Archivist is | premise paragraphs beside the controls |
+| on "Enter the eclipse" | the whole premise properly: the city, you, and the work | three-panel prologue, space/click to advance, skippable |
+| play begins | *follow the compass to the market row* | objective card, paper-mapped to the nearest fragment |
+| within 9 m | *stand in the light and hold E until the ring fills* | objective card + keycap prompt |
+| first wade | the movement keys | hint strip |
+| first swim | space to rise, C to dive, space at a ledge to haul yourself out | hint strip |
+| pressed against a ledge | *hold space to haul yourself out* | hint strip, 1.2 s after you get stuck |
+| first shadow | F raises the lantern, and nothing dark comes near the light | hint strip |
+| tank under 30% | the oil is running low | hint strip |
+| first restoration | the tide comes up with every memory you restore | hint strip |
+| second restoration | TAB opens the journal | hint strip |
+| any time | the full reference, three columns | **H** |
+
+Every hint fires once per session (oil re-arms after a refill), the compass nudge repeats
+at most twice, and nothing is ever explained while the player is mid-interaction. The
+opening lesson is a state machine in `src/tutorial.js` rather than being tangled into the
+frame loop, which is what makes it testable — see `tests/tutorial.mjs`.
+
 ## 6. Systems
 
 ### 6.1 Memory restoration

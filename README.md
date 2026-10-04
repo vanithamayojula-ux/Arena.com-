@@ -37,8 +37,34 @@ generated procedurally while it loads — there is not a single binary asset in 
 | **TAB** | the journal: memories restored |
 | **ESC** | pause |
 
+## What the game tells you, and when
+
+Vaelune explains itself without a lore dump, in four layers:
+
+1. **The title screen** states the premise: a half-sunken city that surfaces during an
+   eclipse and only while somebody remembers it, and who you are in that arrangement.
+2. **A three-panel prologue** — *the city*, *you*, *the work* — says what happened to
+   Vaelune, what the Archivist is for, what you do (walk to a fragment, hold **E**,
+   remember it back into the world), and what it costs (shadows, oil, and the tide).
+   Space or click advances it; "just let me play" skips it.
+3. **The opening lesson.** Two goals, stated plainly at the moment they matter: *follow the
+   compass to the market row*, then *stand in the light and hold E*. After the first
+   fragment the game hands over — the compass and the journal carry it from there.
+4. **Contextual hints**, shown only when a key becomes relevant for the first time:
+   wading explains movement, swimming explains rising/diving/climbing out, getting stuck
+   against a ledge in water explains the mantle, the first shadow explains the lantern,
+   a low tank warns, and the first restoration explains the tide. Each fires once.
+
+**H** opens a full "how to play" reference at any point, from the title screen or mid-game.
+
 ## What the slice does
 
+- **Terrain that holds up.** The floor under you is the highest plate you are standing on,
+  and it is a wall if it rises more than 0.55 m where you are — so you never walk inside a
+  tier or a building; in water you float on the surface instead of being dragged to the
+  drowned floor; every ledge within 2.6 m of the waterline can be climbed out of with
+  **space**; and the city's overlapping ruins can never wedge you. All four are enforced by
+  `tests/terrain.mjs` against the real player physics.
 - **Six districts** built from nothing but arithmetic: the drowned plaza and its orrery,
   the market row, the observatory island, the amphitheatre, the temple of tides, and the
   sea-gates — joined by five avenues and reachable by walking, wading, swimming or
@@ -99,6 +125,9 @@ automatically if frames get expensive.
 python3 -m http.server 8000                 # play
 node tests/wiring.mjs                       # imports/exports/DOM ids all line up
 node tests/smoke.mjs                        # builds the whole world headlessly and walks it
+node tests/terrain.mjs                      # the ground: settling, walking, walls, water, shards
+node tests/tutorial.mjs                     # does the game actually teach itself?
+node tests/map.mjs                          # an ASCII map of the city from the height field
 ```
 
 `tests/` stubs the DOM (including canvas 2D and WebAudio) so the entire procedural world

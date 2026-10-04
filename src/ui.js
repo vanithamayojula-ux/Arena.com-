@@ -21,6 +21,18 @@ export function createUI(handlers = {}) {
   const journal = $('journal');
   const memoryList = $('memoryList');
   const journalFoot = $('journalFoot');
+  const context = $('context');
+  const ctxKey = $('ctxKey');
+  const ctxText = $('ctxText');
+  const goal = $('goal');
+  const goalKicker = $('goalKicker');
+  const goalText = $('goalText');
+  const prologue = $('prologue');
+  const proKicker = $('proKicker');
+  const proTitle = $('proTitle');
+  const proLines = $('proLines');
+  const proDots = $('proDots');
+  const help = $('help');
   const start = $('start');
   const pause = $('pause');
   const finale = $('finale');
@@ -31,6 +43,8 @@ export function createUI(handlers = {}) {
 
   let toastTimer = null;
   let typeTimer = null;
+  let goalTimer = null;
+  let ctxTimer = null;
   const last = { obj: '', objDist: '', prompt: '', progress: -1, stats: {} };
   const ringLen = 2 * Math.PI * 17;
 
@@ -38,9 +52,80 @@ export function createUI(handlers = {}) {
   promptRing.style.strokeDashoffset = ringLen;
 
   const ui = {
-    els: { hud, start, pause, journal, finale },
+    els: { hud, start, pause, journal, finale, prologue, help, goal, context },
 
     loadingDone() { loading.classList.add('hidden'); },
+
+    /* ── prologue: three panels that say what this is and what you do ── */
+    showPrologue(panels, index) {
+      prologue.classList.remove('hidden');
+      hud.classList.add('hidden');
+      const p = panels[index];
+      proKicker.textContent = p.kicker;
+      proTitle.textContent = p.title;
+      proLines.innerHTML = '';
+      for (const line of p.lines) {
+        const el = document.createElement('p');
+        el.textContent = line;
+        proLines.appendChild(el);
+      }
+      proDots.innerHTML = '';
+      for (let i = 0; i < panels.length; i++) {
+        const dot = document.createElement('i');
+        if (i <= index) dot.className = 'on';
+        proDots.appendChild(dot);
+      }
+      const btn = document.getElementById('proNext');
+      if (btn) btn.textContent = index === panels.length - 1 ? 'Walk into Vaelune' : 'Continue';
+    },
+    hidePrologue() {
+      prologue.classList.add('hidden');
+      hud.classList.remove('hidden');
+    },
+
+    /* ── how to play, any time ── */
+    toggleHelp(force) {
+      const showing = force !== undefined ? force : help.classList.contains('hidden');
+      help.classList.toggle('hidden', !showing);
+      return showing;
+    },
+    helpOpen() { return !help.classList.contains('hidden'); },
+
+    /* ── the objective card that states the two opening goals ── */
+    setGoal(text, kicker = 'what to do') {
+      goal.classList.remove('hidden');
+      goalKicker.textContent = kicker;
+      goalText.innerHTML = text;
+      requestAnimationFrame(() => goal.classList.add('show'));
+      clearTimeout(goalTimer);
+      goalTimer = setTimeout(() => {
+        goal.classList.remove('show');
+        setTimeout(() => goal.classList.add('hidden'), 900);
+      }, 9000);
+    },
+    hideGoal() {
+      clearTimeout(goalTimer);
+      goal.classList.remove('show');
+      goal.classList.add('hidden');
+    },
+
+    /* ── contextual control hints: the key, at the moment it matters ── */
+    hint(key, text, ms = 7000) {
+      if (key) { ctxKey.textContent = key; context.classList.remove('plain'); }
+      else { ctxKey.textContent = ''; context.classList.add('plain'); }
+      ctxText.textContent = text;
+      context.classList.remove('hidden');
+      requestAnimationFrame(() => context.classList.add('show'));
+      clearTimeout(ctxTimer);
+      ctxTimer = setTimeout(() => {
+        context.classList.remove('show');
+      }, ms);
+    },
+    clearHint() {
+      clearTimeout(ctxTimer);
+      context.classList.remove('show');
+    },
+
     showStart() { start.classList.remove('hidden'); hud.classList.add('hidden'); },
     hideStart() { start.classList.add('hidden'); hud.classList.remove('hidden'); },
     showPause(stats = '') {
@@ -175,6 +260,10 @@ export function createUI(handlers = {}) {
   };
 
   $('beginBtn').addEventListener('click', () => handlers.onBegin?.());
+  // the whole panel is clickable, so the button must not also bubble into it
+  $('proNext').addEventListener('click', (e) => { e.stopPropagation(); handlers.onPrologueNext?.(); });
+  $('proSkip').addEventListener('click', (e) => { e.stopPropagation(); handlers.onPrologueSkip?.(); });
+  prologue.addEventListener('click', () => handlers.onPrologueNext?.());
   $('resumeBtn').addEventListener('click', () => handlers.onResume?.());
   remainBtn.addEventListener('click', () => handlers.onRemain?.());
 

@@ -90,3 +90,13 @@ It checks:
 5. **Shards** — all six memory anchors sit within interaction range of ground the player can
    stand on.
 6. **Sanity** — most of the walkable city is dry at low tide.
+
+## `node tests/tutorial.mjs`
+
+Onboarding, checked as behaviour rather than as copy. It asserts that the title screen and
+prologue actually state what the game is, who you are and what you do (the prologue must
+mention *hold E*, *tide*, *shadow* and *remember*); that the opening lesson names the market
+row and then asks for **E**; that each contextual hint fires exactly once — including the
+awkward ones (the mantle hint only when you are genuinely stuck against a ledge in water,
+the low-oil warning only once per tank, re-arming after a refill); and that a two-minute
+session never repeats a hint more than twice.
