@@ -1,7 +1,14 @@
 import * as THREE from 'three';
 import { fileURLToPath } from 'node:url';
-import './dom-stub.mjs';
+import { FakeCanvas } from './dom-stub.mjs';
 const SRC = new URL('../src/', import.meta.url).href;
+
+const fails = [];
+const ok = (label) => console.log(`  ok  ${label}`);
+function check(label, fn) {
+  try { const v = fn(); ok(label + (v !== undefined ? ` → ${v}` : '')); return v; }
+  catch (e) { fails.push([label, e]); console.log(`  FAIL ${label}: ${e && e.stack ? e.stack.split('\n').slice(0, 4).join('\n       ') : e}`); return null; }
+}
 
 const t0 = Date.now();
 const cityMod = await check('import city.js', () => import(SRC + 'city.js'));

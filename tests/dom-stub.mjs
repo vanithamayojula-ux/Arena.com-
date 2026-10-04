@@ -25,7 +25,7 @@ function makeCtx(canvas) {
   return ctx;
 }
 
-class FakeCanvas {
+export class FakeCanvas {
   constructor() { this.width = 300; this.height = 150; this.style = {}; this._ctx = null; }
   getContext(kind) {
     if (kind === '2d') { if (!this._ctx) this._ctx = makeCtx(this); return this._ctx; }
@@ -74,11 +74,3 @@ globalThis.cancelAnimationFrame = () => 0;
 globalThis.performance = globalThis.performance || { now: () => Date.now() };
 try { Object.defineProperty(globalThis, 'navigator', { value: { userAgent: 'node' }, configurable: true }); } catch (e) {}
 globalThis.self = globalThis;
-
-const fails = [];
-const ok = (label) => console.log(`  ok  ${label}`);
-function check(label, fn) {
-  try { const v = fn(); ok(label + (v !== undefined ? ` → ${v}` : '')); return v; }
-  catch (e) { fails.push([label, e]); console.log(`  FAIL ${label}: ${e && e.stack ? e.stack.split('\n').slice(0, 4).join('\n       ') : e}`); return null; }
-}
-
