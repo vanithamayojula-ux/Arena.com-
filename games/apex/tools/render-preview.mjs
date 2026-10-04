@@ -1,7 +1,12 @@
 // Renders the procedural art to SVG so it can be rasterised and inspected.
 // Usage: node tools/render-preview.mjs
 
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'screenshots');
+mkdirSync(OUT, { recursive: true });
 import { rasterCanvas } from './raster.mjs';
 import { Player, Prey, Raptor } from '../src/entities.js';
 import { drawCreature, drawShadow } from '../src/render.js';
@@ -83,8 +88,8 @@ const noopSfx = new Proxy({}, { get: () => () => {} });
   g.font = 'bold 30px sans-serif';
   g.fillText('APEX — bestiary', W / 2, 60);
 
-  writeFileSync('art/bestiary.png', c.png());
-  console.log('wrote art/bestiary.png');
+  writeFileSync(join(OUT,'bestiary.png'), c.png());
+  console.log('wrote screenshots/bestiary.png');
 }
 
 // ---------------------------------------------------------------- gameplay frame
@@ -141,8 +146,8 @@ const noopSfx = new Proxy({}, { get: () => () => {} });
     16,
     28
   );
-  writeFileSync('art/frame.png', canvas.png());
-  console.log('wrote art/frame.png', { score: api.game.score, caught: api.game.caught, wave: api.game.wave });
+  writeFileSync(join(OUT,'frame.png'), canvas.png());
+  console.log('wrote screenshots/frame.png', { score: api.game.score, caught: api.game.caught, wave: api.game.wave });
 }
 
 // ---------------------------------------------------------------- terrain sample
@@ -153,6 +158,6 @@ const noopSfx = new Proxy({}, { get: () => () => {} });
   const g = c.getContext('2d');
   g.scale(scale, scale);
   world.paintGround(g, WORLD.w, WORLD.h);
-  writeFileSync('art/terrain.png', c.png());
-  console.log('wrote art/terrain.png');
+  writeFileSync(join(OUT,'terrain.png'), c.png());
+  console.log('wrote screenshots/terrain.png');
 }

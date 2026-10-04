@@ -2,129 +2,319 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>APEX — The Cretaceous Chase</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d2b1a'/%3E%3Cpath d='M6 22c3-1 5-3 7-6 2-3 5-5 9-5 3 0 4 2 4 4 0 3-3 4-5 4h-2l-1 3h-2l1-3c-3 0-5-1-7-3-2 2-4 3-4 3z' fill='%23e0b64a'/%3E%3Ccircle cx='22' cy='14' r='1.4' fill='%231d2b1a'/%3E%3C/svg%3E" />
-<link rel="stylesheet" href="styles.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Arena Arcade — Play Everything</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0f1a'/%3E%3Cpath d='M10 8l12 8-12 8z' fill='%2322d3ee'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --bg2: #101827;
+    --panel: #141c2e;
+    --line: rgba(148, 163, 184, 0.16);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #22d3ee;
+    --accent2: #a78bfa;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 500px at 80% -10%, rgba(167, 139, 250, 0.14), transparent 60%),
+      radial-gradient(900px 500px at 10% -10%, rgba(34, 211, 238, 0.14), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    backdrop-filter: blur(10px);
+    background: rgba(11, 15, 26, 0.78);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    font-size: 18px;
+  }
+  .logo .badge {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #06121a; font-size: 16px;
+  }
+  .logo span em { color: var(--accent); font-style: normal; }
+  .spacer { flex: 1; }
+  #search {
+    width: min(340px, 60vw);
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg2);
+    color: var(--text);
+    outline: none;
+    font-size: 14px;
+  }
+  #search:focus { border-color: var(--accent); }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .chip:hover { color: var(--text); }
+  .chip.on {
+    color: #06121a;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color: transparent;
+    font-weight: 700;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--panel);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  }
+  .thumb {
+    height: 140px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 44px;
+  }
+  .thumb .play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(6, 10, 18, 0.4);
+    opacity: 0;
+    transition: 0.16s;
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+  }
+  .card:hover .play { opacity: 1; }
+  .card-body { padding: 14px 16px 16px; }
+  .card-body h3 { margin: 0 0 4px; font-size: 16px; }
+  .card-body p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .tag.engine { color: var(--accent); border-color: rgba(34, 211, 238, 0.4); }
+
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+
+  /* in-hub player */
+  #player {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: none;
+    background: rgba(4, 7, 12, 0.92);
+    backdrop-filter: blur(4px);
+    padding: 20px;
+  }
+  #player.open { display: flex; flex-direction: column; }
+  .player-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .player-bar h2 { margin: 0; font-size: 17px; flex: 1; }
+  .pbtn {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .pbtn:hover { border-color: var(--accent); }
+  #player iframe {
+    flex: 1;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #000;
+  }
+</style>
 </head>
 <body>
-<div id="app">
-  <canvas id="game" width="960" height="600" aria-label="Game canvas"></canvas>
+<header>
+  <div class="logo"><div class="badge">&#9654;</div><span>ARENA <em>ARCADE</em></span></div>
+  <div class="spacer"></div>
+  <input id="search" type="search" placeholder="Search games&hellip;" autocomplete="off" />
+</header>
 
-  <!-- Heads-up display -->
-  <div id="hud" class="hidden">
-    <div class="hud-row hud-top">
-      <div class="panel stat-panel">
-        <div class="stat">
-          <span class="label">Score</span>
-          <span class="value" id="hud-score">0</span>
-        </div>
-        <div class="stat">
-          <span class="label">Combo</span>
-          <span class="value accent" id="hud-combo">x1</span>
-        </div>
-        <div class="stat">
-          <span class="label">Wave</span>
-          <span class="value" id="hud-wave">1</span>
-        </div>
-      </div>
+<main>
+  <div class="filters" id="filters"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" hidden>Nothing matches that search.</div>
+</main>
 
-      <div class="panel quota-panel">
-        <div class="quota-line">
-          <span id="hud-quota-label">Hunt quota</span>
-          <span id="hud-quota">0 / 6</span>
-        </div>
-        <div class="bar quota-bar"><i id="hud-quota-fill"></i></div>
-        <div class="timer-line"><span id="hud-timer">45s</span></div>
-      </div>
-
-      <div class="panel map-panel">
-        <canvas id="minimap" width="150" height="112"></canvas>
-      </div>
-    </div>
-
-    <div class="hud-row hud-bottom">
-      <div class="panel meters">
-        <div class="meter">
-          <span class="meter-label">Stamina</span>
-          <div class="bar"><i id="hud-stamina"></i></div>
-        </div>
-        <div class="meter">
-          <span class="meter-label">Health</span>
-          <div class="bar health"><i id="hud-health"></i></div>
-        </div>
-        <div class="meter">
-          <span class="meter-label">Hunger</span>
-          <div class="bar hunger"><i id="hud-hunger"></i></div>
-        </div>
-      </div>
-      <div class="panel hint" id="hud-hint">WASD move &middot; Shift sprint &middot; Space bite</div>
-    </div>
-
-    <div id="toast" class="toast"></div>
+<div id="player">
+  <div class="player-bar">
+    <h2 id="player-title">Game</h2>
+    <button class="pbtn" id="player-open" title="Open in a new tab">&#8599; New tab</button>
+    <button class="pbtn" id="player-close">Close &#10005;</button>
   </div>
-
-  <!-- Title / menu overlay -->
-  <div id="menu" class="overlay">
-    <div class="overlay-inner">
-      <h1 class="title"><span class="title-main">APEX</span><span class="title-sub">The Cretaceous Chase</span></h1>
-      <p class="blurb">
-        Sixty-six million years ago, being the biggest thing in the valley was not enough —
-        you still had to <em>catch</em> dinner. Run the herds down before your hunger runs you down.
-      </p>
-
-      <div class="controls-grid">
-        <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>&#8592;&#8593;&#8595;&#8594;</kbd><span>Move</span></div>
-        <div><kbd>Shift</kbd><span>Sprint (burns stamina)</span></div>
-        <div><kbd>Space</kbd> / <kbd>Click</kbd><span>Bite</span></div>
-        <div><kbd>Mouse</kbd><span>Aim your jaws</span></div>
-        <div><kbd>P</kbd><span>Pause</span></div>
-        <div><kbd>M</kbd><span>Mute</span></div>
-      </div>
-
-      <div class="beasts">
-        <div class="beast"><b class="b-gazelle"></b><span><strong>Gazelles &amp; Parasaurs</strong> — flee in herds and tire after a hard sprint. Chase them until they blow.</span></div>
-        <div class="beast"><b class="b-trike"></b><span><strong>Triceratops</strong> — takes three bites and will gore you if you get greedy.</span></div>
-        <div class="beast"><b class="b-raptor"></b><span><strong>Raptor pack</strong> — steals your kills and bites back.</span></div>
-      </div>
-
-      <button id="btn-start" class="btn primary">Begin the hunt</button>
-      <p class="fineprint">Best played with sound on.</p>
-    </div>
-  </div>
-
-  <!-- Pause overlay -->
-  <div id="pause" class="overlay hidden">
-    <div class="overlay-inner compact">
-      <h2 class="title small">Paused</h2>
-      <button id="btn-resume" class="btn primary">Resume</button>
-      <button id="btn-quit" class="btn">Give up the valley</button>
-    </div>
-  </div>
-
-  <!-- Game over overlay -->
-  <div id="gameover" class="overlay hidden">
-    <div class="overlay-inner compact">
-      <h2 class="title small" id="go-title">The valley wins</h2>
-      <p class="go-reason" id="go-reason">Your hunger got the better of you.</p>
-      <div class="go-stats">
-        <div><span class="label">Score</span><span class="value" id="go-score">0</span></div>
-        <div><span class="label">Best combo</span><span class="value" id="go-combo">x1</span></div>
-        <div><span class="label">Prey caught</span><span class="value" id="go-caught">0</span></div>
-        <div><span class="label">Wave</span><span class="value" id="go-wave">1</span></div>
-      </div>
-      <button id="btn-again" class="btn primary">Hunt again</button>
-    </div>
-  </div>
-
-  <!-- Touch controls -->
-  <div id="touch" class="hidden">
-    <div id="stick" class="stick"><div id="stick-knob" class="knob"></div></div>
-    <button id="btn-bite" class="touch-btn">BITE</button>
-    <button id="btn-sprint" class="touch-btn sprint">RUN</button>
-  </div>
+  <iframe id="player-frame" allow="fullscreen; autoplay; gamepad" title="Game"></iframe>
 </div>
 
-<script type="module" src="src/main.js"></script>
+<script>
+  // Registry — add a game here and it appears in the hub automatically.
+  const GAMES = [
+    {
+      id: "apex",
+      title: "APEX — The Cretaceous Chase",
+      desc: "Run the herds down as a tyrannosaur. Stamina-based chases, rival raptors, wave quotas.",
+      dir: "games/apex",
+      entry: "index.html",
+      engine: "Canvas 2D",
+      emoji: "🦖",
+      tint: ["#3f5c30", "#6f7a3f"],
+      tags: ["action", "arcade", "survival"],
+    },
+  ];
+
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  const filtersEl = document.getElementById("filters");
+  const search = document.getElementById("search");
+  const player = document.getElementById("player");
+  const frame = document.getElementById("player-frame");
+  const ptitle = document.getElementById("player-title");
+
+  let activeTag = "all";
+
+  const allTags = ["all", ...new Set(GAMES.flatMap((g) => g.tags))];
+  filtersEl.innerHTML = allTags
+    .map((t) => `<button class="chip${t === "all" ? " on" : ""}" data-tag="${t}">${t}</button>`)
+    .join("");
+
+  function current() {
+    const q = search.value.trim().toLowerCase();
+    return GAMES.filter((g) => {
+      const tagOk = activeTag === "all" || g.tags.includes(activeTag);
+      const qOk =
+        !q ||
+        g.title.toLowerCase().includes(q) ||
+        g.desc.toLowerCase().includes(q) ||
+        g.tags.some((t) => t.includes(q));
+      return tagOk && qOk;
+    });
+  }
+
+  function render() {
+    const list = current();
+    empty.hidden = list.length !== 0;
+    grid.innerHTML = list
+      .map(
+        (g) => `
+      <div class="card" data-id="${g.id}" role="button" tabindex="0">
+        <div class="thumb" style="background:linear-gradient(135deg, ${g.tint[0]}, ${g.tint[1]})">
+          <span>${g.emoji}</span>
+          <div class="play">PLAY &#9654;</div>
+        </div>
+        <div class="card-body">
+          <h3>${g.title}</h3>
+          <p>${g.desc}</p>
+          <div class="meta">
+            <span class="tag engine">${g.engine}</span>
+            ${g.tags.map((t) => `<span class="tag">${t}</span>`).join("")}
+          </div>
+        </div>
+      </div>`
+      )
+      .join("");
+  }
+
+  function openGame(g) {
+    ptitle.textContent = g.title;
+    frame.src = `${g.dir}/${g.entry}`;
+    player.classList.add("open");
+  }
+  function closeGame() {
+    player.classList.remove("open");
+    frame.src = "about:blank";
+  }
+
+  grid.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    openGame(GAMES.find((g) => g.id === card.dataset.id));
+  });
+  grid.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target.closest(".card");
+    if (card) openGame(GAMES.find((g) => g.id === card.dataset.id));
+  });
+
+  filtersEl.addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    activeTag = chip.dataset.tag;
+    filtersEl.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c === chip));
+    render();
+  });
+
+  search.addEventListener("input", render);
+  document.getElementById("player-close").addEventListener("click", closeGame);
+  document.getElementById("player-open").addEventListener("click", () => {
+    const g = GAMES.find((x) => x.title === ptitle.textContent);
+    if (g) window.open(`${g.dir}/${g.entry}`, "_blank");
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && player.classList.contains("open")) closeGame();
+  });
+
+  render();
+</script>
 </body>
 </html>

@@ -2,5 +2,5 @@ node_modules/
 .DS_Store
 *.log
 
-# generated previews (regenerate with: node tools/render-preview.mjs)
+# generated previews (regenerate with: npm run preview:apex)
 art/
