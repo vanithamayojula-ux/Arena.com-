@@ -11,6 +11,7 @@ playing in-hub. Currently featuring:
 | **Typestorm — Neon Blitz** | `games/typestorm/` | React + Tailwind + Vite High-Speed Typing |
 | **Letters on the Wind — Post Boy's Day** | `games/ghibli-style-delivery-game/` | React + Tailwind + Vite Delivery Expedition |
 | **Time Echo — Chronology Lab** | `games/time-echo/` | HTML5 Canvas Temporal Puzzle Platformer |
+| **Afterglow — A Tour with the Ashfall Players** | `games/afterglow/` | Canvas 2D Narrative Action-Adventure (procedural painterly art + WebAudio score) |
 
 ## Run
 

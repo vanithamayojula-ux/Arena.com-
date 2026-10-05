@@ -1,0 +1,97 @@
+/* AFTERGLOW — theatre walls. The game paints its own light; this file just
+   hangs the frame and provides the touch controls. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: #030409;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Spectral", Georgia, serif;
+  background:
+    radial-gradient(ellipse at 50% 115%, rgba(255, 140, 60, 0.07), transparent 60%),
+    radial-gradient(ellipse at 50% -10%, rgba(70, 110, 170, 0.10), transparent 55%),
+    #030409;
+}
+
+#frame {
+  position: relative;
+  line-height: 0;
+}
+
+#game {
+  display: block;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(232, 182, 76, 0.16),
+    0 30px 90px rgba(0, 0, 0, 0.85),
+    0 0 120px rgba(255, 150, 60, 0.05);
+  image-rendering: auto;
+  background: #04060d;
+  touch-action: none;
+  outline: none;
+}
+
+#loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  color: #cfd8e6;
+  line-height: 1.5;
+}
+.l-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 42px;
+  letter-spacing: 0.35em;
+  color: #e9dfc8;
+  text-shadow: 0 0 30px rgba(255, 180, 90, 0.25);
+}
+.l-sub { font-style: italic; font-size: 14px; color: #8fa0b8; }
+
+/* ---------- touch overlay ---------- */
+.touch-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  display: none;
+}
+.touch-layer.show { display: block; }
+.touch-layer .t-side {
+  position: absolute;
+  bottom: 14px;
+  display: flex;
+  gap: 14px;
+  pointer-events: auto;
+}
+.touch-layer .t-left { left: 14px; }
+.touch-layer .t-right { right: 14px; }
+.touch-layer button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 182, 76, 0.4);
+  background: rgba(10, 14, 22, 0.62);
+  color: #e8d5a8;
+  font: 600 18px "Spectral", Georgia, serif;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.touch-layer button.down { background: rgba(60, 44, 16, 0.8); }
+.touch-layer .t-a { width: 66px; height: 66px; font-size: 20px; }
+
+@media (max-width: 700px) {
+  .touch-layer button { width: 48px; height: 48px; }
+}

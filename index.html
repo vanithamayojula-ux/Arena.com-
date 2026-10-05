@@ -1137,7 +1137,7 @@
 
       <div class="quest-progress-box">
         <span>GATES ENTERED TODAY:</span>
-        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 6 GATES CLEARED</strong>
+        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 7 GATES CLEARED</strong>
       </div>
 
       <div class="penalty-warning">
@@ -1176,10 +1176,11 @@
     <div class="section-header">
       <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
       <div class="gate-filters">
-        <button class="filter-btn active" data-filter="all">ALL GATES (6)</button>
+        <button class="filter-btn active" data-filter="all">ALL GATES (7)</button>
         <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
         <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
         <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
+        <button class="filter-btn" data-filter="story">NARRATIVE & ART (1)</button>
       </div>
     </div>
 
@@ -1413,6 +1414,44 @@
         </div>
       </article>
 
+      <!-- GATE 7: AFTERGLOW (RANK S / NARRATIVE) -->
+      <article class="gate-card" data-category="story" data-title="Afterglow Ashfall Players Dim Sun Story Adventure">
+        <div class="gate-thumbnail">
+          <img src="games/afterglow/screenshots/card.jpg" alt="Afterglow hand-painted lantern scene" onerror="this.style.display='none'">
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // AFTERGLOW</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Afterglow: A Tour with the Ashfall Players
+          </h3>
+          <p class="gate-desc">
+            Narrative action-adventure in a world where the sun went quiet. Four former soldiers, now traveling performers, win shows with rhythm rings, talk down warlords, and defend the last flames from the things that snuff them. Combat is rare, brutal, and always a choice.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#e8b64c;">DANGER RATING</span>
+              <span style="color:#e8b64c;">COLD (87%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s" style="background: linear-gradient(90deg, #7a4a18, #e8b64c);"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Arrows / WASD • E speak • Q sing • SPACE</span>
+              <span>FEAT: 5-ACT STORY + SAVES</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('afterglow')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/afterglow/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
     </div>
   </section>
 
@@ -1490,6 +1529,7 @@
           <option value="typestorm">[RANK A] Typestorm: Neon Blitz</option>
           <option value="letters-wind">[RANK A] Letters on the Wind: Post Boy</option>
           <option value="time-echo">[RANK S] Time Echo: Chronology Lab</option>
+          <option value="afterglow">[RANK S] Afterglow: The Ashfall Players</option>
         </select>
       </div>
 
@@ -1508,7 +1548,7 @@
   <!-- Footer -->
   <footer>
     <p>⚔️ <strong>ARISE PLAY</strong> — Solo Leveling Red Gate System Arcade.</p>
-    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, and Time Echo.</p>
+    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, Time Echo, and Afterglow.</p>
   </footer>
 
   <!-- System UI Scripts & Ambient Red Embers -->
@@ -1570,6 +1610,10 @@
       'time-echo': {
         name: '[RANK S: RED GATE] Time Echo: Chronology Lab',
         url: 'games/time-echo/index.html'
+      },
+      'afterglow': {
+        name: '[RANK S: RED GATE] Afterglow: A Tour with the Ashfall Players',
+        url: 'games/afterglow/index.html'
       }
     };
 
@@ -1593,7 +1637,7 @@
 
       // Update Daily Quest Progress
       gatesEnteredCount++;
-      const progressText = Math.min(gatesEnteredCount, 6) + ' / 6 GATES CLEARED';
+      const progressText = Math.min(gatesEnteredCount, 7) + ' / 7 GATES CLEARED';
       document.getElementById('questProgress').textContent = progressText;
       document.getElementById('playerClearedCount').textContent = gatesEnteredCount;
       document.getElementById('playerScoreCount').textContent = (gatesEnteredCount * 3500) + ' PTS';
