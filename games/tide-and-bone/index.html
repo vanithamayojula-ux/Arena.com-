@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TIDE &amp; BONE — Scavenger of the Vastmother</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="mode-calm">
+<div id="stage">
+
+  <canvas id="game" width="560" height="560"></canvas>
+  <div id="veil"></div>
+
+  <!-- ═══════════ creature status (always visible, boss-bar style) ═══════ -->
+  <header id="hud" class="sys-window">
+    <div class="hud-creature">
+      <div class="hud-label">VASTMOTHER // CREATURE STATUS <span id="zoneTag">OUTER SHELL</span></div>
+      <div class="bar-wrap">
+        <div class="bar creature-bar"><div id="creatureFill"></div></div>
+        <span class="bar-num" id="creatureNum">100</span>
+        <span class="mood" id="mood">CALM</span>
+      </div>
+    </div>
+    <div class="hud-dive">
+      <div class="hud-label">DIMENSION SHIFT</div>
+      <div class="bar-wrap"><div class="bar dive-bar"><div id="diveFill"></div></div><span class="bar-num" id="diveCount">15</span></div>
+    </div>
+    <div class="hud-player">
+      <div class="hud-label">SCAVENGER</div>
+      <div class="bar-wrap"><div class="bar hp-bar"><div id="hpFill"></div></div><span class="bar-num" id="hpNum">50/50</span></div>
+      <div class="pocket">
+        <span class="chip gold" title="Salvage — extract to bank it">◆ <b id="salvageNum">0</b></span>
+        <span class="chip" title="Marrow Flask — [1] heal 18">⚗ <b id="flaskCount">1</b></span>
+        <span class="chip" title="Salt Bomb — [2] throw in facing direction">✳ <b id="bombCount">1</b></span>
+      </div>
+    </div>
+  </header>
+
+  <div id="popups" aria-live="polite"></div>
+  <div id="ctxHint" class="sys-window"></div>
+  <aside id="logfeed" class="sys-window"></aside>
+
+  <!-- ═══════════ dive chooser ═══════ -->
+  <div id="zonePicker" class="sys-window"></div>
+
+  <!-- ═══════════ title ═══════ -->
+  <section id="titleScreen" class="screen on">
+    <div class="title-card sys-window">
+      <div class="title-kicker">ARCADE // RED GATE · TACTICAL ROGUELIKE · DRIFT <span id="titleSeed">000000</span></div>
+      <h1 class="title-main">TIDE <span>&amp;</span> BONE</h1>
+      <p class="title-sub">The creature drifts between dimensions. You are a flea with ambitions.
+      Harvest her flesh, dodge her tenants, and <em>extract before the tide turns.</em></p>
+      <div class="title-btns">
+        <button class="sys-btn primary" id="btnBegin">[ BEGIN THE HARVEST ]</button>
+        <button class="sys-btn" id="btnHowto">[ HOW TO PLAY ]</button>
+      </div>
+      <div class="charm-shelf"><span class="shelf-label">BONE CHARMS</span><span id="charmShelf"></span></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ how to play ═══════ -->
+  <section id="howto" class="screen">
+    <div class="howto-card sys-window">
+      <h2>SYSTEM // FIELD MANUAL</h2>
+      <div class="howto-grid">
+        <div><h3>⟶ MOVE</h3><p>WASD / arrows, or click a tile to auto-walk (one step = one turn; enemies answer every turn).</p></div>
+        <div><h3>⚔ ATTACK</h3><p>[SPACE/J] hits all adjacent. Walk into an enemy to bump-slash. Mites flee when wounded — finish them.</p></div>
+        <div><h3>❦ DODGE</h3><p>[K/Shift] BRACE: the next blow misses and you counter. It is your only answer to Spitters on bad tiles.</p></div>
+        <div><h3>✦ HARVEST</h3><p>[E] on flesh, nodules, pools, corpses = salvage. Every cut drops her HP and her temper. WRATHFUL flesh burns you.</p></div>
+        <div><h3>≈ DIVE</h3><p>Stand on a vent, [E], choose HEART / LUNG / GUT. Organs hide richer loot and worse tenants. [E] again climbs out.</p></div>
+        <div><h3>▲ EXTRACT</h3><p>Climb a glowing ridge and press [E]. Salvage banks only if you LEAVE. The shift clock is everything.</p></div>
+        <div><h3>⚗ ITEMS</h3><p>[1] Marrow Flask heals 18. [2] Salt Bomb throws along your facing — hurts parasites AND the creature (careful).</p></div>
+        <div><h3>R OFFERING</h3><p>[R] burns 12 salvage into +22 creature HP and +2 turns. Feeding her is how you buy time and calm.</p></div>
+      </div>
+      <div class="howto-rules">
+        <p><b>THE RULE:</b> at 0 turns the Vastmother dives. Caught inside, she flushes you onto the shell — half your haul spills inside her. Caught out here… the dimension keeps you.</p>
+        <p><b>THE MERCY:</b> every run ends with one Bone Charm — a permanent upgrade kept into the next drift. Death is data.</p>
+      </div>
+      <button class="sys-btn" id="howtoClose">[ CLOSE ]</button>
+    </div>
+  </section>
+
+  <!-- ═══════════ pause ═══════ -->
+  <section id="pauseOverlay" class="screen">
+    <div class="pause-card sys-window">
+      <h2>SYSTEM // PAUSED</h2>
+      <p class="dim">The tide waits, faintly amused.</p>
+      <button class="sys-btn primary" id="pauseResume">[ RESUME ]</button>
+      <button class="sys-btn" id="pauseHelp">[ FIELD MANUAL ]</button>
+      <button class="sys-btn" id="pauseQuit">[ ABANDON RUN ]</button>
+    </div>
+  </section>
+
+  <!-- ═══════════ game over ═══════ -->
+  <section id="overScreen" class="screen">
+    <div class="over-card sys-window">
+      <h2 id="overTitle" class="over-title o-died">YOU DIED</h2>
+      <p id="overBlurb" class="over-blurb"></p>
+      <div id="overStats" class="over-stats"></div>
+      <div id="charmOffer" class="charm-offer"></div>
+      <div class="over-btns">
+        <button class="sys-btn" id="overAgain">[ DRIFT AGAIN ]</button>
+        <button class="sys-btn primary" id="overGo" disabled>[ RETURN TO THE SURFACE ]</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ touch controls ═══════ -->
+  <div id="touchpad">
+    <div class="tpad">
+      <button data-act="up">▲</button>
+      <div class="tpad-row">
+        <button data-act="left">◀</button><button data-act="wait">✋</button><button data-act="right">▶</button>
+      </div>
+      <button data-act="down">▼</button>
+    </div>
+    <div class="tacts">
+      <button data-act="attack" class="ta-big">⚔</button>
+      <button data-act="brace">❦</button>
+      <button data-act="interact">✦</button>
+      <button data-act="feed">R</button>
+      <button data-act="flask">⚗</button>
+      <button data-act="bomb">✳</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { boot } from './src/main.js';
+  boot();
+</script>
+</body>
+</html>

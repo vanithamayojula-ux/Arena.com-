@@ -1137,7 +1137,7 @@
 
       <div class="quest-progress-box">
         <span>GATES ENTERED TODAY:</span>
-        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 7 GATES CLEARED</strong>
+        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 8 GATES CLEARED</strong>
       </div>
 
       <div class="penalty-warning">
@@ -1176,11 +1176,12 @@
     <div class="section-header">
       <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
       <div class="gate-filters">
-        <button class="filter-btn active" data-filter="all">ALL GATES (7)</button>
+        <button class="filter-btn active" data-filter="all">ALL GATES (8)</button>
         <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
         <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
         <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
         <button class="filter-btn" data-filter="story">NARRATIVE & ART (1)</button>
+        <button class="filter-btn" data-filter="tactics">TACTICS & ROGUELIKE (1)</button>
       </div>
     </div>
 
@@ -1452,6 +1453,44 @@
         </div>
       </article>
 
+      <!-- GATE 8: TIDE & BONE (RANK S / TACTICS) -->
+      <article class="gate-card" data-category="tactics" data-title="Tide and Bone Roguelike Living Sea Creature Turn Based Tactics">
+        <div class="gate-thumbnail">
+          <img src="games/tide-and-bone/screenshots/card.jpg" alt="Tide and Bone — scavenger on the back of a vast living creature" onerror="this.style.display='none'">
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // TIDE & BONE</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Tide &amp; Bone: Scavenger of the Vastmother
+          </h3>
+          <p class="gate-desc">
+            A turn-based roguelike fought ON and INSIDE a god-sized sea creature drifting between dimensions. Harvest its flesh, dodge mites, spitters and rival reavers, manage HER temper — enrage the map and the walls themselves close on you — and extract before the Dimension Shift takes the shell. Die, and you keep exactly one Bone Charm.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#4da3ff;">DANGER RATING</span>
+              <span style="color:#4da3ff;">ABYSSAL (94%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s" style="background: linear-gradient(90deg, #1c3f66, #4da3ff, #ff0033);"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>WASD + Click • SPACE hit • K brace • E harvest/dive</span>
+              <span>FEAT: MOOD-REACTIVE MAP</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('tide-and-bone')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/tide-and-bone/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
     </div>
   </section>
 
@@ -1530,6 +1569,7 @@
           <option value="letters-wind">[RANK A] Letters on the Wind: Post Boy</option>
           <option value="time-echo">[RANK S] Time Echo: Chronology Lab</option>
           <option value="afterglow">[RANK S] Afterglow: The Ashfall Players</option>
+          <option value="tide-and-bone">[RANK S] Tide & Bone: Scavenger of the Vastmother</option>
         </select>
       </div>
 
@@ -1548,7 +1588,7 @@
   <!-- Footer -->
   <footer>
     <p>⚔️ <strong>ARISE PLAY</strong> — Solo Leveling Red Gate System Arcade.</p>
-    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, Time Echo, and Afterglow.</p>
+    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, Time Echo, Afterglow, and Tide & Bone.</p>
   </footer>
 
   <!-- System UI Scripts & Ambient Red Embers -->
@@ -1614,6 +1654,10 @@
       'afterglow': {
         name: '[RANK S: RED GATE] Afterglow: A Tour with the Ashfall Players',
         url: 'games/afterglow/index.html'
+      },
+      'tide-and-bone': {
+        name: '[RANK S: RED GATE] Tide & Bone: Scavenger of the Vastmother',
+        url: 'games/tide-and-bone/index.html'
       }
     };
 
@@ -1637,7 +1681,7 @@
 
       // Update Daily Quest Progress
       gatesEnteredCount++;
-      const progressText = Math.min(gatesEnteredCount, 7) + ' / 7 GATES CLEARED';
+      const progressText = Math.min(gatesEnteredCount, 8) + ' / 8 GATES CLEARED';
       document.getElementById('questProgress').textContent = progressText;
       document.getElementById('playerClearedCount').textContent = gatesEnteredCount;
       document.getElementById('playerScoreCount').textContent = (gatesEnteredCount * 3500) + ' PTS';
