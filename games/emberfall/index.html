@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070611">
+  <meta name="description" content="Emberfall: The Lantern Troupe — a narrative action-adventure of performers keeping the last small lights of a dimmed world burning.">
+  <title>Emberfall — The Lantern Troupe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=emberfall1">
+  <script src="src/main.js?v=emberfall1" type="module" defer></script>
+</head>
+<body class="scene-title">
+  <a href="../../index.html" id="arena-back-btn">◀ ARENA HUB</a>
+  <script>if (window.self !== window.top) { const b = document.getElementById('arena-back-btn'); if (b) b.style.display = 'none'; }</script>
+
+  <div id="stageWrap">
+    <canvas id="stage" width="1280" height="720" tabindex="0"></canvas>
+
+    <!-- ----------------------------------------------------------- HUD -->
+    <div id="hud" aria-hidden="true">
+      <div class="hud-left">
+        <div class="hud-chapter"><span id="hudChapter">EMBERFALL</span></div>
+        <div class="hud-place" id="hudPlace"></div>
+      </div>
+      <div class="hud-gauges">
+        <div class="gauge" title="Lantern oil — the road burns it; so does everything else">
+          <span class="gauge-label">OIL</span>
+          <div class="gauge-track"><div class="gauge-fill" id="oilFill"></div></div>
+          <span class="gauge-num" id="oilNum">0</span>
+        </div>
+        <div class="gauge" title="Troupe morale">
+          <span class="gauge-label">SPIRIT</span>
+          <div class="gauge-track spirit"><div class="gauge-fill" id="moraleFill"></div></div>
+        </div>
+        <div class="hud-pips" title="Reputation on the roads">
+          <span class="gauge-label">REP</span><span class="pip-num" id="repNum">0</span>
+        </div>
+        <div class="hud-pips" title="Lanterns relit across the world — the real score">
+          <span class="gauge-label">LIT</span><span class="pip-num lit-num" id="relitNum">0</span>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div class="bonds" title="The troupe's trust in you — talk around fires to raise it">
+          <span class="bond" id="bondDill"><i>D</i><b class="bondbar"><s></s></b></span>
+          <span class="bond" id="bondBram"><i>B</i><b class="bondbar"><s></s></b></span>
+          <span class="bond" id="bondFenn"><i>F</i><b class="bondbar"><s></s></b></span>
+        </div>
+        <button id="btnLedger" title="Playbill & ledger">LEDGER</button>
+        <button id="btnMute" title="Mute" aria-pressed="false">♪ ON</button>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------ dialogue -->
+    <div id="dialogue" hidden>
+      <div class="dlg-card">
+        <div class="dlg-speaker" id="dlgSpeaker">VERA</div>
+        <p class="dlg-text" id="dlgText"></p>
+        <div class="dlg-choices" id="dlgChoices"></div>
+        <div class="dlg-hint" id="dlgHint">▼ SPACE / click to continue</div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------- prompt cards -->
+    <div id="promptCard" hidden>
+      <div class="prompt-inner">
+        <div class="prompt-kicker" id="promptKicker">ON THE ROAD</div>
+        <h3 id="promptTitle">An encounter</h3>
+        <p id="promptBody"></p>
+        <div id="promptChoices"></div>
+        <div class="prompt-timer" id="promptTimer" hidden><b></b></div>
+      </div>
+    </div>
+
+    <!-- touch/keyboard row for the performance scenes -->
+    <div id="laneRow" hidden>
+      <button data-lane="0"><span>D</span><small>BRAM</small></button>
+      <button data-lane="1"><span>F</span><small>ODILE</small></button>
+      <button data-lane="2"><span>J</span><small>FENN</small></button>
+    </div>
+
+    <div id="judgmentPop" hidden></div>
+
+    <!-- --------------------------------------------------- card screens -->
+    <div id="cardScreen" class="open">
+      <div class="card-frame" id="cardFrame"><!-- title/help/ledger/ending mount here --></div>
+    </div>
+
+    <div id="toasts"></div>
+    <div id="fadeout"></div>
+  </div>
+
+  <script>
+    // focus the stage so keyboard input works the moment the iframe is clicked
+    window.addEventListener('pointerdown', () => {
+      const c = document.getElementById('stage');
+      if (c) c.focus({ preventScroll: true });
+    });
+  </script>
+</body>
+</html>

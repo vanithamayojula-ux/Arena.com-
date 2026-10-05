@@ -11,6 +11,7 @@ playing in-hub. Currently featuring:
 | **Typestorm — Neon Blitz** | `games/typestorm/` | React + Tailwind + Vite High-Speed Typing |
 | **Letters on the Wind — Post Boy's Day** | `games/ghibli-style-delivery-game/` | React + Tailwind + Vite Delivery Expedition |
 | **Time Echo — Chronology Lab** | `games/time-echo/` | HTML5 Canvas Temporal Puzzle Platformer |
+| **Emberfall — The Lantern Troupe** | `games/emberfall/` | Canvas 2D Narrative Action-Adventure (procedural art + audio) |
 
 ## Run
 
@@ -20,7 +21,8 @@ npm start          # or: node server.js
 
 Open http://localhost:5173 for the **Arena Arcade portal** (search, category
 filters, in-hub player), or jump straight into a game at
-http://localhost:5173/games/apex/.
+http://localhost:5173/games/apex/ — or the narrative one at
+http://localhost:5173/games/emberfall/.
 
 The server binds `0.0.0.0` for the live preview.
 
@@ -47,6 +49,10 @@ Arena/
 ```
 npm test
 ```
+
+`npm test` covers APEX's simulation/boot tests and **Emberfall's** headless story-graph,
+scene-boot and ending-math tests. `npm run shots:emberfall` re-renders Emberfall's hub
+thumbnails straight from its in-game painter (`games/emberfall/tools/`).
 
 Runs the APEX simulation headlessly (movement, herd stamina, bite cone, waves,
 game-over, pause, collision) plus a boot test of its real entry point.

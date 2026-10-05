@@ -45,6 +45,8 @@ const server = http.createServer((req, res) => {
     filePath = path.join(ROOT, 'games', 'ghibli-style-delivery-game', 'play.html');
   } else if (reqUrl === '/games/time-echo' || reqUrl === '/games/time-echo/') {
     filePath = path.join(ROOT, 'games', 'time-echo', 'index.html');
+  } else if (reqUrl === '/games/emberfall' || reqUrl === '/games/emberfall/') {
+    filePath = path.join(ROOT, 'games', 'emberfall', 'index.html');
   }
 
   // Prevent directory traversal
@@ -98,5 +100,6 @@ server.listen(PORT, () => {
   console.log(`  - Cyberstrike:   http://localhost:${PORT}/games/cyberstrike/`);
   console.log(`  - Typestorm:     http://localhost:${PORT}/games/typestorm/`);
   console.log(`  - Letters Wind:  http://localhost:${PORT}/games/ghibli-style-delivery-game/`);
-  console.log(`  - Time Echo:     http://localhost:${PORT}/games/time-echo/\n`);
+  console.log(`  - Time Echo:     http://localhost:${PORT}/games/time-echo/`);
+  console.log(`  - Emberfall:     http://localhost:${PORT}/games/emberfall/\n`);
 });
