@@ -1,0 +1,55 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "cyberstrike": {
+      "root": "cyberstrike",
+      "framework": "vite"
+    },
+    "ghibli-style-delivery-game": {
+      "root": "ghibli-style-delivery-game",
+      "framework": "vite"
+    },
+    "typestorm": {
+      "root": "typestorm",
+      "framework": "vite"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/cyberstrike/(.*)",
+      "destination": {
+        "service": "cyberstrike"
+      }
+    },
+    {
+      "source": "/cyberstrike",
+      "destination": {
+        "service": "cyberstrike"
+      }
+    },
+    {
+      "source": "/ghibli-style-delivery-game/(.*)",
+      "destination": {
+        "service": "ghibli-style-delivery-game"
+      }
+    },
+    {
+      "source": "/ghibli-style-delivery-game",
+      "destination": {
+        "service": "ghibli-style-delivery-game"
+      }
+    },
+    {
+      "source": "/typestorm/(.*)",
+      "destination": {
+        "service": "typestorm"
+      }
+    },
+    {
+      "source": "/typestorm",
+      "destination": {
+        "service": "typestorm"
+      }
+    }
+  ]
+}
