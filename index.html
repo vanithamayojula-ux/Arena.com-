@@ -1137,7 +1137,7 @@
 
       <div class="quest-progress-box">
         <span>GATES ENTERED TODAY:</span>
-        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 8 GATES CLEARED</strong>
+        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 9 GATES CLEARED</strong>
       </div>
 
       <div class="penalty-warning">
@@ -1176,11 +1176,11 @@
     <div class="section-header">
       <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
       <div class="gate-filters">
-        <button class="filter-btn active" data-filter="all">ALL GATES (8)</button>
+        <button class="filter-btn active" data-filter="all">ALL GATES (9)</button>
         <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
         <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
         <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
-        <button class="filter-btn" data-filter="story">NARRATIVE & ART (1)</button>
+        <button class="filter-btn" data-filter="story">NARRATIVE & ART (2)</button>
         <button class="filter-btn" data-filter="tactics">TACTICS & ROGUELIKE (1)</button>
       </div>
     </div>
@@ -1491,6 +1491,44 @@
         </div>
       </article>
 
+      <!-- GATE 9: LUMEN PROTOCOL (RANK S / NARRATIVE) -->
+      <article class="gate-card" data-category="story" data-title="Lumen Protocol Memory Courier Cyberpunk RPG Dialogue Neon Rain">
+        <div class="gate-thumbnail">
+          <img src="games/lumen-protocol/screenshots/card.jpg" alt="Lumen Protocol — memory courier in a vertical neon city" onerror="this.style.display='none'">
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // LUMEN PROTOCOL</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Lumen Protocol: A Memory Courier RPG
+          </h3>
+          <p class="gate-desc">
+            You carry other people's minds in your implant, and every delivery changes both ends of the transaction. A vertical city of neon and rationed rain; three witnesses who remember the same fire three different ways. Dialogue choices permanently rewrite your personality — EMPATHY, LUCIDITY, DEFIANCE, RELIC — and grant (or cost) abilities that open whole branches. No combat. No game-over. No refunds.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#3fd8ff;">RAIN BUDGET</span>
+              <span style="color:#3fd8ff;">SPARSE (∞%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s" style="background: linear-gradient(90deg, #1c3f66, #3fd8ff, #ff2d78);"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Click / SPACE · choices by number · autosaves per scene</span>
+              <span>FEAT: 4 ENDINGS + LIVE PERSONA EDIT</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('lumen-protocol')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/lumen-protocol/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
     </div>
   </section>
 
@@ -1570,6 +1608,7 @@
           <option value="time-echo">[RANK S] Time Echo: Chronology Lab</option>
           <option value="afterglow">[RANK S] Afterglow: The Ashfall Players</option>
           <option value="tide-and-bone">[RANK S] Tide & Bone: Scavenger of the Vastmother</option>
+          <option value="lumen-protocol">[RANK S] Lumen Protocol: A Memory Courier RPG</option>
         </select>
       </div>
 
@@ -1588,7 +1627,7 @@
   <!-- Footer -->
   <footer>
     <p>⚔️ <strong>ARISE PLAY</strong> — Solo Leveling Red Gate System Arcade.</p>
-    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, Time Echo, Afterglow, and Tide & Bone.</p>
+    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, Time Echo, Afterglow, Tide & Bone, and Lumen Protocol.</p>
   </footer>
 
   <!-- System UI Scripts & Ambient Red Embers -->
@@ -1658,6 +1697,10 @@
       'tide-and-bone': {
         name: '[RANK S: RED GATE] Tide & Bone: Scavenger of the Vastmother',
         url: 'games/tide-and-bone/index.html'
+      },
+      'lumen-protocol': {
+        name: '[RANK S: RED GATE] Lumen Protocol: A Memory Courier RPG',
+        url: 'games/lumen-protocol/index.html'
       }
     };
 
@@ -1681,7 +1724,7 @@
 
       // Update Daily Quest Progress
       gatesEnteredCount++;
-      const progressText = Math.min(gatesEnteredCount, 8) + ' / 8 GATES CLEARED';
+      const progressText = Math.min(gatesEnteredCount, 9) + ' / 9 GATES CLEARED';
       document.getElementById('questProgress').textContent = progressText;
       document.getElementById('playerClearedCount').textContent = gatesEnteredCount;
       document.getElementById('playerScoreCount').textContent = (gatesEnteredCount * 3500) + ' PTS';

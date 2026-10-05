@@ -49,6 +49,8 @@ const server = http.createServer((req, res) => {
     filePath = path.join(ROOT, 'games', 'afterglow', 'index.html');
   } else if (reqUrl === '/games/tide-and-bone' || reqUrl === '/games/tide-and-bone/') {
     filePath = path.join(ROOT, 'games', 'tide-and-bone', 'index.html');
+  } else if (reqUrl === '/games/lumen-protocol' || reqUrl === '/games/lumen-protocol/') {
+    filePath = path.join(ROOT, 'games', 'lumen-protocol', 'index.html');
   }
 
   // Prevent directory traversal
@@ -105,4 +107,5 @@ server.listen(PORT, () => {
   console.log(`  - Time Echo:     http://localhost:${PORT}/games/time-echo/\n`);
   console.log(`  - Afterglow:     http://localhost:${PORT}/games/afterglow/\n`);
   console.log(`  - Tide & Bone:   http://localhost:${PORT}/games/tide-and-bone/\n`);
+  console.log(`  - Lumen Protocol: http://localhost:${PORT}/games/lumen-protocol/\n`);
 });

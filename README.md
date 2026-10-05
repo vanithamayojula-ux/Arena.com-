@@ -13,6 +13,7 @@ playing in-hub. Currently featuring:
 | **Time Echo — Chronology Lab** | `games/time-echo/` | HTML5 Canvas Temporal Puzzle Platformer |
 | **Afterglow — A Tour with the Ashfall Players** | `games/afterglow/` | Canvas 2D Narrative Action-Adventure (procedural painterly art + WebAudio score) |
 | **Tide & Bone — Scavenger of the Vastmother** | `games/tide-and-bone/` | Canvas 2D Turn-Based Roguelike (living-creature mood system, procedural grid art) |
+| **Lumen Protocol — A Memory Courier RPG** | `games/lumen-protocol/` | Canvas 2D + DOM Narrative Cyberpunk RPG (choices permanently edit personality & abilities) |
 
 ## Run
 

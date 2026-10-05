@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMEN PROTOCOL — a memory courier RPG</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="city" width="960" height="540"></canvas>
+  <div id="scan"></div>
+
+  <!-- HUD strip -->
+  <header id="hud">
+    <div class="hud-left"><span id="hudPersona">THE COURIER</span></div>
+    <div id="hudTraits"></div>
+    <div id="hudSkills" class="hud-right"></div>
+  </header>
+  <div id="ticker"></div>
+  <div id="toasts"></div>
+
+  <!-- scene title chip -->
+  <div id="sceneTitle" class="sys-chip"></div>
+
+  <!-- cargo tray -->
+  <aside id="tray" class="sys-chip"></aside>
+
+  <!-- dialogue system -->
+  <section id="playUI">
+    <div id="dialogueBox" class="sys-window">
+      <div id="who" class="who w-sys">// SYSTEM</div>
+      <p id="line"></p>
+      <div id="choices"></div>
+      <div id="tapHint">▸ click / SPACE</div>
+    </div>
+  </section>
+
+  <!-- chapter interstitial -->
+  <div id="chapterCard" class="screen"><div class="cc-inner sys-window"><h3 id="ccTitle">CHAPTER I</h3><h2 id="ccName">THE DESCENT JOB</h2><p class="cc-go">▸ step off the elevator</p></div></div>
+
+  <!-- title -->
+  <section id="titleScreen" class="screen on">
+    <div class="title-card sys-window">
+      <div class="kicker">ARENA ARCADE // RED GATE · NARRATIVE CYBERPUNK RPG</div>
+      <h1 class="big">LUMEN<span>·</span>PROTOCOL</h1>
+      <p class="tag">You are a memory courier. You carry other people's minds in your
+      implant, and every delivery changes <em>both</em> ends of the transaction. The
+      city is vertical, the rain is budgeted, and the witnesses remember three
+      different nights. Choose like you mean it — that's the only skill that carries.</p>
+      <div class="tbtns">
+        <button class="sys-btn primary" id="btnStart">[ BEGIN A RUN ]</button>
+        <button class="sys-btn" id="btnContinue">[ CONTINUE — RECOVER LAST HUM ]</button>
+        <button class="sys-btn" id="btnHow">[ HOW IT WORKS ]</button>
+      </div>
+      <div class="fine">every dialogue choice permanently edits your personality &amp; abilities · no combat, no game-over, no refunds</div>
+    </div>
+  </section>
+
+  <!-- calibration -->
+  <section id="calibScreen" class="screen">
+    <div class="calib-wrap sys-window">
+      <h2>CALIBRATE THE IMPLANT<span> — this is who you are before the city edits you · pick 1 · [1/2/3]</span></h2>
+      <div id="calibCards"></div>
+    </div>
+  </section>
+
+  <!-- epilogue -->
+  <section id="epiScreen" class="screen">
+    <div class="epi-wrap sys-window">
+      <h2>LUMEN PROTOCOL · FINAL RECEIPT</h2>
+      <div id="epiCards"></div>
+      <button class="sys-btn primary" id="btnNewRun">[ NEW RUN — THE RAIN RESETS ]</button>
+    </div>
+  </section>
+
+  <!-- how to -->
+  <section id="howto" class="screen">
+    <div class="howto-card sys-window">
+      <h2>HOW IT WORKS</h2>
+      <ul>
+        <li><b>READ &amp; CHOOSE</b> — click or [SPACE] advances. Numbered choices: click or press [1..9]. Greyed choices show the trait/skill they want; they unlock as you change.</li>
+        <li><b>YOU ARE THE STATS</b> — EMPATHY (open), LUCIDITY (cold-clear), DEFIANCE (edit the rules), RELIC (how much of everyone else lives in you). Choices move them permanently. Your PERSONA title and available options follow.</li>
+        <li><b>SKILLS ARE PERMANENT</b> — ECHO SIGHT lets you catch contradictions; FROST READ, FLOOD TONGUE, STEEL MEMORY and friends gate whole branches. Some skills can be <em>lost</em>. Loss is also content.</li>
+        <li><b>CARGO</b> — packages ride in the tray (bottom-right). Carried minds whisper in the ticker and change scenes. Deliver the ORIGINAL (whole to them, gone from you) or a COPY (they get 92%, you keep a ghost — and it sharpens you).</li>
+        <li><b>OFFERINGS</b> — feeding a grief back to the city (you'll know when) calms weather and buys latitude.</li>
+        <li><b>ENDINGS</b> — the final roof offers RETURN / INTEGRATE / BROADCAST / GLITCH. Which are open depends on who you became on the way up. Autosaves per scene; CONTINUE recovers mid-run.</li>
+      </ul>
+      <button class="sys-btn" id="howtoClose">[ CLOSE ]</button>
+    </div>
+  </section>
+</div>
+<script type="module">
+  import { boot } from './src/main.js';
+  boot();
+</script>
+</body>
+</html>

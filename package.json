@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs && node games/afterglow/tests/story.test.mjs && node games/afterglow/tests/boot.test.mjs && node games/tide-and-bone/tests/engine.test.mjs && node games/tide-and-bone/tests/boot.test.mjs",
+    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs && node games/afterglow/tests/story.test.mjs && node games/afterglow/tests/boot.test.mjs && node games/tide-and-bone/tests/engine.test.mjs && node games/tide-and-bone/tests/boot.test.mjs && node games/lumen-protocol/tests/story.test.mjs && node games/lumen-protocol/tests/game.test.mjs && node games/lumen-protocol/tests/boot.test.mjs",
     "preview:apex": "node games/apex/tools/rec.mjs",
     "build:cyberstrike": "npm --prefix games/cyberstrike run build && cp games/cyberstrike/dist/index.html games/cyberstrike/play.html",
     "build:typestorm": "npm --prefix games/typestorm run build && cp games/typestorm/dist/index.html games/typestorm/play.html",
