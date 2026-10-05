@@ -24,6 +24,7 @@ export function makeVignette(G) {
     async play(step, camp) {
       await runBeats(step.beats || [], {
         state: G.st,
+        g: G,
         apply: (set) => G.applySet(set),
         fx: (fx) => this.doFx(fx),
         onAct: () => {},

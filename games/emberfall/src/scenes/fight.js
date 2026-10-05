@@ -25,7 +25,7 @@ export function makeFight(G) {
     },
 
     async run(step) {
-      await runBeats(step.fight.intro || [], { state: G.st, apply: (s) => G.applySet(s) });
+      await runBeats(step.fight.intro || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
       ui.hideDialogue();
       for (let i = 0; i < step.fight.exchanges; i++) {
         if (this.quit) return;
@@ -43,8 +43,8 @@ export function makeFight(G) {
       } else {
         G.applySet({ morale: -8, trust: -3 });
       }
-      await runBeats(win ? step.fight.winBeats : step.fight.loseBeats, { state: G.st, apply: (s) => G.applySet(s) });
-      await runBeats(step.fight.after || [], { state: G.st, apply: (s) => G.applySet(s) });
+      await runBeats(win ? step.fight.winBeats : step.fight.loseBeats, { state: G.st, apply: (s) => G.applySet(s), g: G });
+      await runBeats(step.fight.after || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
       ui.hideDialogue();
       if (!win && this.hurt.length === 0) this.hurt.push('bram');
       if (this.hurt.length) {

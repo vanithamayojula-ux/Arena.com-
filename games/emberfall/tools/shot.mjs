@@ -131,11 +131,12 @@ shot('campfire.png', (g) => {
   art.figure(g, W * 0.42, gy + 10, 1.0, { who: 'vera', pose: 'sit', phase: 2, dir: 1, rim: 'rgba(255,190,110,0.4)' });
   art.figure(g, W * 0.565, gy + 10, 0.94, { who: 'dill', pose: 'sit', phase: 1, dir: -1, rim: 'rgba(255,190,110,0.35)' });
   art.figure(g, W * 0.63, gy + 8, 1.18, { who: 'bram', pose: 'sit', phase: 3, dir: -1, rim: 'rgba(255,190,110,0.4)' });
-  art.figure(g, W * 0.36, gy + 12, 0.72, { who: 'fenn', pose: 'puppet', phase: 2.5, rim: 'rgba(140,220,205,0.4)' });
+  art.figure(g, W * 0.455, gy + 16, 0.74, { who: 'fenn', pose: 'kneel', phase: 2.5, dir: 1, rim: 'rgba(255,190,110,0.35)' });
   art.cinderMoth(g, W * 0.4, gy - 96, t, 1.2, 1);
-  const lights = [{ x: W * 0.5, y: gy + 38, r: 250, core: 0.9 }, { x: W * 0.82, y: gy - 60, r: 90, core: 0.6 }];
+  const lights = [{ x: W * 0.5, y: gy + 30, r: 240, core: 0.95 }, { x: W * 0.82, y: gy - 60, r: 130, core: 0.5 }];
   art.darkness(g, W, H, lights, 0.6);
-  for (const L of lights) art.lampGlow(g, L.x, L.y, L.r * 0.5, 0.5, 0.25, t);
+  art.lampGlow(g, lights[0].x, lights[0].y - 6, 210, 0.42, 0.3, t);
+  art.lampGlow(g, lights[1].x, lights[1].y - 8, 90, 0.3, 0.25, t);
   art.ash(g, W, H, t, 42, { a: 0.9, col: '255,190,120' });
   art.vignette(g, W, H, 1);
   art.grain(g, W, H, t, 5);
@@ -145,8 +146,9 @@ shot('campfire.png', (g) => {
 shot('lighthouse.png', (g) => {
   const t = 5.2;
   art.backdrop(g, W, H, 'cliff', t, { lit: true });
-  const lights = [{ x: W * 0.78, y: H * 0.52 - 108 - 190 * 0.72, r: 260, core: 0.9 }];
-  art.lampGlow(g, lights[0].x, lights[0].y, 150, 0.7, 0.2, t);
+  const lampY = H * 0.52 - 124 - 16 - 190 * 0.72 - 16;
+  art.lampGlow(g, W * 0.775, lampY, 190, 0.55, 0.22, t);
+  art.fogBands(g, W * 0.5, H * 0.52 + 30, 40, t, 4, 1.2);
   art.vignette(g, W, H, 0.8);
   art.grain(g, W, H, t, 11);
 });

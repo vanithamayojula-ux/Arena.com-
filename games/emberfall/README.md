@@ -60,7 +60,9 @@ games/emberfall/
 ## Test & frames
 
 ```sh
-node --test games/emberfall/tests/story.test.mjs   # story graph, scenes boot & draw, endings math
+node --test games/emberfall/tests/story.test.mjs \
+      games/emberfall/tests/soak.test.mjs           # same, plus the full-tour director soak
+# (both run inside `npm test` at the repo root)
 node games/emberfall/tools/shot.mjs                # regenerate screenshots/*.png
 ```
 

@@ -60,7 +60,7 @@ export function makeNegotiation(G) {
 
     async run(step) {
       const npc = this.npc;
-      await runBeats(npc.intro || [], { state: G.st, apply: (s) => G.applySet(s) });
+      await runBeats(npc.intro || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
       let outcome = null;
       while (this.guard > 0 && this.ex < npc.exchanges) {
         const tone = this.nextTone();
@@ -117,12 +117,12 @@ export function makeNegotiation(G) {
       }
       this.phase = 'outro';
       if (outcome === 'win') {
-        await runBeats(this.winBeats || npc.winBeats || [], { state: G.st, apply: (s) => G.applySet(s) });
+        await runBeats(this.winBeats || npc.winBeats || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
         if (npc.win?.set) G.applySet(npc.win.set);
         if (npc.win?.toast) ui.toast(npc.win.toast);
         audio.fanfare();
       } else {
-        await runBeats(this.loseBeatsOverride || npc.loseBeats || [], { state: G.st, apply: (s) => G.applySet(s) });
+        await runBeats(this.loseBeatsOverride || npc.loseBeats || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
         if (npc.lose?.set) G.applySet(npc.lose.set);
         audio.doom();
       }

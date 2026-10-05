@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs && node --test games/emberfall/tests/story.test.mjs",
+    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs && node --test games/emberfall/tests/story.test.mjs games/emberfall/tests/soak.test.mjs",
     "preview:apex": "node games/apex/tools/rec.mjs",
     "shots:emberfall": "node games/emberfall/tools/shot.mjs",
     "build:cyberstrike": "npm --prefix games/cyberstrike run build && cp games/cyberstrike/dist/index.html games/cyberstrike/play.html",

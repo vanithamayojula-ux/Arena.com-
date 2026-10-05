@@ -310,7 +310,7 @@ export function makePerformance(G) {
         ui.toast('It did not land. Somebody in Ashvale will quote this night for years.', 'bad');
       }
       G.addLog(`${sh.name}: ${Math.round(m)}% applause (${win ? 'the room was yours' : 'the room was rented'}).`);
-      await runBeats(win ? sh.outroWin || [] : sh.outroFlop || [], { state: G.st, apply: (s) => G.applySet(s) });
+      await runBeats(win ? sh.outroWin || [] : sh.outroFlop || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
       ui.hideDialogue();
       G.markHud();
       G.advance();

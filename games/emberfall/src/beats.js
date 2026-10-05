@@ -41,7 +41,7 @@ export async function runBeats(beats, ctx) {
       const c = b.choices[pick];
       if (c) {
         if (c.set && ctx.apply) ctx.apply(c.set);
-        if (c.do) await c.do(ctx.state, ctx);
+        if (c.do) await c.do(ctx.state, ctx.g || ctx);
         if (c.say) {
           ui.say(c.say.sp || '', resolveTx(c.say.tx, ctx.state, ctx), c.say.tone);
           await waitTyping();

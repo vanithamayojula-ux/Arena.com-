@@ -401,5 +401,10 @@ function showEndingCard() {
 }
 
 // go
+// A quiet window for tooling and the headless soak test — gameplay never looks at it.
+if (typeof window !== 'undefined') {
+  window.__emberfall = { G, get scene() { return scene; }, get running() { return running; }, startTour, showTitle };
+}
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else boot();

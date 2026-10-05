@@ -274,17 +274,23 @@ export function lighthouse(g, x, baseY, s, t, o = {}) {
       [1, 'rgba(255,140,60,0)'],
     ]);
     ell(g, 0, -H - 16, 130, 130);
-    // rotating beams
+    // rotating beams: light you can almost hear
     const rot = t * (o.beamSpeed === undefined ? 0.5 : o.beamSpeed);
     for (let b = 0; b < 2; b++) {
       const ang = rot + b * Math.PI;
-      const len = 320, sp = 0.09 + 0.05 * Math.abs(Math.cos(ang * 2));
-      g.fillStyle = `rgba(255,205,140,${0.12 + 0.1 * sp * 3})`;
-      poly(g, [
-        [0, -H - 16],
-        [Math.cos(ang - sp) * len, -H - 16 + Math.sin(ang - sp) * len * 0.24],
-        [Math.cos(ang + sp) * len, -H - 16 + Math.sin(ang + sp) * len * 0.24],
-      ], true);
+      const facing = Math.max(0.25, Math.abs(Math.cos(ang)));
+      const len = 340, sp = 0.055 + 0.03 * Math.abs(Math.cos(ang * 2));
+      const tx = Math.cos(ang) * len, ty = -H - 16 + Math.sin(ang) * len * 0.24;
+      g.fillStyle = grad(g, 'l', [0, -H - 16, tx, ty], [
+        [0, `rgba(255,214,150,${0.20 * facing})`],
+        [0.5, `rgba(255,180,104,${0.09 * facing})`],
+        [1, 'rgba(255,160,80,0)'],
+      ]);
+      g.beginPath();
+      g.moveTo(0, -H - 16);
+      g.lineTo(Math.cos(ang - sp) * len, -H - 16 + Math.sin(ang - sp) * len * 0.24);
+      g.lineTo(Math.cos(ang + sp) * len, -H - 16 + Math.sin(ang + sp) * len * 0.24);
+      g.closePath(); g.fill();
     }
     g.restore();
   }
@@ -298,9 +304,11 @@ export function lampGlow(g, x, y, r, warmth = 1, flick = 0, t = 0) {
   g.save();
   g.globalCompositeOperation = 'lighter';
   g.fillStyle = grad(g, 'r', [x, y, 0, x, y, r], [
-    [0, `rgba(255,214,150,${0.34 * warmth * fl})`],
-    [0.30, `rgba(255,158,74,${0.15 * warmth * fl})`],
-    [0.72, `rgba(214,96,58,${0.055 * warmth * fl})`],
+    [0, `rgba(255,222,164,${0.30 * warmth * fl})`],
+    [0.18, `rgba(255,186,108,${0.20 * warmth * fl})`],
+    [0.38, `rgba(255,158,74,${0.115 * warmth * fl})`],
+    [0.60, `rgba(232,120,62,${0.055 * warmth * fl})`],
+    [0.80, `rgba(206,96,58,${0.022 * warmth * fl})`],
     [1, 'rgba(120,50,40,0)'],
   ]);
   ell(g, x, y, r, r * 0.9);
@@ -321,14 +329,27 @@ export function lampObject(g, x, y, s, lit, kind = 'brass', t = 0) {
     return;
   }
   if (kind === 'sunkey') {
-    // the big brass lantern: a lantern like a reliquary
+    // the big brass lantern: a reliquary with a caged flame
     g.fillStyle = body;
-    ell(g, 0, 0, 15, 12);
-    g.fillStyle = lit ? 'rgba(255,214,140,0.95)' : 'rgba(60,64,84,0.8)';
-    ell(g, 0, -1, 10, 8);
-    g.fillStyle = metal; rect(g, -16, -2, 32, 2.5); rect(g, -2, -14, 2.5, 6);
+    ell(g, 0, 0, 16, 13);
+    if (lit) {
+      g.fillStyle = 'rgba(255,214,140,0.62)';
+      ell(g, 0, -1, 11, 9);
+      g.fillStyle = 'rgba(255,246,224,0.92)';
+      ell(g, 0, -2, 5.2, 6.4);
+    } else {
+      g.fillStyle = 'rgba(60,64,84,0.8)';
+      ell(g, 0, -1, 11, 9);
+    }
+    g.fillStyle = metal;
+    g.beginPath();
+    g.moveTo(-17, 1); g.lineTo(17, 1); g.lineTo(13, 4.5); g.lineTo(-13, 4.5);
+    g.closePath(); g.fill();
+    g.strokeStyle = metal; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(-9, 1); g.quadraticCurveTo(0, -16, 9, 1); g.stroke();
+    g.beginPath(); g.moveTo(0, 1); g.lineTo(0, -13); g.stroke();
     g.restore();
-    if (lit) lampGlow(g, x, y - 2, 90 * s, 1.15, 0.18, t);
+    if (lit) lampGlow(g, x, y - 2, Math.min(340, 82 * s), 0.85, 0.18, t);
     return;
   }
   // brass hall lantern
@@ -606,7 +627,9 @@ export function darkness(g, W, H, lights, base = 0.78, o = {}) {
     const r = Math.max(4, L.r);
     cg.fillStyle = grad(cg, 'r', [L.x, L.y, 0, L.x, L.y, r], [
       [0, `rgba(0,0,0,${L.core === undefined ? 0.95 : L.core})`],
-      [0.55, 'rgba(0,0,0,0.55)'],
+      [0.42, `rgba(0,0,0,${(L.core === undefined ? 0.95 : L.core) * 0.58})`],
+      [0.72, 'rgba(0,0,0,0.24)'],
+      [0.92, 'rgba(0,0,0,0.06)'],
       [1, 'rgba(0,0,0,0)'],
     ]);
     cg.fillRect(L.x - r, L.y - r, r * 2, r * 2);
@@ -820,10 +843,10 @@ export function backdrop(g, W, H, kind, t = 0, o = {}) {
     if (o.fire !== false) {
       g.save(); g.globalCompositeOperation = 'lighter';
       const fl = 0.75 + 0.25 * Math.sin(t * 9) * Math.sin(t * 3.7);
-      g.fillStyle = grad(g, 'r', [fx, fy - 8, 0, fx, fy - 8, 130], [
-        [0, `rgba(255,208,140,${0.5 * fl})`], [0.4, `rgba(255,140,60,${0.22 * fl})`], [1, 'rgba(255,90,40,0)'],
+      g.fillStyle = grad(g, 'r', [fx, fy - 6, 0, fx, fy - 6, 92], [
+        [0, `rgba(255,208,140,${0.5 * fl})`], [0.45, `rgba(255,140,60,${0.22 * fl})`], [0.8, `rgba(255,110,48,${0.07 * fl})`], [1, 'rgba(255,90,40,0)'],
       ]);
-      ell(g, fx, fy - 8, 130, 90);
+      ell(g, fx, fy - 6, 118, 84);
       for (let i = 0; i < 5; i++) {
         const fh = 16 + 12 * Math.abs(Math.sin(t * (6 + i) + i * 2));
         g.fillStyle = `rgba(255,${150 + i * 18},80,${0.5 - i * 0.07})`;
@@ -925,9 +948,11 @@ export function backdrop(g, W, H, kind, t = 0, o = {}) {
       rect(g, wx - 1.5, wy0 + 4, 3, wy1 - wy0 - 10);
     }
   } else if (kind === 'cliff') {
-    sky(g, W, H, t, { seed: 51, horizonY: H * 0.5, horizonGlow: 0.9, glowX: W * 0.5 });
-    // the sea, flat and pewter
+    sky(g, W, H, t, { seed: 51, horizonY: H * 0.52, horizonGlow: 0.9, glowX: W * 0.5 });
+    // the sea, flat and pewter, one hard waterline
     const wy = H * 0.52;
+    g.fillStyle = 'rgba(150,170,215,0.14)';
+    rect(g, 0, wy - 1, W * 0.62, 2.2);
     g.fillStyle = grad(g, 'l', [0, wy, 0, H], [[0, '#0d1330'], [1, '#05070f']]);
     rect(g, 0, wy, W, H - wy);
     for (let i = 0; i < 14; i++) {
@@ -935,19 +960,44 @@ export function backdrop(g, W, H, kind, t = 0, o = {}) {
       g.fillStyle = `rgba(140,160,210,${0.03 + (i % 4) * 0.012})`;
       rect(g, (i * 173) % W, yy, 50 + (i % 5) * 30, 1.6);
     }
-    // the rock the tower stands on
-    g.fillStyle = PAL.hillNear;
-    poly(g, [[W * 0.52, H], [W * 0.56, wy - 60], [W * 0.66, wy - 120], [W * 0.86, wy - 140], [W + 40, wy - 90], [W + 40, H]], true);
-    lighthouse(g, W * 0.78, wy - 108, 0.72, t, { lit: o.lit !== false });
-    fogBands(g, W, wy + 20, 60, t, 12, 1.5);
-    ash(g, W, H, t, 9, {});
-    // cliff path switchbacks
-    g.strokeStyle = 'rgba(40,36,54,0.5)'; g.lineWidth = 5;
-    g.beginPath(); g.moveTo(W * 0.05, H);
-    g.quadraticCurveTo(W * 0.3, H * 0.8, W * 0.28, H * 0.72);
-    g.quadraticCurveTo(W * 0.5, H * 0.66, W * 0.46, wy - 40);
-    g.quadraticCurveTo(W * 0.62, wy - 70, W * 0.66, wy - 100);
+    // the headland: a cape that ends at the water, like everything else here
+    const wy124 = wy - 124;
+    g.fillStyle = '#0a0d1a';
+    g.beginPath();
+    g.moveTo(W + 40, 560);
+    g.lineTo(W + 40, wy124 - 6);
+    g.lineTo(W * 0.915, wy124 - 18);
+    g.lineTo(W * 0.845, wy124 - 22);
+    g.lineTo(W * 0.74, wy124 - 4);
+    g.lineTo(W * 0.665, wy124 + 34);
+    g.lineTo(W * 0.6, wy - 46);
+    g.lineTo(W * 0.545, wy + 2);
+    // the shore: where the rock finally kneels
+    g.quadraticCurveTo(W * 0.62, wy + 52, W * 0.76, wy + 92);
+    g.quadraticCurveTo(W * 0.9, wy + 140, W + 40, wy + 190);
+    g.closePath(); g.fill();
+    // the day, remembering the ridge from behind
+    g.fillStyle = 'rgba(126,136,196,0.10)';
+    poly(g, [[W * 0.665, wy124 + 34], [W * 0.74, wy124 - 4], [W * 0.845, wy124 - 22], [W * 0.915, wy124 - 18], [W + 40, wy124 - 6], [W + 40, wy124 + 10], [W * 0.9, wy124 + 4], [W * 0.84, wy124 - 10], [W * 0.75, wy124 + 6], [W * 0.68, wy124 + 44]], true);
+    // surf, thin and patient, along the whole shore
+    g.strokeStyle = 'rgba(170,190,235,0.14)'; g.lineWidth = 2.4;
+    g.beginPath();
+    g.moveTo(W * 0.545, wy + 2);
+    g.quadraticCurveTo(W * 0.62, wy + 52, W * 0.76, wy + 92);
+    g.quadraticCurveTo(W * 0.9, wy + 140, W + 40, wy + 190);
     g.stroke();
+    lighthouse(g, W * 0.775, wy124 - 16, 0.72, t, { lit: o.lit !== false });
+    fogBands(g, W * 0.55, wy + 20, 52, t, 12, 1.35);
+    ash(g, W, H, t, 9, {});
+    // the pilgrim's stair, cut into the cliff's face and ending at the shore
+    g.strokeStyle = 'rgba(150,160,210,0.08)'; g.lineWidth = 3;
+    g.setLineDash([12, 16]);
+    g.beginPath();
+    g.moveTo(W * 0.6, wy + 66);
+    g.quadraticCurveTo(W * 0.655, wy + 8, W * 0.64, wy - 46);
+    g.quadraticCurveTo(W * 0.66, wy124 + 26, W * 0.7, wy124 + 18);
+    g.stroke();
+    g.setLineDash([]);
   } else if (kind === 'council') {
     g.fillStyle = grad(g, 'l', [0, 0, 0, H], [[0, '#120e1c'], [1, '#0a0813']]);
     rect(g, 0, 0, W, H);

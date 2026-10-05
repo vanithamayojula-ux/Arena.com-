@@ -53,7 +53,7 @@ export function makeWatch(G) {
 
     async run(step) {
       const a = step.arena;
-      await runBeats(a.intro || [], { state: G.st, apply: (s) => G.applySet(s) });
+      await runBeats(a.intro || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
       ui.hideDialogue();
       this.running = true;
     },
@@ -311,7 +311,7 @@ export function makeWatch(G) {
         G.st.wickGift = true; G.st.flags.wickGiven = true;
         ui.toast('ASHVALE GIVES THE TROUPE THE BRASS WICK — one free relight, anywhere.', 'cold');
       }
-      await runBeats(win ? a.winBeats || [] : a.loseBeats || [], { state: G.st, apply: (s) => G.applySet(s) });
+      await runBeats(win ? a.winBeats || [] : a.loseBeats || [], { state: G.st, apply: (s) => G.applySet(s), g: G });
       ui.hideDialogue();
       G.markHud();
       G.advance();
