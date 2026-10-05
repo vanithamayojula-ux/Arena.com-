@@ -1,16 +1,19 @@
 {
   "name": "arena-arcade",
   "version": "1.0.0",
-  "private": true,
-  "description": "Arena Arcade — a hub of browser games. Currently featuring APEX: The Cretaceous Chase.",
-  "type": "module",
+  "description": "Multi-game browser arcade platform featuring APEX, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, and Time Echo",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node --test",
-    "preview:apex": "node games/apex/tools/render-preview.mjs"
+    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs",
+    "preview:apex": "node games/apex/tools/rec.mjs",
+    "build:cyberstrike": "npm --prefix games/cyberstrike run build && cp games/cyberstrike/dist/index.html games/cyberstrike/play.html",
+    "build:typestorm": "npm --prefix games/typestorm run build && cp games/typestorm/dist/index.html games/typestorm/play.html",
+    "build:ghibli": "npm --prefix games/ghibli-style-delivery-game run build && cp games/ghibli-style-delivery-game/dist/index.html games/ghibli-style-delivery-game/play.html",
+    "build:all": "npm run build:cyberstrike && npm run build:typestorm && npm run build:ghibli"
   },
-  "engines": {
-    "node": ">=18"
-  }
+  "keywords": ["games", "arcade", "webgl", "html5", "canvas", "runner", "typing"],
+  "author": "",
+  "license": "MIT"
 }

@@ -1,320 +1,1742 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Arena Arcade — Play Everything</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b0f1a'/%3E%3Cpath d='M10 8l12 8-12 8z' fill='%2322d3ee'/%3E%3C/svg%3E" />
-<style>
-  :root {
-    --bg: #0b0f1a;
-    --bg2: #101827;
-    --panel: #141c2e;
-    --line: rgba(148, 163, 184, 0.16);
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --accent: #22d3ee;
-    --accent2: #a78bfa;
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    background:
-      radial-gradient(1100px 500px at 80% -10%, rgba(167, 139, 250, 0.14), transparent 60%),
-      radial-gradient(900px 500px at 10% -10%, rgba(34, 211, 238, 0.14), transparent 60%),
-      var(--bg);
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
-  }
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    backdrop-filter: blur(10px);
-    background: rgba(11, 15, 26, 0.78);
-    border-bottom: 1px solid var(--line);
-    padding: 14px 22px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    font-size: 18px;
-  }
-  .logo .badge {
-    width: 34px; height: 34px; border-radius: 9px;
-    display: grid; place-items: center;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: #06121a; font-size: 16px;
-  }
-  .logo span em { color: var(--accent); font-style: normal; }
-  .spacer { flex: 1; }
-  #search {
-    width: min(340px, 60vw);
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--bg2);
-    color: var(--text);
-    outline: none;
-    font-size: 14px;
-  }
-  #search:focus { border-color: var(--accent); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ARISE PLAY // Red Gate System Arcade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-abyss: #070205;
+      --bg-card: rgba(18, 6, 12, 0.85);
+      --bg-card-hover: rgba(30, 8, 18, 0.95);
+      --neon-red: #ff003b;
+      --neon-crimson: #ff1744;
+      --neon-crimson-dark: #8b0000;
+      --neon-red-glow: rgba(255, 0, 59, 0.55);
+      --blood-orange: #ff5500;
+      --shadow-purple: #9333ea;
+      --gold-rank: #ffd700;
+      --text-main: #fce7f3;
+      --text-muted: #9f8694;
+      --border-red: rgba(255, 0, 59, 0.38);
+      --border-red-glow: rgba(255, 0, 59, 0.85);
+    }
 
-  main { max-width: 1180px; margin: 0 auto; padding: 26px 22px 60px; }
-  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
-  .chip {
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--muted);
-    padding: 7px 14px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: 0.15s;
-  }
-  .chip:hover { color: var(--text); }
-  .chip.on {
-    color: #06121a;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-color: transparent;
-    font-weight: 700;
-  }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 18px;
-  }
-  .card {
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    overflow: hidden;
-    background: var(--panel);
-    cursor: pointer;
-    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s;
-    display: flex;
-    flex-direction: column;
-  }
-  .card:hover {
-    transform: translateY(-4px);
-    border-color: var(--accent);
-    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
-  }
-  .thumb {
-    height: 140px;
-    position: relative;
-    display: grid;
-    place-items: center;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 44px;
-  }
-  .thumb .play {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    background: rgba(6, 10, 18, 0.4);
-    opacity: 0;
-    transition: 0.16s;
-    font-size: 15px;
-    letter-spacing: 0.12em;
-    font-weight: 700;
-  }
-  .card:hover .play { opacity: 1; }
-  .card-body { padding: 14px 16px 16px; }
-  .card-body h3 { margin: 0 0 4px; font-size: 16px; }
-  .card-body p { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
-  .meta { display: flex; gap: 6px; flex-wrap: wrap; }
-  .tag {
-    font-size: 10.5px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border: 1px solid var(--line);
-    padding: 3px 8px;
-    border-radius: 6px;
-  }
-  .tag.engine { color: var(--accent); border-color: rgba(34, 211, 238, 0.4); }
+    body {
+      background-color: var(--bg-abyss);
+      color: var(--text-main);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      background-image: 
+        radial-gradient(ellipse at 50% -15%, rgba(255, 0, 59, 0.22) 0%, transparent 65%),
+        radial-gradient(ellipse at 85% 70%, rgba(255, 23, 68, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 15% 40%, rgba(139, 0, 0, 0.18) 0%, transparent 50%);
+    }
 
-  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+    /* Ambient Blood Ember & Shadow Particles Canvas */
+    #shadowCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
 
-  /* in-hub player */
-  #player {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    display: none;
-    background: rgba(4, 7, 12, 0.92);
-    backdrop-filter: blur(4px);
-    padding: 20px;
-  }
-  #player.open { display: flex; flex-direction: column; }
-  .player-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .player-bar h2 { margin: 0; font-size: 17px; flex: 1; }
-  .pbtn {
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--text);
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-  }
-  .pbtn:hover { border-color: var(--accent); }
-  #player iframe {
-    flex: 1;
-    width: 100%;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: #000;
-  }
-</style>
+    /* Red System Scanline & Grid Effect */
+    .system-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background: 
+        linear-gradient(rgba(255, 0, 59, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 59, 0.03) 1px, transparent 1px);
+      background-size: 38px 38px;
+    }
+
+    /* Navbar / Hunter Status HUD */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(8, 2, 6, 0.92);
+      border-bottom: 1px solid var(--border-red);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 0, 59, 0.3);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-decoration: none;
+    }
+
+    .system-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 0, 59, 0.15);
+      border: 1px solid var(--neon-red);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 18px var(--neon-red-glow);
+      position: relative;
+    }
+
+    .system-icon::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px dashed rgba(255, 0, 59, 0.5);
+      border-radius: 9px;
+      animation: rotateDash 15s linear infinite;
+    }
+
+    @keyframes rotateDash {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .system-icon span {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 20px;
+      color: var(--neon-red);
+      text-shadow: 0 0 12px var(--neon-red);
+    }
+
+    .brand-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: #ffffff;
+      text-shadow: 0 0 14px rgba(255, 0, 59, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title b {
+      color: var(--neon-red);
+    }
+
+    .brand-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #ff4d6d;
+      text-transform: uppercase;
+    }
+
+    /* Hunter Navigation Links */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--neon-red);
+      text-shadow: 0 0 8px var(--neon-red);
+    }
+
+    /* Hunter Status Widget */
+    .player-hud {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(22, 6, 14, 0.8);
+      border: 1px solid rgba(255, 0, 59, 0.35);
+      border-radius: 8px;
+      padding: 6px 14px;
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 0, 59, 0.15);
+    }
+
+    .level-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-right: 12px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .level-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--gold-rank);
+      letter-spacing: 1px;
+    }
+
+    .level-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 900;
+      font-size: 18px;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 10px var(--gold-rank);
+    }
+
+    .bars-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 140px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-name {
+      font-weight: bold;
+    }
+
+    .hp-text { color: #ff1744; }
+    .mp-text { color: #ff5500; }
+
+    .bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hp-bar-fill {
+      width: 98%;
+      height: 100%;
+      background: linear-gradient(90deg, #b80028, #ff003b);
+      box-shadow: 0 0 8px rgba(255, 0, 59, 0.85);
+      border-radius: 2px;
+    }
+
+    .mp-bar-fill {
+      width: 92%;
+      height: 100%;
+      background: linear-gradient(90deg, #c43800, #ff6600);
+      box-shadow: 0 0 8px rgba(255, 85, 0, 0.85);
+      border-radius: 2px;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 50px 24px 30px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: var(--neon-red);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero-eyebrow::before, .hero-eyebrow::after {
+      content: "──";
+      color: var(--neon-red);
+      letter-spacing: -2px;
+    }
+
+    .hero h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(34px, 5.5vw, 68px);
+      font-weight: 900;
+      letter-spacing: 2px;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      text-shadow: 0 0 25px rgba(255, 0, 59, 0.5), 0 0 50px rgba(184, 0, 40, 0.35);
+      color: #fff;
+    }
+
+    .hero h1 span.red-glow {
+      color: var(--neon-red);
+      text-shadow: 0 0 24px var(--neon-red);
+    }
+
+    /* Red System Window in Hero */
+    .system-window {
+      max-width: 700px;
+      margin: 0 auto 36px;
+      background: rgba(16, 5, 11, 0.92);
+      border: 1px solid var(--neon-red);
+      border-radius: 10px;
+      box-shadow: 
+        0 0 30px rgba(255, 0, 59, 0.3),
+        inset 0 0 24px rgba(255, 0, 59, 0.08);
+      position: relative;
+      padding: 24px;
+      backdrop-filter: blur(14px);
+      text-align: left;
+    }
+
+    /* Red Corner crosshairs */
+    .system-window::before {
+      content: "┌               ┐";
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      right: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--neon-red);
+      font-size: 12px;
+      letter-spacing: 0;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .system-window::after {
+      content: "└               ┘";
+      position: absolute;
+      bottom: 4px;
+      left: 6px;
+      right: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--neon-red);
+      font-size: 12px;
+      letter-spacing: 0;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    .sys-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 0, 59, 0.25);
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+
+    .sys-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--neon-red);
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sys-blink {
+      width: 7px;
+      height: 7px;
+      background: var(--neon-red);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--neon-red);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
+    }
+
+    .sys-quest-title {
+      font-family: 'Cinzel', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .sys-quest-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: #fbcfe8;
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    .quest-progress-box {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 0, 59, 0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+    }
+
+    .penalty-warning {
+      color: #ff3366;
+      font-size: 11px;
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-system {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 12px 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      border: 0;
+    }
+
+    .btn-red-gate {
+      background: linear-gradient(135deg, var(--neon-red), #990022);
+      color: white;
+      box-shadow: 0 0 20px var(--neon-red-glow);
+      border: 1px solid #ff4d6d;
+    }
+
+    .btn-red-gate:hover {
+      background: linear-gradient(135deg, #ff1a4a, #c4002c);
+      box-shadow: 0 0 32px var(--neon-red-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-red-outline {
+      background: rgba(255, 0, 59, 0.08);
+      color: var(--neon-red);
+      border: 1px solid var(--neon-red);
+      box-shadow: 0 0 15px rgba(255, 0, 59, 0.2);
+    }
+
+    .btn-red-outline:hover {
+      background: rgba(255, 0, 59, 0.22);
+      color: #fff;
+      box-shadow: 0 0 25px var(--neon-red-glow);
+      transform: translateY(-2px);
+    }
+
+    /* Warning Banner for Featured Boss Gate (Apex Dinosaur Hunt) */
+    .boss-gate-banner {
+      max-width: 1200px;
+      margin: 0 auto 40px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .red-gate-alert {
+      background: linear-gradient(90deg, rgba(255, 0, 59, 0.28) 0%, rgba(26, 6, 14, 0.9) 50%, rgba(255, 0, 59, 0.2) 100%);
+      border: 1px solid var(--neon-red);
+      border-radius: 12px;
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 0 40px rgba(255, 0, 59, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .red-gate-alert::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--neon-red);
+      box-shadow: 0 0 16px var(--neon-red);
+    }
+
+    .alert-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .alert-badge {
+      background: var(--neon-red);
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      letter-spacing: 1.5px;
+      animation: pulse 1.2s infinite;
+    }
+
+    .alert-info h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      letter-spacing: 1px;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .alert-info p {
+      font-size: 13.5px;
+      color: #fbcfe8;
+    }
+
+    /* Gates Section */
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto 60px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 0, 59, 0.25);
+      padding-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title span {
+      color: var(--neon-red);
+      text-shadow: 0 0 12px var(--neon-red);
+    }
+
+    /* Gate Filter Tabs */
+    .gate-filters {
+      display: flex;
+      gap: 8px;
+      background: rgba(20, 6, 14, 0.8);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 0, 59, 0.25);
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      background: rgba(255, 0, 59, 0.2);
+      color: var(--neon-red);
+      box-shadow: 0 0 12px rgba(255, 0, 59, 0.25);
+    }
+
+    /* Gates Grid */
+    .gates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 26px;
+    }
+
+    /* Gate Card (Red System Window style) */
+    .gate-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+      transition: all 0.3s ease;
+      position: relative;
+      backdrop-filter: blur(10px);
+    }
+
+    .gate-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-red-glow);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 32px var(--neon-red-glow);
+    }
+
+    /* Corner crosshairs */
+    .gate-card::before {
+      content: "┼";
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--neon-red);
+      font-size: 11px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .gate-card::after {
+      content: "┼";
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--neon-red);
+      font-size: 11px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .gate-thumbnail {
+      width: 100%;
+      height: 200px;
+      position: relative;
+      overflow: hidden;
+      background: #090306;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gate-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .gate-card:hover .gate-thumbnail img {
+      transform: scale(1.06);
+    }
+
+    .gate-thumbnail-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .rank-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      z-index: 5;
+    }
+
+    .badge-s {
+      background: linear-gradient(135deg, #ff003b, #8b0000);
+      color: white;
+      border: 1px solid #ff4d6d;
+      box-shadow: 0 0 15px var(--neon-red-glow);
+    }
+
+    .badge-a {
+      background: linear-gradient(135deg, #d90429, #660708);
+      color: #fff;
+      border: 1px solid #ef233c;
+      box-shadow: 0 0 15px rgba(239, 35, 60, 0.5);
+    }
+
+    .gate-type-tag {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(12, 3, 8, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 0, 59, 0.3);
+      color: #fbcfe8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      z-index: 5;
+    }
+
+    .gate-info {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .gate-title {
+      font-family: 'Cinzel', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .gate-desc {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+
+    .gate-stats {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 0, 59, 0.15);
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .danger-level-bar {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .danger-fill-s {
+      width: 98%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff0055, #ff1744);
+    }
+
+    .danger-fill-a {
+      width: 82%;
+      height: 100%;
+      background: linear-gradient(90deg, #e11d48, #fb7185);
+    }
+
+    .gate-actions {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-enter-gate {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 11px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 0;
+    }
+
+    .btn-enter-red {
+      background: linear-gradient(135deg, var(--neon-red), #990022);
+      color: #fff;
+      box-shadow: 0 0 18px var(--neon-red-glow);
+    }
+
+    .btn-enter-red:hover {
+      background: linear-gradient(135deg, #ff2a55, #b80028);
+      box-shadow: 0 0 30px var(--neon-red-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-portal-window {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 0, 59, 0.3);
+      color: #fce7f3;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    .btn-portal-window:hover {
+      background: rgba(255, 0, 59, 0.2);
+      border-color: var(--neon-red);
+      color: #fff;
+    }
+
+    /* Leaderboard / Hunter Association Rankings */
+    .hunter-table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-red);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+    }
+
+    .hunter-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .hunter-table th {
+      background: rgba(10, 3, 7, 0.95);
+      color: var(--neon-red);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 0, 59, 0.25);
+    }
+
+    .hunter-table td {
+      padding: 14px 18px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #f3e8ff;
+    }
+
+    .hunter-table tr:hover td {
+      background: rgba(255, 0, 59, 0.06);
+    }
+
+    .hunter-rank-cell {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .rank-s-text { color: var(--gold-rank); text-shadow: 0 0 10px var(--gold-rank); }
+    .rank-a-text { color: #ff4d6d; }
+
+    /* Red System Window Arcade Modal Player */
+    .system-player-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 2, 5, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .system-player-modal.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-sys-topbar {
+      background: rgba(16, 4, 11, 0.95);
+      border-bottom: 1px solid var(--neon-red);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 0 25px rgba(255, 0, 59, 0.3);
+    }
+
+    .modal-gate-title {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-gate-title span {
+      color: var(--neon-red);
+    }
+
+    .gate-switcher {
+      background: rgba(24, 6, 16, 0.85);
+      border: 1px solid var(--neon-red);
+      color: var(--neon-red);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .modal-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 0, 59, 0.3);
+      color: #fce7f3;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .modal-action-btn:hover {
+      background: rgba(255, 0, 59, 0.2);
+      border-color: var(--neon-red);
+      color: #fff;
+    }
+
+    .modal-btn-exit {
+      background: var(--neon-red);
+      border-color: #ff4d6d;
+      color: white;
+      box-shadow: 0 0 15px var(--neon-red-glow);
+    }
+
+    .modal-btn-exit:hover {
+      background: #c4002c;
+      box-shadow: 0 0 25px var(--neon-red-glow);
+    }
+
+    .modal-iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #000;
+    }
+
+    .gate-iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(255, 0, 59, 0.25);
+      background: rgba(8, 2, 6, 0.95);
+      padding: 36px 24px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      position: relative;
+      z-index: 10;
+    }
+
+    footer a {
+      color: var(--neon-red);
+      text-decoration: none;
+    }
+
+    @media (max-width: 820px) {
+      .player-hud, .nav-links {
+        display: none;
+      }
+      .gates-grid {
+        grid-template-columns: 1fr;
+      }
+      .gate-actions {
+        grid-template-columns: 1fr;
+      }
+      .modal-sys-topbar {
+        padding: 10px 14px;
+      }
+      .modal-gate-title {
+        font-size: 13px;
+      }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <div class="logo"><div class="badge">&#9654;</div><span>ARENA <em>ARCADE</em></span></div>
-  <div class="spacer"></div>
-  <input id="search" type="search" placeholder="Search games&hellip;" autocomplete="off" />
-</header>
 
-<main>
-  <div class="filters" id="filters"></div>
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" hidden>Nothing matches that search.</div>
-</main>
+  <!-- Background Rising Blood Embers Canvas -->
+  <canvas id="shadowCanvas"></canvas>
+  <div class="system-overlay"></div>
 
-<div id="player">
-  <div class="player-bar">
-    <h2 id="player-title">Game</h2>
-    <button class="pbtn" id="player-open" title="Open in a new tab">&#8599; New tab</button>
-    <button class="pbtn" id="player-close">Close &#10005;</button>
-  </div>
-  <iframe id="player-frame" allow="fullscreen; autoplay; gamepad" title="Game"></iframe>
-</div>
+  <!-- Navbar / Hunter Status HUD -->
+  <header>
+    <a href="#" class="brand-group">
+      <div class="system-icon">
+        <span>A</span>
+      </div>
+      <div class="brand-meta">
+        <div class="brand-title">ARISE <b>PLAY</b></div>
+        <div class="brand-subtitle">RED GATE SYSTEM // BLOOD MONARCH</div>
+      </div>
+    </a>
 
-<script>
-  // Registry — add a game here and it appears in the hub automatically.
-  const GAMES = [
-    {
-      id: "apex",
-      title: "APEX — The Cretaceous Chase",
-      desc: "Run the herds down as a tyrannosaur. Stamina-based chases, rival raptors, wave quotas.",
-      dir: "games/apex",
-      entry: "index.html",
-      engine: "Canvas 2D",
-      emoji: "🦖",
-      tint: ["#3f5c30", "#6f7a3f"],
-      tags: ["action", "arcade", "survival"],
-    },
-  ];
+    <nav class="nav-links">
+      <a href="#gates" class="nav-link active">DUNGEON GATES</a>
+      <a href="#quest" class="nav-link">DAILY QUEST</a>
+      <a href="#ranks" class="nav-link">HUNTER RANKS</a>
+    </nav>
 
-  const grid = document.getElementById("grid");
-  const empty = document.getElementById("empty");
-  const filtersEl = document.getElementById("filters");
-  const search = document.getElementById("search");
-  const player = document.getElementById("player");
-  const frame = document.getElementById("player-frame");
-  const ptitle = document.getElementById("player-title");
-
-  let activeTag = "all";
-
-  const allTags = ["all", ...new Set(GAMES.flatMap((g) => g.tags))];
-  filtersEl.innerHTML = allTags
-    .map((t) => `<button class="chip${t === "all" ? " on" : ""}" data-tag="${t}">${t}</button>`)
-    .join("");
-
-  function current() {
-    const q = search.value.trim().toLowerCase();
-    return GAMES.filter((g) => {
-      const tagOk = activeTag === "all" || g.tags.includes(activeTag);
-      const qOk =
-        !q ||
-        g.title.toLowerCase().includes(q) ||
-        g.desc.toLowerCase().includes(q) ||
-        g.tags.some((t) => t.includes(q));
-      return tagOk && qOk;
-    });
-  }
-
-  function render() {
-    const list = current();
-    empty.hidden = list.length !== 0;
-    grid.innerHTML = list
-      .map(
-        (g) => `
-      <div class="card" data-id="${g.id}" role="button" tabindex="0">
-        <div class="thumb" style="background:linear-gradient(135deg, ${g.tint[0]}, ${g.tint[1]})">
-          <span>${g.emoji}</span>
-          <div class="play">PLAY &#9654;</div>
+    <!-- Player Status HUD -->
+    <div class="player-hud">
+      <div class="level-badge">
+        <span class="level-label">RANK</span>
+        <span class="level-val" style="color: var(--gold-rank)">S</span>
+      </div>
+      <div class="level-badge" style="border:0; padding-right: 0;">
+        <span class="level-label">LVL</span>
+        <span class="level-val">100</span>
+      </div>
+      <div class="bars-group">
+        <div class="stat-row">
+          <span class="stat-name hp-text">HP</span>
+          <span class="hp-text">24,500 / 24,500</span>
         </div>
-        <div class="card-body">
-          <h3>${g.title}</h3>
-          <p>${g.desc}</p>
-          <div class="meta">
-            <span class="tag engine">${g.engine}</span>
-            ${g.tags.map((t) => `<span class="tag">${t}</span>`).join("")}
+        <div class="bar-bg">
+          <div class="hp-bar-fill"></div>
+        </div>
+        <div class="stat-row" style="margin-top:2px;">
+          <span class="stat-name mp-text">MP</span>
+          <span class="mp-text">12,800 / 12,800</span>
+        </div>
+        <div class="bar-bg">
+          <div class="mp-bar-fill"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="quest">
+    <div class="hero-eyebrow">SYSTEM LOG // RED GATE AWAKENING DETECTED</div>
+    <h1>ARISE, MONARCH.<br><span class="red-glow">BREACH THE RED GATES.</span></h1>
+
+    <!-- Glowing Red System Notification Window -->
+    <div class="system-window">
+      <div class="sys-header">
+        <div class="sys-tag">
+          <span class="sys-blink"></span>
+          [ SYSTEM NOTIFICATION // RED GATE QUEST ]
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--gold-rank);">
+          DIFFICULTY: S-RANK (EXTREME)
+        </div>
+      </div>
+
+      <div class="sys-quest-title">
+        DAILY QUEST: SURVIVE THE RED GATE DUNGEONS
+      </div>
+
+      <div class="sys-quest-desc">
+        A Crimson dimensional rift has sealed the valley. Hunt Cretaceous apex predators, dodge high-speed subway trains, and eliminate boss missiles before your vitality expires.
+      </div>
+
+      <div class="quest-progress-box">
+        <span>GATES ENTERED TODAY:</span>
+        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 6 GATES CLEARED</strong>
+      </div>
+
+      <div class="penalty-warning">
+        <span>⚠</span> PENALTY WARNING: Sealed Red Gate. Retreat is forbidden until all wave quotas are satisfied.
+      </div>
+
+      <div class="hero-actions">
+        <button class="btn-system btn-red-gate" onclick="launchGate('apex')">
+          [ BREACH APEX GATE ]
+        </button>
+        <a href="#ranks" class="btn-system btn-red-outline">
+          [ VIEW HUNTER RANKS ]
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Boss Gate: Apex Dinosaur Hunt -->
+  <div class="boss-gate-banner">
+    <div class="red-gate-alert">
+      <div class="alert-left">
+        <div class="alert-badge">S-RANK APEX GATE</div>
+        <div class="alert-info">
+          <h3>FEATURED BOSS DUNGEON: APEX — THE CRETACEOUS CHASE</h3>
+          <p>Top-down prehistoric valley trial. Stalk fleeing herds as a hungry Tyrannosaur, unleash bite lunges, and dominate rival raptors.</p>
+        </div>
+      </div>
+      <button class="btn-system btn-red-gate" onclick="launchGate('apex')">
+        [ HUNT AS APEX PREDATOR ]
+      </button>
+    </div>
+  </div>
+
+  <!-- Available Gates Section -->
+  <section class="section-container" id="gates">
+    <div class="section-header">
+      <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
+      <div class="gate-filters">
+        <button class="filter-btn active" data-filter="all">ALL GATES (6)</button>
+        <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
+        <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
+        <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
+      </div>
+    </div>
+
+    <div class="gates-grid" id="gatesGrid">
+
+      <!-- GATE 1: APEX (RANK S / RED GATE) -->
+      <article class="gate-card" data-category="predator" data-title="Apex The Cretaceous Chase Dinosaur">
+        <div class="gate-thumbnail">
+          <img src="games/apex/screenshots/frame.png" alt="Apex Dinosaur Chase Gameplay" onerror="this.src='games/apex/screenshots/bestiary.png'">
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // APEX HUNTER</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            APEX: The Cretaceous Chase
+          </h3>
+          <p class="gate-desc">
+            Command a mighty Tyrannosaur in a lush prehistoric valley. Track prey scent cones, sprint to build momentum, snap jaw bites, and survive goring Triceratops horns.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:var(--neon-red);">DANGER RATING</span>
+              <span style="color:var(--neon-red);">EXTREME (99%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>WASD / Mouse Aim / Space Bite</span>
+              <span>ENGINE: CANVAS 2D</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('apex')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/apex/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
           </div>
         </div>
-      </div>`
-      )
-      .join("");
-  }
+      </article>
 
-  function openGame(g) {
-    ptitle.textContent = g.title;
-    frame.src = `${g.dir}/${g.entry}`;
-    player.classList.add("open");
-  }
-  function closeGame() {
-    player.classList.remove("open");
-    frame.src = "about:blank";
-  }
+      <!-- GATE 2: NEON RUN (RANK S / RED GATE) -->
+      <article class="gate-card" data-category="predator" data-title="Neon Run Midnight Express">
+        <div class="gate-thumbnail">
+          <img src="games/neon-run/screenshots/game-3d.png" alt="Neon Run 3D Red Gate" onerror="this.src='games/neon-run/screenshots/menu-3d.png'">
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // 3D RUNNER</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Neon Run: Midnight Express
+          </h3>
+          <p class="gate-desc">
+            An S-Rank Red Gate trial. Three speeding subway tracks, zero brakes. Leap trains, slide under barrier gates, and harvest monarch gold before the city consumes you.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:var(--neon-red);">DANGER RATING</span>
+              <span style="color:var(--neon-red);">EXTREME (98%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>A / D Steer • Space Jump • S Slide</span>
+              <span>ENGINE: THREE.JS 3D</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('neon-run')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/neon-run/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
 
-  grid.addEventListener("click", (e) => {
-    const card = e.target.closest(".card");
-    if (!card) return;
-    openGame(GAMES.find((g) => g.id === card.dataset.id));
-  });
-  grid.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    const card = e.target.closest(".card");
-    if (card) openGame(GAMES.find((g) => g.id === card.dataset.id));
-  });
+      <!-- GATE 3: CYBERSTRIKE (RANK A / CRIMSON COMBAT) -->
+      <article class="gate-card" data-category="typing" data-title="Cyberstrike Neon Typing Blaster">
+        <div class="gate-thumbnail">
+          <div class="gate-thumbnail-fallback" style="background: radial-gradient(circle at center, #3b0716 0%, #080205 100%);">
+            <div style="font-size: 52px; filter: drop-shadow(0 0 16px var(--neon-red));">⚡</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #ff2a55; letter-spacing: 2px; margin-top: 8px;">
+              CRIMSON LASER CANNON
+            </div>
+          </div>
+          <span class="rank-badge badge-a">RANK A</span>
+          <span class="gate-type-tag">RED GATE // LASER TYPING</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Cyberstrike: Laser Blaster
+          </h3>
+          <p class="gate-desc">
+            High-tech combat trial. Decimate falling word projectiles and boss missiles with precision keyboard strikes, trigger EMP bombs, freeze time, and unlock shadow streaks.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#ff3366;">DANGER RATING</span>
+              <span style="color:#ff3366;">HIGH (85%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-a"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Type falling words • ESC Pause</span>
+              <span>FEAT: EMP BOMBS</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('cyberstrike')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/cyberstrike/play.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
 
-  filtersEl.addEventListener("click", (e) => {
-    const chip = e.target.closest(".chip");
-    if (!chip) return;
-    activeTag = chip.dataset.tag;
-    filtersEl.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c === chip));
-    render();
-  });
+      <!-- GATE 4: TYPESTORM (RANK A / CRIMSON BLITZ) -->
+      <article class="gate-card" data-category="typing" data-title="Typestorm Word Blitz">
+        <div class="gate-thumbnail">
+          <div class="gate-thumbnail-fallback" style="background: radial-gradient(circle at center, #2e0813 0%, #080205 100%);">
+            <div style="font-size: 52px; filter: drop-shadow(0 0 16px var(--blood-orange));">🌪️</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #ff5500; letter-spacing: 2px; margin-top: 8px;">
+              OVERDRIVE BLITZ
+            </div>
+          </div>
+          <span class="rank-badge badge-a">RANK A</span>
+          <span class="gate-type-tag">RED GATE // WORD BLITZ</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Typestorm: Neon Blitz
+          </h3>
+          <p class="gate-desc">
+            Relentless speed trial. Blast raining words before your energy barrier shatters. Chain combos, unleash OVERDRIVE mode, and etch your hunter alias on the Hall of Fame.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#ff5500;">DANGER RATING</span>
+              <span style="color:#ff5500;">HIGH (80%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-a"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Keyboard / Touch • Combos</span>
+              <span>FEAT: OVERDRIVE BOOST</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('typestorm')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/typestorm/play.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
 
-  search.addEventListener("input", render);
-  document.getElementById("player-close").addEventListener("click", closeGame);
-  document.getElementById("player-open").addEventListener("click", () => {
-    const g = GAMES.find((x) => x.title === ptitle.textContent);
-    if (g) window.open(`${g.dir}/${g.entry}`, "_blank");
-  });
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && player.classList.contains("open")) closeGame();
-  });
+      <!-- GATE 5: LETTERS ON THE WIND (RANK A / WIND COURIER) -->
+      <article class="gate-card" data-category="chronos" data-title="Letters on the Wind Ghibli Post Boy Delivery">
+        <div class="gate-thumbnail">
+          <div class="gate-thumbnail-fallback" style="background: radial-gradient(circle at center, #1b382b 0%, #06110a 100%);">
+            <div style="font-size: 52px; filter: drop-shadow(0 0 16px #4ade80);">🍃</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #4ade80; letter-spacing: 2px; margin-top: 8px;">
+              VALLEY COURIER EXPEDITION
+            </div>
+          </div>
+          <span class="rank-badge badge-a">RANK A</span>
+          <span class="gate-type-tag">RED GATE // WIND COURIER</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Letters on the Wind: Post Boy
+          </h3>
+          <p class="gate-desc">
+            Whimsical delivery expedition. Cycle across rolling coastal hills, preserve postal stamina, converse with eccentric villagers, and deliver urgent mail before dusk settles.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#4ade80;">DANGER RATING</span>
+              <span style="color:#4ade80;">MODERATE (65%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-a" style="background: linear-gradient(90deg, #10b981, #4ade80); width: 65%;"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Bicycle / Touch • Dialogues</span>
+              <span>FEAT: STAMINA & COMBOS</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('letters-wind')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/ghibli-style-delivery-game/play.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
 
-  render();
-</script>
+      <!-- GATE 6: TIME ECHO (RANK S / TEMPORAL PUZZLE) -->
+      <article class="gate-card" data-category="chronos" data-title="Time Echo Chronology Lab Temporal Puzzle">
+        <div class="gate-thumbnail">
+          <div class="gate-thumbnail-fallback" style="background: radial-gradient(circle at center, #0c2340 0%, #030a14 100%);">
+            <div style="font-size: 52px; filter: drop-shadow(0 0 16px #38bdf8);">⏳</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #38bdf8; letter-spacing: 2px; margin-top: 8px;">
+              CHRONOLOGY LAB
+            </div>
+          </div>
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // TIME ECHO</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Time Echo: Chronology Lab
+          </h3>
+          <p class="gate-desc">
+            Mind-bending temporal puzzle trial. Record 5-second echo loops to clone your past actions, hold pressure relays open, dodge lethal spikes, and conquer 100 distinct testing chambers.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#38bdf8;">DANGER RATING</span>
+              <span style="color:#38bdf8;">EXTREME (94%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s" style="background: linear-gradient(90deg, #0284c7, #38bdf8);"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Arrows / WASD • Space Jump</span>
+              <span>FEAT: 100 SECTORS ARCHIVE</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('time-echo')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/time-echo/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- Leaderboard: Top Hunters -->
+  <section class="section-container" id="ranks">
+    <div class="section-header">
+      <h2 class="section-title">TOP HUNTERS // <span>RANKINGS</span></h2>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold-rank);">
+        RED GATE CLEARANCE REGISTRY
+      </div>
+    </div>
+
+    <div class="hunter-table-wrapper">
+      <table class="hunter-table">
+        <thead>
+          <tr>
+            <th>RANK</th>
+            <th>HUNTER NAME</th>
+            <th>TITLE / GUILD</th>
+            <th>GATES CLEARED</th>
+            <th>DUNGEON SCORE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="hunter-rank-cell rank-s-text">S-RANK #1</td>
+            <td><strong>Sung Jinwoo</strong></td>
+            <td>Shadow Monarch // Ahjin Guild</td>
+            <td>9,999</td>
+            <td style="color: var(--gold-rank); font-weight: bold;">∞ BLOOD ESSENCE</td>
+          </tr>
+          <tr>
+            <td class="hunter-rank-cell rank-s-text">S-RANK #2</td>
+            <td>Cha Hae-In</td>
+            <td>Sword Saint // Hunters Guild</td>
+            <td>1,420</td>
+            <td style="color: var(--neon-red);">894,200 PTS</td>
+          </tr>
+          <tr>
+            <td class="hunter-rank-cell rank-s-text">S-RANK #3</td>
+            <td>Choi Jong-In</td>
+            <td>The Ultimate Soldier // Hunters Guild</td>
+            <td>1,150</td>
+            <td style="color: var(--neon-red);">762,100 PTS</td>
+          </tr>
+          <tr>
+            <td class="hunter-rank-cell rank-a-text">A-RANK #4</td>
+            <td>Woo Jin-Chul</td>
+            <td>Chief Inspector // Surveillance Team</td>
+            <td>840</td>
+            <td style="color: #ff4d6d;">512,400 PTS</td>
+          </tr>
+          <tr>
+            <td class="hunter-rank-cell rank-a-text">YOU (PLAYER)</td>
+            <td><strong id="playerRankName">Blood Monarch Candidate</strong></td>
+            <td>Awakened Red Gate Hunter</td>
+            <td id="playerClearedCount">0</td>
+            <td id="playerScoreCount" style="color: var(--neon-red);">0 PTS</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Red System Window Player Modal -->
+  <div class="system-player-modal" id="systemPlayer">
+    <div class="modal-sys-topbar">
+      <div class="modal-gate-title">
+        <span class="sys-blink"></span>
+        <div id="modalGateHeading">RED GATE ACTIVE</div>
+        <select class="gate-switcher" id="gateSwitcher" onchange="switchGate(this.value)">
+          <option value="apex">[RANK S] APEX: The Cretaceous Chase</option>
+          <option value="neon-run">[RANK S] Neon Run: Midnight Express</option>
+          <option value="cyberstrike">[RANK A] Cyberstrike: Laser Blaster</option>
+          <option value="typestorm">[RANK A] Typestorm: Neon Blitz</option>
+          <option value="letters-wind">[RANK A] Letters on the Wind: Post Boy</option>
+          <option value="time-echo">[RANK S] Time Echo: Chronology Lab</option>
+        </select>
+      </div>
+
+      <div class="modal-btn-group">
+        <button class="modal-action-btn" onclick="togglePlayerFullscreen()">⤢ Fullscreen</button>
+        <a id="modalExternalTab" href="#" target="_blank" class="modal-action-btn">↗ New Tab</a>
+        <button class="modal-action-btn modal-btn-exit" onclick="closeGate()">✕ Exit Gate</button>
+      </div>
+    </div>
+
+    <div class="modal-iframe-container">
+      <iframe class="gate-iframe" id="gateIframe" src="" allow="autoplay; fullscreen; keyboard"></iframe>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>⚔️ <strong>ARISE PLAY</strong> — Solo Leveling Red Gate System Arcade.</p>
+    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, and Time Echo.</p>
+  </footer>
+
+  <!-- System UI Scripts & Ambient Red Embers -->
+  <script>
+    // Audio Synthesizer for Solo Leveling Red Gate SFX
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSystemSound(type = 'ping') {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        if (type === 'gate') {
+          // Deep resonant Red Gate breach chime
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.35);
+          gain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.45);
+        } else {
+          // Sharp red system pulse
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(980, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1960, audioCtx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.16, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.15);
+        }
+      } catch(e) {}
+    }
+
+    // Gate Configurations
+    const GATES = {
+      'apex': {
+        name: '[RANK S: RED GATE] APEX: The Cretaceous Chase',
+        url: 'games/apex/index.html'
+      },
+      'neon-run': {
+        name: '[RANK S: RED GATE] Neon Run: Midnight Express',
+        url: 'games/neon-run/index.html'
+      },
+      'cyberstrike': {
+        name: '[RANK A: RED GATE] Cyberstrike: Laser Blaster',
+        url: 'games/cyberstrike/play.html'
+      },
+      'typestorm': {
+        name: '[RANK A: RED GATE] Typestorm: Neon Blitz',
+        url: 'games/typestorm/play.html'
+      },
+      'letters-wind': {
+        name: "[RANK A: RED GATE] Letters on the Wind: Post Boy's Day",
+        url: 'games/ghibli-style-delivery-game/play.html'
+      },
+      'time-echo': {
+        name: '[RANK S: RED GATE] Time Echo: Chronology Lab',
+        url: 'games/time-echo/index.html'
+      }
+    };
+
+    let gatesEnteredCount = 0;
+
+    function launchGate(gateKey) {
+      if (!GATES[gateKey]) return;
+      playSystemSound('gate');
+      const gate = GATES[gateKey];
+      
+      document.getElementById('modalGateHeading').innerHTML = `<span>[RED GATE]</span> ${gate.name}`;
+      document.getElementById('gateSwitcher').value = gateKey;
+      document.getElementById('modalExternalTab').href = gate.url;
+
+      const iframe = document.getElementById('gateIframe');
+      iframe.src = gate.url;
+
+      const modal = document.getElementById('systemPlayer');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      // Update Daily Quest Progress
+      gatesEnteredCount++;
+      const progressText = Math.min(gatesEnteredCount, 6) + ' / 6 GATES CLEARED';
+      document.getElementById('questProgress').textContent = progressText;
+      document.getElementById('playerClearedCount').textContent = gatesEnteredCount;
+      document.getElementById('playerScoreCount').textContent = (gatesEnteredCount * 3500) + ' PTS';
+
+      setTimeout(() => {
+        iframe.focus();
+      }, 300);
+    }
+
+    function switchGate(gateKey) {
+      launchGate(gateKey);
+    }
+
+    function closeGate() {
+      playSystemSound('ping');
+      const modal = document.getElementById('systemPlayer');
+      modal.classList.remove('open');
+      document.getElementById('gateIframe').src = '';
+      document.body.style.overflow = 'auto';
+    }
+
+    function togglePlayerFullscreen() {
+      const modal = document.getElementById('systemPlayer');
+      if (!document.fullscreenElement) {
+        modal.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen().catch(err => console.log(err));
+      }
+    }
+
+    // Keyboard shortcut ESC
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('systemPlayer').classList.contains('open')) {
+        if (!document.fullscreenElement) {
+          closeGate();
+        }
+      }
+    });
+
+    // Category Filter Tabs
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.gate-card');
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSystemSound('ping');
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.getAttribute('data-filter');
+
+        cards.forEach(card => {
+          if (filter === 'all' || card.getAttribute('data-category') === filter) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Ambient Rising Crimson & Blood Ember Sparks Canvas
+    const canvas = document.getElementById('shadowCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    const particles = [];
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class RedEmberParticle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = height + Math.random() * 40;
+        this.vx = (Math.random() - 0.5) * 0.9;
+        this.vy = -(Math.random() * 1.6 + 0.6);
+        this.size = Math.random() * 2.8 + 1;
+        this.alpha = Math.random() * 0.65 + 0.25;
+        this.isOrange = Math.random() > 0.65;
+        this.maxLife = Math.random() * 180 + 90;
+        this.life = 0;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life++;
+        if (this.y < -10 || this.life > this.maxLife) {
+          this.reset();
+        }
+      }
+      draw() {
+        const progress = this.life / this.maxLife;
+        const fade = progress < 0.2 ? progress / 0.2 : 1 - progress;
+        ctx.fillStyle = this.isOrange 
+          ? `rgba(255, 85, 0, ${this.alpha * fade})` 
+          : `rgba(255, 0, 59, ${this.alpha * fade})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 70; i++) {
+      const p = new RedEmberParticle();
+      p.y = Math.random() * height;
+      particles.push(p);
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, width, height);
+      for (const p of particles) {
+        p.update();
+        p.draw();
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
 </body>
 </html>

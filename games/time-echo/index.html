@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08121e">
+  <meta name="description" content="Time Echo is a short puzzle-platformer about replaying your past movements to solve the present.">
+  <title>Time Echo — Temporal Puzzle Platformer</title>
+  <link rel="stylesheet" href="styles.css?v=campaign100">
+  <script src="game.js?v=campaign100" defer></script>
+</head>
+<body>
+  <a href="../../index.html" id="arena-back-btn" style="position:fixed;top:16px;left:16px;z-index:999999;display:inline-flex;align-items:center;gap:6px;background:rgba(5,6,15,0.85);backdrop-filter:blur(8px);border:1px solid rgba(80,180,255,0.6);color:#60c5ff;font-family:sans-serif;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;text-decoration:none;box-shadow:0 4px 15px rgba(0,0,0,0.6);transition:all .2s;">◀ ARENA HUB</a>
+  <script>if(window.self!==window.top){const b=document.getElementById('arena-back-btn');if(b)b.style.display='none';}</script>
+  <div class="app-shell game-screen" id="gameApp" hidden>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Time Echo home">
+        <span class="brand-mark" aria-hidden="true">
+          <span class="brand-ring brand-ring-outer"></span>
+          <span class="brand-ring brand-ring-inner"></span>
+          <span class="brand-core"></span>
+        </span>
+        <span class="brand-copy">
+          <strong>TIME<span>ECHO</span></strong>
+          <small>CHRONOLOGY LAB</small>
+        </span>
+      </a>
+
+      <div class="system-status" aria-label="Simulation status">
+        <span class="status-dot"></span>
+        <span>SIMULATION ONLINE</span>
+        <span class="status-divider"></span>
+        <span class="status-system">FIELD 07-B</span>
+      </div>
+
+      <div class="top-actions">
+        <button class="icon-button menu-button" id="menuButton" type="button" aria-label="Return to title screen">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m3.5 9 6.5-5.5L16.5 9v7.2H11v-4.8H8.5v4.8h-5V9Z"></path></svg>
+          <span>MENU</span>
+        </button>
+        <button class="icon-button sound-button" id="soundToggle" type="button" aria-pressed="true" aria-label="Mute sound effects">
+          <svg class="sound-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 10v4h3l4 3V7l-4 3H4Z"></path>
+            <path class="sound-wave" d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11"></path>
+            <path class="sound-mute" d="m16 9 5 6m0-6-5 6"></path>
+          </svg>
+          <span id="soundLabel">SOUND ON</span>
+        </button>
+        <button class="restart-button" id="restartButton" type="button" aria-label="Restart this level">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M16.4 7.4A6.7 6.7 0 1 0 17 11M16.4 7.4V3.8m0 3.6h-3.6"></path>
+          </svg>
+          <span>RESTART</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="page-heading" aria-labelledby="pageTitle">
+        <div class="heading-copy">
+          <div class="eyebrow"><span class="eyebrow-mark"></span> TEMPORAL PUZZLE SIMULATION <span class="eyebrow-index">/ 01</span></div>
+          <h1 id="pageTitle">Past you. <span>Present problem.</span></h1>
+          <p>Every five seconds, your last five seconds become a living echo. Use your own timeline to get through.</p>
+        </div>
+        <div class="session-badge" aria-label="Current level">
+          <span>SECTOR</span>
+          <strong id="sectorNumber">01</strong>
+          <span class="badge-rule"></span>
+          <small id="sectorTotal">OF 100</small>
+        </div>
+      </section>
+
+      <div class="game-layout">
+        <section class="game-column" aria-label="Game area">
+          <div class="stage-heading">
+            <div class="stage-title-group">
+              <div class="stage-kicker" id="levelKicker">TRAINING SIMULATION · SECTOR 01</div>
+              <h2 id="levelTitle">The First Imprint</h2>
+            </div>
+            <div class="echo-clock" aria-live="polite" aria-label="Time until next echo">
+              <div class="clock-copy">
+                <span class="clock-label"><span class="clock-dot"></span> NEXT ECHO</span>
+                <strong id="timerValue">5.0<span>s</span></strong>
+              </div>
+              <div class="timer-track" aria-hidden="true"><span id="timerFill"></span></div>
+            </div>
+          </div>
+
+          <section class="how-to-play-banner" id="howToPlay" aria-labelledby="howToPlayTitle">
+            <div class="how-to-title">
+              <span class="how-to-mark" aria-hidden="true">?</span>
+              <span><strong id="howToPlayTitle">HOW TO PLAY</strong><small>QUICK GUIDE</small></span>
+            </div>
+            <div class="how-to-steps">
+              <div class="how-to-step"><span class="how-step-num">01</span><b>MOVE + JUMP</b><span class="how-step-keys">← → <i>/</i> SPACE</span></div>
+              <span class="how-step-arrow" aria-hidden="true">›</span>
+              <div class="how-to-step"><span class="how-step-num">02</span><b>HOLD A RELAY</b><span class="how-step-keys">FOR 5 SECONDS</span></div>
+              <span class="how-step-arrow" aria-hidden="true">›</span>
+              <div class="how-to-step"><span class="how-step-num">03</span><b>ECHOES HOLD RELAYS</b><span class="how-step-keys">THEN THE EXIT OPENS</span></div>
+            </div>
+          </section>
+
+          <div class="screen-frame">
+            <div class="screen-topline" aria-hidden="true">
+              <span><i class="live-dot"></i> LIVE FEED</span>
+              <span class="screen-coordinate">CHRONO FIELD <b>07-B</b></span>
+            </div>
+            <canvas id="gameCanvas" width="1000" height="560" tabindex="0" aria-label="Time Echo platform game. Use left and right arrow keys to move, and spacebar to jump." aria-describedby="howToPlay gameInstructions"></canvas>
+            <div class="screen-footerline" aria-hidden="true">
+              <span>WORLD CLOCK <b id="worldClock">00:00</b></span>
+              <span class="screen-footer-center"><i></i> TEMPORAL RECORDING ACTIVE</span>
+              <span>LOOP <b id="loopNumber">01</b></span>
+            </div>
+          </div>
+
+          <div class="control-strip" id="gameInstructions">
+            <div class="control-item">
+              <span class="key-cluster" aria-hidden="true"><kbd>←</kbd><kbd>→</kbd></span>
+              <span><b>MOVE</b><small>ARROW KEYS</small></span>
+            </div>
+            <span class="control-divider" aria-hidden="true"></span>
+            <div class="control-item">
+              <kbd class="key-wide" aria-hidden="true">SPACE</kbd>
+              <span><b>JUMP</b><small>HOLD FOR HEIGHT</small></span>
+            </div>
+            <div class="control-note"><span class="control-note-mark">↻</span> Echoes replay your recorded path exactly.</div>
+          </div>
+
+          <div class="touch-controls" aria-label="Touch controls">
+            <div class="touch-movement">
+              <button type="button" data-touch-key="ArrowLeft" aria-label="Move left">←</button>
+              <button type="button" data-touch-key="ArrowRight" aria-label="Move right">→</button>
+            </div>
+            <button class="touch-jump" type="button" data-touch-key="Space" aria-label="Jump">JUMP <span>↑</span></button>
+          </div>
+        </section>
+
+        <aside class="sidebar" aria-label="Mission information">
+          <section class="info-card mission-card">
+            <div class="card-heading">
+              <div class="card-overline"><span class="mini-signal"></span> MISSION BRIEF</div>
+              <span class="lock-badge" id="gateBadge"><span class="lock-icon" aria-hidden="true"></span> LOCKED</span>
+            </div>
+            <h3 id="missionTitle">Leave an imprint.</h3>
+            <p class="mission-copy" id="objectiveText">Stand on the relay until an echo is recorded. Your echo can hold it while you cross the gate.</p>
+
+            <div class="relay-section">
+              <div class="section-label-row">
+                <span>RELAY NETWORK</span>
+                <span id="relayProgress">0 / 1 ACTIVE</span>
+              </div>
+              <div class="relay-list" id="relayList" aria-live="polite"></div>
+            </div>
+
+            <div class="gate-readout" id="gateReadout">
+              <span class="gate-icon" aria-hidden="true"><span></span></span>
+              <span class="gate-copy"><b id="gateReadoutTitle">Exit gate sealed</b><small id="gateReadoutCopy">Waiting for relay signal</small></span>
+              <span class="gate-led" id="gateLed" aria-hidden="true"></span>
+            </div>
+
+            <div class="echo-section">
+              <div class="section-label-row">
+                <span>YOUR ECHOES</span>
+                <span class="echo-count"><b id="echoCount">00</b> ACTIVE</span>
+              </div>
+              <div id="echoList" class="echo-list" aria-live="polite">
+                <p class="echo-empty">No echoes yet <span>— first imprint in 5 seconds.</span></p>
+              </div>
+            </div>
+
+            <div class="mission-tip" id="missionTip">
+              <span class="tip-icon" aria-hidden="true">i</span>
+              <p>Hold still on a relay for the full five-second recording window to leave a useful echo.</p>
+            </div>
+
+            <button class="continue-button" id="continueButton" type="button" hidden>
+              <span id="continueLabel">NEXT SECTOR</span>
+              <span class="continue-arrow" aria-hidden="true">↗</span>
+            </button>
+          </section>
+
+          <section class="info-card archive-card">
+            <div class="archive-heading">
+              <div>
+                <div class="card-overline">ARCHIVE SELECT</div>
+                <h3>Campaign map</h3>
+              </div>
+              <span class="archive-count" id="archiveCount">100 <i>LEVELS</i></span>
+            </div>
+            <div class="level-tabs" id="levelTabs" role="group" aria-label="Select an unlocked level"></div>
+            <div class="archive-foot"><span class="archive-foot-dot"></span><span id="archiveFootCopy">Clear a sector to unlock the next chamber.</span></div>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="page-footer">
+        <span>CHRONOLOGY LAB <b>·</b> FIELD NOTES 07-B</span>
+        <span><i class="footer-pulse"></i> LOCAL SIMULATION <b>·</b> PROGRESS SAVED LOCALLY</span>
+      </footer>
+    </main>
+  </div>
+
+  <section class="intro-screen" id="introOverlay" aria-labelledby="introTitle" aria-describedby="introDescription">
+    <div class="intro-backdrop-orbit intro-backdrop-orbit-one" aria-hidden="true"></div>
+    <div class="intro-backdrop-orbit intro-backdrop-orbit-two" aria-hidden="true"></div>
+    <section class="intro-panel">
+      <div class="intro-topline">
+        <div class="intro-brand">
+          <span class="brand-mark" aria-hidden="true"><span class="brand-ring brand-ring-outer"></span><span class="brand-ring brand-ring-inner"></span><span class="brand-core"></span></span>
+          <span class="brand-copy"><strong>CHRONOLOGY<span> LAB</span></strong><small>FIELD EXPERIMENT 07-B</small></span>
+        </div>
+        <span class="intro-version"><i></i> TEMPORAL SYSTEM ONLINE</span>
+      </div>
+
+      <div class="intro-main">
+        <div class="intro-copy">
+          <div class="intro-eyebrow"><span></span> A PUZZLE PLATFORMER ABOUT YOUR PAST</div>
+          <h1 id="introTitle">TIME<br><span>ECHO</span></h1>
+          <p class="intro-tagline">The past is your <em>second chance.</em></p>
+          <p class="intro-description" id="introDescription">Every five seconds, a ghost retraces your last five. Clear 100 distinct chambers—each with its own route and rising challenge—to escape the loop. Your unlocked sectors save on this device.</p>
+
+          <button class="play-button" id="playButton" type="button">
+            <span class="play-button-icon" aria-hidden="true">▶</span>
+            <span class="play-button-copy"><strong>PLAY GAME</strong><small>BEGIN SECTOR 01</small></span>
+            <span class="play-button-arrow" aria-hidden="true">↗</span>
+          </button>
+
+          <div class="intro-controls" aria-label="Game controls">
+            <span><kbd>←</kbd><kbd>→</kbd> <small>MOVE</small></span>
+            <i></i>
+            <span><kbd>SPACE</kbd> <small>JUMP</small></span>
+          </div>
+        </div>
+
+        <div class="intro-visual" aria-hidden="true">
+          <div class="visual-grid"></div>
+          <div class="visual-orbit visual-orbit-outer"></div>
+          <div class="visual-orbit visual-orbit-middle"></div>
+          <div class="visual-orbit visual-orbit-inner"></div>
+          <div class="visual-axis visual-axis-horizontal"></div>
+          <div class="visual-axis visual-axis-vertical"></div>
+          <span class="visual-pip visual-pip-one"></span>
+          <span class="visual-pip visual-pip-two"></span>
+          <span class="visual-pip visual-pip-three"></span>
+          <div class="intro-figure intro-figure-echo"><i></i><span></span><b></b></div>
+          <div class="intro-figure intro-figure-player"><i></i><span></span><b></b></div>
+          <div class="visual-trail"></div>
+          <div class="visual-label visual-label-top"><span>REC</span><i></i> 05.0 SEC</div>
+          <div class="visual-label visual-label-bottom">PAST <span>↗</span> PRESENT</div>
+          <div class="visual-coordinates">X 07.31<br>Y 02.08</div>
+        </div>
+      </div>
+
+      <div class="intro-bottomline">
+        <span><b>100</b> CHRONO CHAMBERS</span>
+        <span><i></i> NO CHECKPOINTS. NO TIMELINE LEFT BEHIND.</span>
+      </div>
+    </section>
+  </section>
+</body>
+</html>

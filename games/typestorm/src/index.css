@@ -1,0 +1,228 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --color-void: #05060f;
+  --color-ink: #0a0d1e;
+  --color-cyan: #22d3ee;
+  --color-magenta: #f0f;
+  --color-lime: #a3e635;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #05060f;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* mobile browsers: use the dynamic viewport so the keyboard + HUD always fit */
+@supports (height: 100dvh) {
+  #root {
+    height: 100dvh;
+  }
+}
+
+body {
+  font-family: var(--font-mono);
+  color: #e6f1ff;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+canvas {
+  display: block;
+  touch-action: none;
+}
+
+/* ---------- utility classes ---------- */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 6px rgba(34, 211, 238, 0.9), 0 0 22px rgba(34, 211, 238, 0.45);
+}
+.text-glow-magenta {
+  text-shadow: 0 0 6px rgba(255, 0, 255, 0.85), 0 0 24px rgba(255, 0, 255, 0.4);
+}
+.text-glow-red {
+  text-shadow: 0 0 8px rgba(248, 113, 113, 0.9), 0 0 26px rgba(239, 68, 68, 0.5);
+}
+
+.panel {
+  background: linear-gradient(160deg, rgba(12, 18, 40, 0.92), rgba(6, 8, 20, 0.94));
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 24px 70px -20px rgba(0, 0, 0, 0.9),
+    0 0 60px -30px rgba(34, 211, 238, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.035) 0px,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+}
+
+.vignette::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+/* ---------- animations ---------- */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.anim-floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.82) translateY(10px);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.03) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+.anim-pop {
+  animation: pop-in 0.34s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes banner-in {
+  0% {
+    transform: scale(0.6) translateY(14px);
+    opacity: 0;
+    filter: blur(6px);
+  }
+  25% {
+    transform: scale(1.12) translateY(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  70% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.06);
+    opacity: 0;
+  }
+}
+.anim-banner {
+  animation: banner-in 1.35s cubic-bezier(0.2, 1.1, 0.3, 1) both;
+}
+
+@keyframes score-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.anim-score-pop {
+  animation: score-pop 0.24s ease-out;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(34, 211, 238, 0);
+  }
+}
+.anim-pulse-ring {
+  animation: pulse-ring 1.6s ease-out infinite;
+}
+
+@keyframes glitch-x {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-2px, 1px);
+  }
+  40% {
+    transform: translate(2px, -1px);
+  }
+  60% {
+    transform: translate(-1px, -1px);
+  }
+  80% {
+    transform: translate(1px, 1px);
+  }
+}
+.anim-glitch {
+  animation: glitch-x 0.32s steps(2) 1;
+}
+
+@keyframes marquee {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 -240px;
+  }
+}
+
+@keyframes hue-slide {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+.anim-hue {
+  background-size: 200% auto;
+  animation: hue-slide 6s linear infinite;
+}
+
+/* scrollbar for score table */
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.35);
+  border-radius: 99px;
+}

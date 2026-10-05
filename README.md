@@ -6,6 +6,11 @@ playing in-hub. Currently featuring:
 | Game | Folder | Engine |
 | ---- | ------ | ------ |
 | **APEX — The Cretaceous Chase** | `games/apex/` | Canvas 2D (procedural art + audio) |
+| **Neon Run — Midnight Express** | `games/neon-run/` | Three.js 3D Endless Runner |
+| **Cyberstrike — Laser Blaster** | `games/cyberstrike/` | React + Tailwind + Vite Combat Typing |
+| **Typestorm — Neon Blitz** | `games/typestorm/` | React + Tailwind + Vite High-Speed Typing |
+| **Letters on the Wind — Post Boy's Day** | `games/ghibli-style-delivery-game/` | React + Tailwind + Vite Delivery Expedition |
+| **Time Echo — Chronology Lab** | `games/time-echo/` | HTML5 Canvas Temporal Puzzle Platformer |
 
 ## Run
 
