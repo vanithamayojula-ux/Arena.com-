@@ -138,23 +138,17 @@ function stubUi() {
   try { ui.init(); } catch { /* stage lookups are all stubbed anyway */ }
 }
 
-// ------------------------------------------------------------------ the soak
-test('the whole tour plays itself, start to finish, on the real director', async () => {
-  stubUi();
-  const main = await import('../src/main.js');
-  const E = globalThis.window.__emberfall;
-  assert.ok(E && E.G, 'main.js did not publish the tooling hook');
 
-  // press BEGIN (mFresh if a save existed; it doesn't)
-  const begin = CLICKED.find((c) => c._sel === '#mBegin');
-  assert.ok(begin && begin._handlers.click?.length, 'title card never wired BEGIN');
-  begin._handlers.click[0]();
-  flushTimers();
-  assert.ok(E.running, 'the tour did not start');
-
+// ------------------------------------------------------------------ the frame pump
+// Both passes share it: hand-cranked rAF, timers flushed per frame, prompts answered,
+// scene minigames autoplayed the way the scene tests do.
+async function runTour(E, { max = 250000 } = {}) {
+  const MAX = max;
   let ts = 0;
-  const st0 = E.G.st;
   let swept = CLICKED.length;
+  const st0 = E.G.st;
+  const seen = new Set();
+  let frames = 0;
   const clickSweep = () => { // press chapter-card buttons ("TAKE THE ROAD →") as they appear
     while (swept < CLICKED.length) {
       const el = CLICKED[swept++];
@@ -164,12 +158,7 @@ test('the whole tour plays itself, start to finish, on the real director', async
       }
     }
   };
-  const seen = new Set();
-  const MAX = 250000;
-  let frames = 0;
-  const pick = { roadOilWarn: false };
   while (frames < MAX) {
-    // one frame: run every queued rAF callback with a fat dt (scene pacing is dt-based)
     const q = RAFQ.splice(0);
     ts += 50;
     for (const cb of q) cb(ts);
@@ -177,7 +166,7 @@ test('the whole tour plays itself, start to finish, on the real director', async
 
     const sc = E.scene;
     if (sc) {
-      seen.add(`${sc.kind || sc.constructor?.name || 'scene'}#${st0.chapter}:${st0.step}`);
+      seen.add(`${sc.kind || 'scene'}#${st0.chapter}:${st0.step}`);
       if (lastPrompt) { const p = lastPrompt; lastPrompt = null; try { p.onPick?.(0); } catch (e) { ERRORS.push(e); } }
       try {
         if (sc.kind === 'performance' || sc.act !== undefined) {
@@ -202,29 +191,44 @@ test('the whole tour plays itself, start to finish, on the real director', async
             if (sc.glow !== undefined && sc.glow < 60) sc.shove();
           }
         }
-        if (sc.kind === 'fight' || sc.state === 'window') { if (sc.state === 'window') sc.input?.(); }
-        // the road may warn about a hustle; keep walking
+        if (sc.state === 'window') { sc.input?.(); }
         if (sc.kind === 'road' && sc.keys) { sc.keys.d = true; }
       } catch (e) { ERRORS.push(e); break; }
     }
     if (lastPrompt) { const p = lastPrompt; lastPrompt = null; try { p.onPick?.(0); } catch (e) { ERRORS.push(e); } }
-
     clickSweep();
     if (!E.running) break; // the ending card drops the curtain on the loop
     frames++;
     if (frames % 2000 === 0) await new Promise((r) => setImmediate(r)); // breathe, don't starve the runner
   }
+  return { st0, seen, frames, MAX, E };
+}
+
+// ------------------------------------------------------------------ the soak
+test('the whole tour plays itself, start to finish, on the real director', async () => {
+  stubUi();
+  await import('../src/main.js');
+  const E = globalThis.window.__emberfall;
+  assert.ok(E && E.G, 'main.js did not publish the tooling hook');
+
+  const begin = CLICKED.find((c) => c._sel === '#mBegin');
+  assert.ok(begin && begin._handlers.click?.length, 'title card never wired BEGIN');
+  begin._handlers.click[0]();
+  flushTimers();
+  assert.ok(E.running, 'the tour did not start');
+
+  const { st0, seen, frames, MAX } = await runTour(E);
 
   console.error = realErr; console.warn = realWarn;
 
   assert.ok(!E.running || st0.chapter >= CHAPTERS.length, `tour stalled at chapter ${st0.chapter + 1} step ${st0.step} after ${frames} frames`);
+  assert.ok(frames < MAX, 'the tour consumed the whole frame budget without a curtain');
   const NOISE = /Reparsing as ES module|module syntax was detected|trace-warnings/;
   const hard = ERRORS.filter((e) => e && !NOISE.test(String(e)));
   assert.deepEqual(hard.map(String).slice(0, 4), [], `errors during soak:\n${hard.map((e) => String(e.stack || e)).slice(0, 4).join('\n')}`);
   assert.ok(!WARNS.some((w) => /unknown step type/.test(w)), `director saw unknown steps: ${WARNS.join(' | ')}`);
   assert.ok(seen.size >= CHAPTERS.reduce((n, c) => n + Math.min(6, c.steps.length), 0), `only visited ${seen.size} distinct steps — the graph is bigger than that`);
 
-  // the ledger stayed a ledger: every number finite, in range, sane
   for (const k of ['oil', 'silver', 'morale', 'rep', 'relit', 'trust', 'shows']) {
     assert.ok(Number.isFinite(st0[k]), `${k} went non-finite: ${st0[k]}`);
   }
@@ -232,14 +236,55 @@ test('the whole tour plays itself, start to finish, on the real director', async
   assert.ok(st0.morale >= 0 && st0.morale <= 100, 'morale out of range');
   for (const who of Object.keys(st0.bonds)) assert.ok(st0.bonds[who] >= 0 && st0.bonds[who] <= 100, `bond ${who} out of range`);
 
-  // an ending card actually went up, and it names one of the three endings
   const endCard = CARDS[CARDS.length - 1];
   assert.ok(endCard && /CURTAIN/.test(endCard.html), `no ending card rendered (last card: ${String(endCard?.html).slice(0, 80)})`);
   assert.ok(Object.keys(ENDINGS).length === 3, 'ending table drifted');
 
-  // and the save that the epilogue wrote parses back into the same shape
   const raw = LS.get('emberfall.save.v1');
   assert.ok(raw, 'no save was written at the end of the tour');
   const back = JSON.parse(raw);
   assert.ok(back.chapter >= 1, 'the save forgot where the tour ended');
+});
+
+// A second, meaner pass: resume from a crafted save straight into the finale,
+// so the FIGHT branch (condition-gated) and the 'chain of small suns' ending
+// both run end to end — none of it reachable on the default-picks route.
+test('a resumed save can play the finale the brutal way and earn the Chain ending', async () => {
+  const { freshState, computeEnding, ENDING_TITLES } = await import('../src/state.js');
+  assert.ok(ENDING_TITLES && computeEnding, 'state.js contract');
+
+  const s = freshState();
+  s.chapter = 3; s.step = 0;
+  s.oil = 44; s.silver = 6; s.morale = 47; s.rep = 12;
+  s.relit = 4; s.ovations = 2; s.shows = 3;
+  s.trust = 60; s.bonds = { dill: 52, bram: 53, fenn: 51 };
+  s.flags = { foughtMoths: true, toldTruth: true, sangAway: true, paidToll: true, wickGiven: true };
+  s.log = ['resumed for the finale'];
+  LS.set('emberfall.save.v1', JSON.stringify({ v: 1, ...s }));
+  assert.equal(computeEnding(s), 'chain', 'the crafted ledger should point at the Chain ending if nothing darks the beacon');
+
+  // fresh module instance (query-busted import) sees the save at boot → RESUME path
+  CLICKED.length = 0; CARDS.length = 0; lastPrompt = null;
+  ERRORS.length = 0; WARNS.length = 0; RAFQ.length = 0; TIMERS.length = 0;
+  await import('../src/main.js?resume=1');
+  const E = globalThis.window.__emberfall;
+  assert.ok(E && E.G.st.chapter === 3, `resume did not land in the finale (chapter ${E.G.st.chapter}, step ${E.G.st.step})`);
+
+  const begin = CLICKED.find((c) => c._sel === '#mBegin');
+  begin._handlers.click[0](); // "RESUME THE TOUR"
+  flushTimers();
+
+  const { st0, seen, frames, MAX } = await runTour(E, { max: 160000 });
+
+  assert.ok(!E.running, `resumed tour stalled at step ${st0.step} after ${frames} frames`);
+  assert.ok(frames < MAX);
+  const NOISE = /Reparsing as ES module|module syntax was detected|trace-warnings/;
+  const hard = ERRORS.filter((e) => e && !NOISE.test(String(e)));
+  assert.deepEqual(hard.map(String).slice(0, 4), [], `errors during resumed soak:\n${hard.map((e) => String(e.stack || e)).slice(0, 4).join('\n')}`);
+  assert.ok([...seen].some((k) => k.startsWith('fight')), 'the foughtMoths save never reached the fight step');
+  assert.ok(st0.flags.mothsWon || st0.injury || st0.flags.mothsLost, 'fight neither cost nor earned anything');
+  assert.equal(computeEnding(st0), 'chain', `the ledger should end on the Chain (relit ${st0.relit}, morale ${st0.morale}, bonds ${JSON.stringify(st0.bonds)}, flags.beaconDark=${!!st0.flags.beaconDark})`);
+  const endCard = CARDS[CARDS.length - 1];
+  assert.ok(endCard && /CURTAIN/.test(endCard.html), 'no ending card after the resumed finale');
+  assert.ok(endCard.html.includes(ENDING_TITLES.chain), 'the curtain card does not name the Chain of Small Suns');
 });

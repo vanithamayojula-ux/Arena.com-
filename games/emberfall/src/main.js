@@ -188,6 +188,7 @@ function runStep() {
 let loopOn = false;
 
 function loop(ts) {
+  if (!running) { loopOn = false; return; } // idle at the title or past the curtain
   const dt = Math.min(0.05, (ts - last) / 1000 || 0.016);
   last = ts; gt += dt;
   try {
@@ -229,6 +230,7 @@ function showTitle(canResume) {
     <div class="card-rule"></div>
     <p style="text-align:center;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.14em;">WE KEEP IT BURNING — 47TH LIGHT INFANTRY</p>`;
   const fr = ui.showCard(html, { persistent: true });
+  ui._endingOpen = false;
   fr.querySelector('#mBegin').addEventListener('click', () => { startTour(!canResume); });
   fr.querySelector('#mFresh').addEventListener('click', () => { wipeSave(); st = freshState(); G.markHud(); startTour(false); });
   fr.querySelector('#mHelp').addEventListener('click', () => { audio.click(); showHelp(); });
@@ -388,7 +390,9 @@ function showEndingCard() {
     <div class="card-rule"></div>
     <p style="text-align:center;font-size:12.5px;color:var(--muted);font-style:italic;">Applause is ambient. It is not billable. — AUDITOR PELL, RELUCTANTLY</p>`;
   const f = ui.showCard(html, { persistent: true });
+  ui._endingOpen = true;
   f.querySelector('#eAgain').addEventListener('click', () => {
+    ui._endingOpen = false;
     audio.click();
     wipeSave(); st = freshState(); G.markHud();
     ui.hideCard();
