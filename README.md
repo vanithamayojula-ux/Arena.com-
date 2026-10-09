@@ -37,9 +37,14 @@ no deploy settings.
 
 Two things worth knowing:
 
-- **`play.html` and `dist/` are not in git.** They are build output, listed in
-  `.gitignore`, regenerated on every deploy. A game therefore can never ship a
-  stale `play.html` that disagrees with its `src/`.
+- **`play.html` IS committed, `dist/` is not.** This is deliberate. Vercel
+  excludes gitignored files from the deployment, so ignoring the built
+  `play.html` leaves the Vite games missing in production and every link to
+  them 404s. `npm run build` still regenerates `play.html` on every deploy, so
+  the deployed copy is always freshly built from `src/`; the committed copy is
+  a fallback for static hosting that can't run a build. Only the intermediate
+  `dist/` folder is ignored, because `tools/build-games.mjs` copies the built
+  file out of it before deploy.
 - **Each game's `package.json` must have a unique `name`.** They are npm
   workspaces, and npm rejects duplicate workspace names.
 
@@ -58,6 +63,8 @@ derive from the catalog.
   `name` is unique and which has a `build` script. `tools/build-games.mjs`
   discovers it automatically, builds it, and copies `dist/index.html` to
   `games/<id>/play.html`. You do not need to touch `package.json` scripts.
+  Commit the generated `play.html` the first time you build it — otherwise it
+  will not deploy.
 
 **2. Add one entry to [`games/catalog.js`](games/catalog.js).**
 
@@ -117,8 +124,27 @@ Arena/
 ## Test
 
 ```sh
-npm test
+npm test            # link check + APEX simulation
+npm run check:links # link check only
 ```
 
-Runs the APEX simulation headlessly — movement, herd stamina, bite cone, waves,
-game-over, pause, collision — plus a boot test of its real entry point.
+`check:links` verifies that every URL the portal references actually exists
+**and will deploy** — a file that is gitignored and untracked works fine
+locally but 404s on Vercel, which is exactly how the three Vite games went
+missing once already. It runs first in `npm test` so that class of bug fails
+loudly.
+
+The rest of `npm test` runs the APEX simulation headlessly — movement, herd
+stamina, bite cone, waves, game-over, pause, collision — plus a boot test of
+its real entry point.
+
+## Troubleshooting a 404 on Vercel
+
+If a game 404s in production but works locally:
+
+1. `npm run check:links` names the exact file and why it won't deploy.
+2. In the Vercel dashboard, confirm **Framework Preset** is *Other* and
+   **Output Directory** is `.`. A leftover preset from an earlier deploy
+   overrides `vercel.json` and is the other common cause.
+3. Check the deploy's **Build Logs** for a failed `npm run build` — if the
+   build fails, the `play.html` for that game never gets written.

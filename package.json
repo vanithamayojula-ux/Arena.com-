@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node server.js",
     "build": "node tools/build-games.mjs",
-    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs"
+    "check:links": "node tools/check-links.mjs",
+    "test": "node tools/check-links.mjs && node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs"
   },
   "workspaces": [
     "games/*"
