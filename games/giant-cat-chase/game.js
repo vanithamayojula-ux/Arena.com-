@@ -12,7 +12,7 @@
   const JUMP_VY = 12.5;
   const RAMP_H = 2.0, RAMP_HL = 4.5;
   const PIT_HL = 4.6;
-  const HP_MAX = 3;
+  const HP_MAX = 4;
   const GAP_START = 42, GAP_MAX = 85;
   const BEST_KEY = 'giantcat_best_v1';
 

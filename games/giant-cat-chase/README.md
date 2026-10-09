@@ -17,7 +17,7 @@ Start the hub (`npm start`) and open http://localhost:5173/games/giant-cat-chase
 
 ## Rules
 
-- 3 hits (solid obstacles) and you're wrecked.
+- 4 hits (solid obstacles) and you're wrecked.
 - Falling into a pit ends the run.
 - If the cat's gap closes to zero, you're caught.
 - Close calls, coins, and distance all add to points. Best score is saved locally.
