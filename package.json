@@ -1,19 +1,27 @@
 {
   "name": "arena-arcade",
   "version": "1.0.0",
-  "description": "Multi-game browser arcade platform featuring APEX, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, and Time Echo",
-  "main": "server.js",
+  "private": true,
+  "description": "Multi-game browser arcade portal. Add a game by dropping it in games/ and adding an entry to games/catalog.js.",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs",
-    "preview:apex": "node games/apex/tools/rec.mjs",
-    "build:cyberstrike": "npm --prefix games/cyberstrike run build && cp games/cyberstrike/dist/index.html games/cyberstrike/play.html",
-    "build:typestorm": "npm --prefix games/typestorm run build && cp games/typestorm/dist/index.html games/typestorm/play.html",
-    "build:ghibli": "npm --prefix games/ghibli-style-delivery-game run build && cp games/ghibli-style-delivery-game/dist/index.html games/ghibli-style-delivery-game/play.html",
-    "build:all": "npm run build:cyberstrike && npm run build:typestorm && npm run build:ghibli"
+    "prebuild": "node tools/build-games.mjs",
+    "build": "node tools/build-games.mjs",
+    "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs"
   },
-  "keywords": ["games", "arcade", "webgl", "html5", "canvas", "runner", "typing"],
+  "workspaces": [
+    "games/*"
+  ],
+  "keywords": [
+    "games",
+    "arcade",
+    "webgl",
+    "html5",
+    "canvas",
+    "runner",
+    "typing"
+  ],
   "author": "",
   "license": "MIT"
 }

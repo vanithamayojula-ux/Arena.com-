@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ARISE PLAY // Red Gate System Arcade</title>
+  <meta name="description" content="Arena Arcade — six browser games in one portal: a dinosaur hunt, a 3D subway runner, two combat typing trials, a courier expedition and a temporal puzzle platformer.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23070205'/%3E%3Cpath d='M7 24 L16 6 L25 24 L16 19 Z' fill='%23ff003b'/%3E%3C/svg%3E">
+  <meta property="og:title" content="ARISE PLAY // Red Gate System Arcade">
+  <meta property="og:description" content="Six browser games in one portal. Breach the red gates.">
+  <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -1137,7 +1142,7 @@
 
       <div class="quest-progress-box">
         <span>GATES ENTERED TODAY:</span>
-        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 6 GATES CLEARED</strong>
+        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 0 GATES CLEARED</strong>
       </div>
 
       <div class="penalty-warning">
@@ -1155,266 +1160,33 @@
     </div>
   </section>
 
-  <!-- Featured Boss Gate: Apex Dinosaur Hunt -->
-  <div class="boss-gate-banner">
+  <!-- Featured Boss Gate: rendered from the catalog's `featured` entry -->
+  <div class="boss-gate-banner" id="bossBanner" hidden>
     <div class="red-gate-alert">
       <div class="alert-left">
-        <div class="alert-badge">S-RANK APEX GATE</div>
+        <div class="alert-badge" id="bossBadge"></div>
         <div class="alert-info">
-          <h3>FEATURED BOSS DUNGEON: APEX — THE CRETACEOUS CHASE</h3>
-          <p>Top-down prehistoric valley trial. Stalk fleeing herds as a hungry Tyrannosaur, unleash bite lunges, and dominate rival raptors.</p>
+          <h3 id="bossTitle"></h3>
+          <p id="bossDesc"></p>
         </div>
       </div>
-      <button class="btn-system btn-red-gate" onclick="launchGate('apex')">
-        [ HUNT AS APEX PREDATOR ]
-      </button>
+      <button class="btn-system btn-red-gate" id="bossButton"></button>
     </div>
   </div>
 
-  <!-- Available Gates Section -->
+  <!-- Available Gates Section
+       Every card below is rendered from games/catalog.js. To add a game, add
+       an entry to that file — do not hand-edit this grid. -->
   <section class="section-container" id="gates">
     <div class="section-header">
       <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
-      <div class="gate-filters">
-        <button class="filter-btn active" data-filter="all">ALL GATES (6)</button>
-        <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
-        <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
-        <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
-      </div>
+      <div class="gate-filters" id="gateFilters"></div>
     </div>
 
-    <div class="gates-grid" id="gatesGrid">
-
-      <!-- GATE 1: APEX (RANK S / RED GATE) -->
-      <article class="gate-card" data-category="predator" data-title="Apex The Cretaceous Chase Dinosaur">
-        <div class="gate-thumbnail">
-          <img src="games/apex/screenshots/frame.png" alt="Apex Dinosaur Chase Gameplay" onerror="this.src='games/apex/screenshots/bestiary.png'">
-          <span class="rank-badge badge-s">RANK S</span>
-          <span class="gate-type-tag">RED GATE // APEX HUNTER</span>
-        </div>
-        <div class="gate-info">
-          <h3 class="gate-title">
-            APEX: The Cretaceous Chase
-          </h3>
-          <p class="gate-desc">
-            Command a mighty Tyrannosaur in a lush prehistoric valley. Track prey scent cones, sprint to build momentum, snap jaw bites, and survive goring Triceratops horns.
-          </p>
-          <div class="gate-stats">
-            <div class="stat-bar-header">
-              <span style="color:var(--neon-red);">DANGER RATING</span>
-              <span style="color:var(--neon-red);">EXTREME (99%)</span>
-            </div>
-            <div class="danger-level-bar">
-              <div class="danger-fill-s"></div>
-            </div>
-            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
-              <span>WASD / Mouse Aim / Space Bite</span>
-              <span>ENGINE: CANVAS 2D</span>
-            </div>
-          </div>
-          <div class="gate-actions">
-            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('apex')">
-              [ ENTER GATE ]
-            </button>
-            <a href="games/apex/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
-              NEW TAB ↗
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- GATE 2: NEON RUN (RANK S / RED GATE) -->
-      <article class="gate-card" data-category="predator" data-title="Neon Run Midnight Express">
-        <div class="gate-thumbnail">
-          <img src="games/neon-run/screenshots/game-3d.png" alt="Neon Run 3D Red Gate" onerror="this.src='games/neon-run/screenshots/menu-3d.png'">
-          <span class="rank-badge badge-s">RANK S</span>
-          <span class="gate-type-tag">RED GATE // 3D RUNNER</span>
-        </div>
-        <div class="gate-info">
-          <h3 class="gate-title">
-            Neon Run: Midnight Express
-          </h3>
-          <p class="gate-desc">
-            An S-Rank Red Gate trial. Three speeding subway tracks, zero brakes. Leap trains, slide under barrier gates, and harvest monarch gold before the city consumes you.
-          </p>
-          <div class="gate-stats">
-            <div class="stat-bar-header">
-              <span style="color:var(--neon-red);">DANGER RATING</span>
-              <span style="color:var(--neon-red);">EXTREME (98%)</span>
-            </div>
-            <div class="danger-level-bar">
-              <div class="danger-fill-s"></div>
-            </div>
-            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
-              <span>A / D Steer • Space Jump • S Slide</span>
-              <span>ENGINE: THREE.JS 3D</span>
-            </div>
-          </div>
-          <div class="gate-actions">
-            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('neon-run')">
-              [ ENTER GATE ]
-            </button>
-            <a href="games/neon-run/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
-              NEW TAB ↗
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- GATE 3: CYBERSTRIKE (RANK A / CRIMSON COMBAT) -->
-      <article class="gate-card" data-category="typing" data-title="Cyberstrike Neon Typing Blaster">
-        <div class="gate-thumbnail">
-          <img src="games/cyberstrike/screenshots/cyberstrike.png" alt="Cyberstrike Laser Blaster" onerror="this.style.display='none'">
-          <span class="rank-badge badge-a">RANK A</span>
-          <span class="gate-type-tag">RED GATE // LASER TYPING</span>
-        </div>
-        <div class="gate-info">
-          <h3 class="gate-title">
-            Cyberstrike: Laser Blaster
-          </h3>
-          <p class="gate-desc">
-            High-tech combat trial. Decimate falling word projectiles and boss missiles with precision keyboard strikes, trigger EMP bombs, freeze time, and unlock shadow streaks.
-          </p>
-          <div class="gate-stats">
-            <div class="stat-bar-header">
-              <span style="color:#ff3366;">DANGER RATING</span>
-              <span style="color:#ff3366;">HIGH (85%)</span>
-            </div>
-            <div class="danger-level-bar">
-              <div class="danger-fill-a"></div>
-            </div>
-            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
-              <span>Type falling words • ESC Pause</span>
-              <span>FEAT: EMP BOMBS</span>
-            </div>
-          </div>
-          <div class="gate-actions">
-            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('cyberstrike')">
-              [ ENTER GATE ]
-            </button>
-            <a href="games/cyberstrike/play.html" class="btn-enter-gate btn-portal-window" target="_blank">
-              NEW TAB ↗
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- GATE 4: TYPESTORM (RANK A / CRIMSON BLITZ) -->
-      <article class="gate-card" data-category="typing" data-title="Typestorm Word Blitz">
-        <div class="gate-thumbnail">
-          <img src="games/typestorm/screenshots/typestorm.png" alt="Typestorm Neon Blitz" onerror="this.style.display='none'">
-          <span class="rank-badge badge-a">RANK A</span>
-          <span class="gate-type-tag">RED GATE // WORD BLITZ</span>
-        </div>
-        <div class="gate-info">
-          <h3 class="gate-title">
-            Typestorm: Neon Blitz
-          </h3>
-          <p class="gate-desc">
-            Relentless speed trial. Blast raining words before your energy barrier shatters. Chain combos, unleash OVERDRIVE mode, and etch your hunter alias on the Hall of Fame.
-          </p>
-          <div class="gate-stats">
-            <div class="stat-bar-header">
-              <span style="color:#ff5500;">DANGER RATING</span>
-              <span style="color:#ff5500;">HIGH (80%)</span>
-            </div>
-            <div class="danger-level-bar">
-              <div class="danger-fill-a"></div>
-            </div>
-            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
-              <span>Keyboard / Touch • Combos</span>
-              <span>FEAT: OVERDRIVE BOOST</span>
-            </div>
-          </div>
-          <div class="gate-actions">
-            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('typestorm')">
-              [ ENTER GATE ]
-            </button>
-            <a href="games/typestorm/play.html" class="btn-enter-gate btn-portal-window" target="_blank">
-              NEW TAB ↗
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- GATE 5: LETTERS ON THE WIND (RANK A / WIND COURIER) -->
-      <article class="gate-card" data-category="chronos" data-title="Letters on the Wind Ghibli Post Boy Delivery">
-        <div class="gate-thumbnail">
-          <img src="games/ghibli-style-delivery-game/screenshots/ghibli.png" alt="Letters on the Wind Post Boy Delivery" onerror="this.style.display='none'">
-          <span class="rank-badge badge-a">RANK A</span>
-          <span class="gate-type-tag">RED GATE // WIND COURIER</span>
-        </div>
-        <div class="gate-info">
-          <h3 class="gate-title">
-            Letters on the Wind: Post Boy
-          </h3>
-          <p class="gate-desc">
-            Whimsical delivery expedition. Cycle across rolling coastal hills, preserve postal stamina, converse with eccentric villagers, and deliver urgent mail before dusk settles.
-          </p>
-          <div class="gate-stats">
-            <div class="stat-bar-header">
-              <span style="color:#4ade80;">DANGER RATING</span>
-              <span style="color:#4ade80;">MODERATE (65%)</span>
-            </div>
-            <div class="danger-level-bar">
-              <div class="danger-fill-a" style="background: linear-gradient(90deg, #10b981, #4ade80); width: 65%;"></div>
-            </div>
-            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
-              <span>Bicycle / Touch • Dialogues</span>
-              <span>FEAT: STAMINA & COMBOS</span>
-            </div>
-          </div>
-          <div class="gate-actions">
-            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('letters-wind')">
-              [ ENTER GATE ]
-            </button>
-            <a href="games/ghibli-style-delivery-game/play.html" class="btn-enter-gate btn-portal-window" target="_blank">
-              NEW TAB ↗
-            </a>
-          </div>
-        </div>
-      </article>
-
-      <!-- GATE 6: TIME ECHO (RANK S / TEMPORAL PUZZLE) -->
-      <article class="gate-card" data-category="chronos" data-title="Time Echo Chronology Lab Temporal Puzzle">
-        <div class="gate-thumbnail">
-          <img src="games/time-echo/screenshots/menu.png" alt="Time Echo Chronology Lab" onerror="this.src='games/time-echo/screenshots/time-echo.png'">
-          <span class="rank-badge badge-s">RANK S</span>
-          <span class="gate-type-tag">RED GATE // TIME ECHO</span>
-        </div>
-        <div class="gate-info">
-          <h3 class="gate-title">
-            Time Echo: Chronology Lab
-          </h3>
-          <p class="gate-desc">
-            Mind-bending temporal puzzle trial. Record 5-second echo loops to clone your past actions, hold pressure relays open, dodge lethal spikes, and conquer 100 distinct testing chambers.
-          </p>
-          <div class="gate-stats">
-            <div class="stat-bar-header">
-              <span style="color:#38bdf8;">DANGER RATING</span>
-              <span style="color:#38bdf8;">EXTREME (94%)</span>
-            </div>
-            <div class="danger-level-bar">
-              <div class="danger-fill-s" style="background: linear-gradient(90deg, #0284c7, #38bdf8);"></div>
-            </div>
-            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
-              <span>Arrows / WASD • Space Jump</span>
-              <span>FEAT: 100 SECTORS ARCHIVE</span>
-            </div>
-          </div>
-          <div class="gate-actions">
-            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('time-echo')">
-              [ ENTER GATE ]
-            </button>
-            <a href="games/time-echo/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
-              NEW TAB ↗
-            </a>
-          </div>
-        </div>
-      </article>
-
-    </div>
+    <div class="gates-grid" id="gatesGrid"></div>
   </section>
+
+
 
   <!-- Leaderboard: Top Hunters -->
   <section class="section-container" id="ranks">
@@ -1483,14 +1255,7 @@
       <div class="modal-gate-title">
         <span class="sys-blink"></span>
         <div id="modalGateHeading">RED GATE ACTIVE</div>
-        <select class="gate-switcher" id="gateSwitcher" onchange="switchGate(this.value)">
-          <option value="apex">[RANK S] APEX: The Cretaceous Chase</option>
-          <option value="neon-run">[RANK S] Neon Run: Midnight Express</option>
-          <option value="cyberstrike">[RANK A] Cyberstrike: Laser Blaster</option>
-          <option value="typestorm">[RANK A] Typestorm: Neon Blitz</option>
-          <option value="letters-wind">[RANK A] Letters on the Wind: Post Boy</option>
-          <option value="time-echo">[RANK S] Time Echo: Chronology Lab</option>
-        </select>
+        <select class="gate-switcher" id="gateSwitcher" onchange="switchGate(this.value)"></select>
       </div>
 
       <div class="modal-btn-group">
@@ -1508,8 +1273,11 @@
   <!-- Footer -->
   <footer>
     <p>⚔️ <strong>ARISE PLAY</strong> — Solo Leveling Red Gate System Arcade.</p>
-    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, and Time Echo.</p>
+    <p style="margin-top: 8px; color: #9f8694;" id="footerGames"></p>
   </footer>
+
+  <!-- Game catalog: single source of truth for the portal's game list -->
+  <script src="games/catalog.js"></script>
 
   <!-- System UI Scripts & Ambient Red Embers -->
   <script>
@@ -1545,47 +1313,133 @@
       } catch(e) {}
     }
 
-    // Gate Configurations
-    const GATES = {
-      'apex': {
-        name: '[RANK S: RED GATE] APEX: The Cretaceous Chase',
-        url: 'games/apex/index.html'
-      },
-      'neon-run': {
-        name: '[RANK S: RED GATE] Neon Run: Midnight Express',
-        url: 'games/neon-run/index.html'
-      },
-      'cyberstrike': {
-        name: '[RANK A: RED GATE] Cyberstrike: Laser Blaster',
-        url: 'games/cyberstrike/play.html'
-      },
-      'typestorm': {
-        name: '[RANK A: RED GATE] Typestorm: Neon Blitz',
-        url: 'games/typestorm/play.html'
-      },
-      'letters-wind': {
-        name: "[RANK A: RED GATE] Letters on the Wind: Post Boy's Day",
-        url: 'games/ghibli-style-delivery-game/play.html'
-      },
-      'time-echo': {
-        name: '[RANK S: RED GATE] Time Echo: Chronology Lab',
-        url: 'games/time-echo/index.html'
+    // Gate Configurations — every game, keyed by id, straight from the
+    // catalog. Nothing to update here when a game is added.
+    const GATES = ARENA.games.reduce(function (map, g) {
+      map[g.id] = g;
+      return map;
+    }, {});
+
+    // ---- Catalog-driven rendering -----------------------------------------
+    // The grid, filter tabs, switcher and boss banner are all built from
+    // games/catalog.js. Adding a game there is enough to make it appear
+    // everywhere with the right counts.
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function renderFilters() {
+      const wrap = document.getElementById('gateFilters');
+      const cats = ARENA.categories;
+      const total = ARENA.games.length;
+
+      const tabs = [{ key: 'all', label: 'ALL GATES', count: total }].concat(
+        cats.map(function (c) {
+          return {
+            key: c.key,
+            label: c.label,
+            count: ARENA.games.filter(function (g) { return g.category === c.key; }).length,
+          };
+        })
+      );
+
+      wrap.innerHTML = tabs.map(function (t, i) {
+        return `<button class="filter-btn${i === 0 ? ' active' : ''}" data-filter="${t.key}">${escapeHtml(t.label)} (${t.count})</button>`;
+      }).join('');
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('gatesGrid');
+
+      grid.innerHTML = ARENA.games.map(function (g) {
+        const img = escapeHtml(g.thumbSrc);
+        const alt = escapeHtml(g.title);
+        const fallback = g.thumbAlt
+          ? ` onerror="this.onerror=null;this.src='${g.thumbAlt}'"`
+          : ` onerror="this.style.display='none'"`;
+
+        return `
+      <article class="gate-card" data-category="${escapeHtml(g.category)}" data-title="${escapeHtml(g.search)}">
+        <div class="gate-thumbnail">
+          <img src="${img}" alt="${alt}"${fallback}>
+          <span class="rank-badge ${g.badgeClass}">RANK ${escapeHtml(g.rank)}</span>
+          <span class="gate-type-tag">${escapeHtml(g.typeTag)}</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">${escapeHtml(g.title)}</h3>
+          <p class="gate-desc">${escapeHtml(g.desc)}</p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:${escapeHtml(g.accent)};">DANGER RATING</span>
+              <span style="color:${escapeHtml(g.accent)};">${escapeHtml(g.dangerLabel)} (${g.danger}%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div style="width:${g.danger}%;height:100%;background:${escapeHtml(g.gradient)};"></div>
+            </div>
+            <div class="stat-bar-header" style="color:#cbd5e1;margin-top:4px;">
+              <span>${escapeHtml(g.controls)}</span>
+              <span>${escapeHtml(g.engine)}</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('${escapeHtml(g.id)}')">[ ENTER GATE ]</button>
+            <a href="${escapeHtml(g.entry)}" class="btn-enter-gate btn-portal-window" target="_blank" rel="noopener">NEW TAB ↗</a>
+          </div>
+        </div>
+      </article>`;
+      }).join('');
+    }
+
+    function renderSwitcher() {
+      document.getElementById('gateSwitcher').innerHTML = ARENA.games.map(function (g) {
+        return `<option value="${escapeHtml(g.id)}">${escapeHtml(g.switcherLabel)}</option>`;
+      }).join('');
+    }
+
+    function renderBossBanner() {
+      const boss = ARENA.games.find(function (g) { return g.featured; });
+      if (!boss || !boss.featured.badge) return;
+
+      const banner = document.getElementById('bossBanner');
+      banner.hidden = false;
+      document.getElementById('bossBadge').textContent = boss.featured.badge;
+      document.getElementById('bossTitle').textContent = 'FEATURED BOSS DUNGEON: ' + boss.title.toUpperCase();
+      document.getElementById('bossDesc').textContent = boss.desc;
+      const btn = document.getElementById('bossButton');
+      btn.textContent = boss.featured.button;
+      btn.onclick = function () { launchGate(boss.id); };
+    }
+
+    function renderFooter() {
+      const names = ARENA.games.map(function (g) { return g.title.split(':')[0]; });
+      const el = document.getElementById('footerGames');
+      if (el && names.length) {
+        el.textContent = 'Featuring ' + names.join(', ') + '.';
       }
-    };
+    }
+
+    renderFilters();
+    renderCards();
+    renderSwitcher();
+    renderBossBanner();
+    renderFooter();
 
     let gatesEnteredCount = 0;
 
     function launchGate(gateKey) {
-      if (!GATES[gateKey]) return;
-      playSystemSound('gate');
       const gate = GATES[gateKey];
-      
-      document.getElementById('modalGateHeading').innerHTML = `<span>[RED GATE]</span> ${gate.name}`;
+      if (!gate) return;
+      playSystemSound('gate');
+
+      document.getElementById('modalGateHeading').innerHTML = `<span>[RED GATE]</span> ${escapeHtml(gate.gateName)}`;
       document.getElementById('gateSwitcher').value = gateKey;
-      document.getElementById('modalExternalTab').href = gate.url;
+      document.getElementById('modalExternalTab').href = gate.entry;
 
       const iframe = document.getElementById('gateIframe');
-      iframe.src = gate.url;
+      iframe.src = gate.entry;
 
       const modal = document.getElementById('systemPlayer');
       modal.classList.add('open');
@@ -1593,8 +1447,8 @@
 
       // Update Daily Quest Progress
       gatesEnteredCount++;
-      const progressText = Math.min(gatesEnteredCount, 6) + ' / 6 GATES CLEARED';
-      document.getElementById('questProgress').textContent = progressText;
+      const total = ARENA.games.length;
+      document.getElementById('questProgress').textContent = Math.min(gatesEnteredCount, total) + ' / ' + total + ' GATES CLEARED';
       document.getElementById('playerClearedCount').textContent = gatesEnteredCount;
       document.getElementById('playerScoreCount').textContent = (gatesEnteredCount * 3500) + ' PTS';
 
@@ -1633,7 +1487,8 @@
       }
     });
 
-    // Category Filter Tabs
+    // Category Filter Tabs — the tabs themselves come from the catalog, so
+    // these listeners are attached after renderFilters() has run.
     const filterButtons = document.querySelectorAll('.filter-btn');
     const cards = document.querySelectorAll('.gate-card');
 
