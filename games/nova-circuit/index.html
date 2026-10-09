@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#04060f">
+<title>NOVA CIRCUIT — Anti-Gravity Combat Racing | Arena Arcade</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="gl"></canvas>
+  <div id="views"></div>
+  <div id="splitline" class="hidden"></div>
+  <div id="fps" class="hidden"></div>
+
+  <!-- touch controls (only shown on touch devices during a race) -->
+  <div id="touch" class="hidden">
+    <div class="tl">
+      <button data-hold="left">◀</button><button data-hold="right">▶</button>
+    </div>
+    <div class="tm">
+      <button data-tap="dodgeL" class="sm">⟲</button><button data-tap="dodgeR" class="sm">⟳</button>
+      <button data-hold="climb" class="sm">▲</button><button data-hold="brake" class="sm">▼</button>
+    </div>
+    <div class="tr">
+      <button data-tap="item" class="sm">ITEM</button>
+      <button data-tap="missile" class="md">MSL</button>
+      <button data-hold="fire" class="md">FIRE</button>
+      <button data-hold="boost" class="lg">BOOST</button>
+    </div>
+    <button id="touchPause">❚❚</button>
+  </div>
+
+  <div id="ui">
+    <!-- MAIN MENU -->
+    <section id="s-menu" class="screen active">
+      <a class="back-arcade" href="../../index.html">◀ ARENA ARCADE</a>
+      <div class="logo">
+        <div class="kicker">ANTI-GRAVITY COMBAT RACING</div>
+        <h1><span>NOVA</span> CIRCUIT</h1>
+        <div class="tag">Four circuits. One championship. Zero brakes.</div>
+      </div>
+      <nav class="menu" id="menuList">
+        <button data-go="championship" class="primary"><b id="champLabel">CHAMPIONSHIP</b><small>4 circuits · points · glory</small></button>
+        <button data-go="quick"><b>QUICK RACE</b><small>Any track, your rules</small></button>
+        <button data-go="trial"><b>TIME TRIAL</b><small>Just you and the clock</small></button>
+        <button data-go="local2p"><b>LOCAL 2-PLAYER</b><small>Split-screen duel</small></button>
+        <button data-go="online"><b>ONLINE</b><small>Race up to 6 pilots</small></button>
+        <div class="row2">
+          <button data-go="hangar">HANGAR</button>
+          <button data-go="controls">CONTROLS</button>
+          <button data-go="settings">SETTINGS</button>
+        </div>
+      </nav>
+      <div class="menu-foot" id="menuFoot"></div>
+    </section>
+
+    <!-- SETUP (shared by championship / quick / trial / 2p) -->
+    <section id="s-setup" class="screen">
+      <header><button class="back" data-back>◀ BACK</button><h2 id="setupTitle">QUICK RACE</h2><div class="spacer"></div></header>
+      <div class="setup-body">
+        <div class="pilots" id="pilots"></div>
+        <div class="opts" id="setupOpts">
+          <div class="opt-block" data-for="track"><h3>CIRCUIT</h3><div class="track-cards" id="trackCards"></div></div>
+          <div class="opt-block" data-for="laps"><h3>LAPS</h3><div class="chips" data-opt="laps"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
+          <div class="opt-block" data-for="rivals"><h3>AI RIVALS</h3><div class="chips" data-opt="rivals"><button data-v="0">0</button><button data-v="2">2</button><button data-v="4">4</button><button data-v="5">5</button></div></div>
+          <div class="opt-block" data-for="difficulty"><h3>DIFFICULTY</h3><div class="chips" data-opt="difficulty"><button data-v="0">ROOKIE</button><button data-v="1">PRO</button><button data-v="2">ACE</button><button data-v="3">LEGEND</button></div></div>
+          <div class="opt-block" data-for="combat"><h3>COMBAT</h3><div class="chips" data-opt="combat"><button data-v="1">WEAPONS ON</button><button data-v="0">RACE ONLY</button></div></div>
+        </div>
+      </div>
+      <footer><button class="go" id="setupGo">START RACE ▶</button></footer>
+    </section>
+
+    <!-- HANGAR -->
+    <section id="s-hangar" class="screen">
+      <header><button class="back" data-back>◀ BACK</button><h2>HANGAR</h2><div class="spacer"></div></header>
+      <div class="setup-body">
+        <div class="pilots" id="hangarPilot"></div>
+        <div class="opts"><div class="opt-block"><h3>PERSONAL BESTS</h3><div id="records" class="records"></div></div>
+        <div class="opt-block"><h3>CAREER</h3><div id="career" class="career"></div></div></div>
+      </div>
+    </section>
+
+    <!-- CHAMPIONSHIP BRIEFING -->
+    <section id="s-brief" class="screen">
+      <header><button class="back" data-back>◀ QUIT</button><h2 id="briefRound">ROUND 1 / 4</h2><div class="spacer"></div></header>
+      <div class="brief-body">
+        <div class="brief-left">
+          <div class="kicker" id="briefPlace"></div>
+          <h1 id="briefName"></h1>
+          <p id="briefBlurb"></p>
+          <div class="brief-stats" id="briefStats"></div>
+          <canvas id="briefMap" width="560" height="360"></canvas>
+        </div>
+        <div class="brief-right"><h3>STANDINGS</h3><div id="briefTable" class="table"></div></div>
+      </div>
+      <footer><button id="briefNew" class="hidden">NEW CHAMPIONSHIP</button><button class="go" id="briefGo">LAUNCH ▶</button></footer>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="s-results" class="screen">
+      <header><div class="spacer"></div><h2 id="resTitle">RACE RESULTS</h2><div class="spacer"></div></header>
+      <div class="results-body">
+        <div class="banner" id="resBanner"></div>
+        <div id="resTable" class="table wide"></div>
+      </div>
+      <footer id="resButtons"></footer>
+    </section>
+
+    <!-- ONLINE -->
+    <section id="s-online" class="screen">
+      <header><button class="back" data-back>◀ BACK</button><h2>ONLINE RACING</h2><div class="spacer"></div></header>
+      <div class="online-body">
+        <div id="onConnect" class="panel">
+          <h3>PILOT CALLSIGN</h3>
+          <input id="onName" maxlength="12" placeholder="CALLSIGN" autocomplete="off" spellcheck="false">
+          <div class="on-actions">
+            <button class="go" id="onCreate">CREATE ROOM</button>
+            <div class="join"><input id="onCode" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false"><button id="onJoin">JOIN</button></div>
+          </div>
+          <div class="note" id="onNote">Create a room and share the 4-letter code with friends. Up to 6 pilots; weapons and power-ups are fully synced.</div>
+        </div>
+        <div id="onLobby" class="panel hidden">
+          <div class="room"><span>ROOM CODE</span><b id="onRoom">----</b><button id="onCopy" class="sm">COPY LINK</button></div>
+          <div class="lobby-cols">
+            <div><h3>PILOTS</h3><div id="onPlayers" class="table"></div></div>
+            <div>
+              <h3>YOUR SHIP</h3>
+              <div class="chips" id="onShips"></div>
+              <div class="swatches" id="onSwatches"></div>
+              <div id="onHost">
+                <h3>CIRCUIT</h3><div class="chips" id="onTracks"></div>
+                <h3>LAPS</h3><div class="chips" id="onLaps"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="5">5</button></div>
+                <h3>COMBAT</h3><div class="chips" id="onCombat"><button data-v="1">WEAPONS ON</button><button data-v="0">RACE ONLY</button></div>
+              </div>
+              <div class="note" id="onWait"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer><button class="go hidden" id="onStart">START RACE ▶</button></footer>
+    </section>
+
+    <!-- CONTROLS -->
+    <section id="s-controls" class="screen">
+      <header><button class="back" data-back>◀ BACK</button><h2>CONTROLS</h2><div class="spacer"></div></header>
+      <div class="controls-body">
+        <table class="keys">
+          <tr><th></th><th>PILOT 1 / SOLO</th><th>PILOT 2</th><th>GAMEPAD</th></tr>
+          <tr><td>Steer</td><td><kbd>A</kbd> <kbd>D</kbd> / <kbd>◀</kbd> <kbd>▶</kbd></td><td><kbd>◀</kbd> <kbd>▶</kbd></td><td>Left stick</td></tr>
+          <tr><td>Climb / Brake</td><td><kbd>W</kbd> <kbd>S</kbd> / <kbd>▲</kbd> <kbd>▼</kbd></td><td><kbd>▲</kbd> <kbd>▼</kbd></td><td>D-pad ▲ / LT</td></tr>
+          <tr><td>Boost</td><td><kbd>SHIFT</kbd> or <kbd>B</kbd></td><td><kbd>R-SHIFT</kbd> / <kbd>/</kbd></td><td>A / B</td></tr>
+          <tr><td>Pulse cannon</td><td><kbd>SPACE</kbd> or <kbd>J</kbd></td><td><kbd>ENTER</kbd></td><td>RT</td></tr>
+          <tr><td>Homing missile</td><td><kbd>E</kbd> / <kbd>K</kbd></td><td><kbd>.</kbd></td><td>X</td></tr>
+          <tr><td>Use item</td><td><kbd>Q</kbd> / <kbd>C</kbd></td><td><kbd>,</kbd></td><td>Y</td></tr>
+          <tr><td>Barrel-roll dodge</td><td>double-tap <kbd>A</kbd>/<kbd>D</kbd></td><td>double-tap <kbd>◀</kbd>/<kbd>▶</kbd></td><td>LB / RB</td></tr>
+          <tr><td>Pause · Camera</td><td><kbd>ESC</kbd> / <kbd>P</kbd> · <kbd>V</kbd></td><td></td><td></td></tr>
+        </table>
+        <div class="tips">
+          <h3>FLIGHT MANUAL</h3>
+          <ul>
+            <li><b>Boost</b> burns your energy bar. Fill it back up with <b>boost pads</b>, <b>cell pickups</b>, takedowns and by drafting behind rivals.</li>
+            <li><b>Hold BOOST</b> as the countdown ends for a <b>perfect launch</b>. Hold it too early and your engines flood.</li>
+            <li><b>Missiles</b> lock on after a brief aim. A double-tap barrel roll dodges incoming ones.</li>
+            <li><b>Jump pads</b> launch you airborne; loops and corkscrews keep you stuck to the track. Ride them at full speed.</li>
+            <li>Item pads (white) grant ammo, energy, repairs, shields, mines, EMP and overdrive.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="s-settings" class="screen">
+      <header><button class="back" data-back>◀ BACK</button><h2>SETTINGS</h2><div class="spacer"></div></header>
+      <div class="settings-body">
+        <label>MUSIC <input type="range" id="setMusic" min="0" max="100"></label>
+        <label>EFFECTS <input type="range" id="setSfx" min="0" max="100"></label>
+        <div class="opt-block"><h3>GRAPHICS</h3><div class="chips" data-opt="quality"><button data-v="auto">AUTO</button><button data-v="0">LOW</button><button data-v="1">MEDIUM</button><button data-v="2">HIGH</button></div></div>
+        <div class="opt-block"><h3>CAMERA</h3><div class="chips" data-opt="cam"><button data-v="chase">CHASE</button><button data-v="nose">COCKPIT</button></div></div>
+        <div class="opt-block"><h3>FPS COUNTER</h3><div class="chips" data-opt="fps"><button data-v="0">OFF</button><button data-v="1">ON</button></div></div>
+        <div class="opt-block"><h3>DATA</h3><button id="setReset" class="danger">RESET RECORDS &amp; CHAMPIONSHIP</button></div>
+      </div>
+    </section>
+
+    <!-- PAUSE -->
+    <section id="s-pause" class="screen overlay">
+      <div class="pause-box">
+        <h2>PAUSED</h2>
+        <button id="pResume" class="primary">RESUME</button>
+        <button id="pRestart">RESTART RACE</button>
+        <button id="pSettings">SETTINGS</button>
+        <button id="pQuit" class="danger">QUIT TO MENU</button>
+      </div>
+    </section>
+
+    <section id="s-loading" class="screen overlay"><div class="loader"><div class="spin"></div><b id="loadText">BUILDING CIRCUIT…</b></div></section>
+    <div id="toast"></div>
+  </div>
+</div>
+<script src="vendor/three.min.js"></script>
+<script type="module" src="main.js"></script>
+</body>
+</html>

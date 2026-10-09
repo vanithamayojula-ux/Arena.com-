@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const novaRelay = require('./games/nova-circuit/relay.cjs');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -24,6 +25,12 @@ const MIME_TYPES = {
 };
 
 const server = http.createServer((req, res) => {
+  // Nova Circuit online relay (rooms over HTTP + SSE)
+  if (req.url.startsWith('/api/nc/')) {
+    const u = new URL(req.url, 'http://localhost');
+    novaRelay.handle(req, res, u.pathname, u.searchParams);
+    return;
+  }
   // Parse URL safely
   let reqUrl = decodeURI(req.url.split('?')[0]);
 
@@ -41,6 +48,8 @@ const server = http.createServer((req, res) => {
     filePath = path.join(ROOT, 'games', 'neon-run', 'index.html');
   } else if (reqUrl === '/games/apex' || reqUrl === '/games/apex/') {
     filePath = path.join(ROOT, 'games', 'apex', 'index.html');
+  } else if (reqUrl === '/games/nova-circuit' || reqUrl === '/games/nova-circuit/') {
+    filePath = path.join(ROOT, 'games', 'nova-circuit', 'index.html');
   } else if (reqUrl === '/games/ghibli-style-delivery-game' || reqUrl === '/games/ghibli-style-delivery-game/') {
     filePath = path.join(ROOT, 'games', 'ghibli-style-delivery-game', 'play.html');
   } else if (reqUrl === '/games/time-echo' || reqUrl === '/games/time-echo/') {
@@ -95,6 +104,7 @@ server.listen(PORT, () => {
   console.log(`  - Arena Hub:     http://localhost:${PORT}/`);
   console.log(`  - Apex Chase:    http://localhost:${PORT}/games/apex/`);
   console.log(`  - Neon Run:      http://localhost:${PORT}/games/neon-run/`);
+  console.log(`  - Nova Circuit:  http://localhost:${PORT}/games/nova-circuit/`);
   console.log(`  - Cyberstrike:   http://localhost:${PORT}/games/cyberstrike/`);
   console.log(`  - Typestorm:     http://localhost:${PORT}/games/typestorm/`);
   console.log(`  - Letters Wind:  http://localhost:${PORT}/games/ghibli-style-delivery-game/`);

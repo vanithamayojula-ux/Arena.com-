@@ -1,0 +1,31 @@
+<!doctype html><meta charset=utf-8><body style="margin:0;background:#000;overflow:hidden">
+<canvas id=c></canvas>
+<script src="../vendor/three.min.js"></script>
+<script type=module>
+import {buildTrack} from '../src/track.js';
+import {TRACKS} from '../src/trackdefs.js';
+import {Race, ROSTER} from '../src/sim.js';
+import {Renderer} from '../src/renderer.js';
+const q=new URLSearchParams(location.search);
+const ti=+(q.get('t')||0), warm=+(q.get('warm')||6), cam=q.get('cam')||'chase', skipTo=+(q.get('skip')||0);
+const track=buildTrack(TRACKS[ti]);
+const race=new Race({track,racers:ROSTER.slice(0,6).map((r,i)=>({name:r.name,ship:r.ship,livery:r.livery,skill:0.8})),laps:3,mode:'attract',instantStart:true});
+const R=new Renderer(document.getElementById('c'));
+R.setQuality(+(q.get('q')||2));
+R.resize(innerWidth,innerHeight);
+R.attachRace(race);
+window.race=race; window.R=R;
+// warm-up sim
+for(let i=0;i<warm*60;i++){race.step(1/60); R.handleEvents([]); race.drain();}
+let last=performance.now(), frames=0;
+const focus=race.ships[+(q.get('ship')||0)];
+function frame(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  race.step(dt); const ev=race.drain(); R.handleEvents(ev);
+  const f=race.order[0];
+  R.render(dt,race,[{ship:q.get('lead')?race.order[0]:focus,cam,rect:{x:0,y:0,w:innerWidth,h:innerHeight}}]);
+  frames++; window.__frames=frames;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>

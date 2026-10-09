@@ -1,0 +1,21 @@
+<!doctype html><meta charset=utf-8><body style="background:#06080f;color:#cde;font:12px monospace;margin:8px">
+<div id=o style="display:flex;flex-wrap:wrap;gap:12px"></div>
+<script type=module>
+import {buildTrack,minClearance} from '../src/track.js';
+import {TRACKS} from '../src/trackdefs.js';
+const o=document.getElementById('o');
+for(const d of TRACKS){
+  const t=buildTrack(d); const c=minClearance(t);
+  const wrap=document.createElement('div'); const cv=document.createElement('canvas'); cv.width=620; cv.height=520; wrap.appendChild(cv);
+  const lab=document.createElement('div'); lab.textContent=`${d.id} len ${t.length.toFixed(0)} gap ${t.closureGap.toFixed(0)} clearance ${c.distance.toFixed(0)}`; wrap.appendChild(lab); o.appendChild(wrap);
+  const g=cv.getContext('2d'); let minx=1e9,maxx=-1e9,minz=1e9,maxz=-1e9,miny=1e9,maxy=-1e9;
+  for(let i=0;i<t.N;i++){minx=Math.min(minx,t.P[i*3]);maxx=Math.max(maxx,t.P[i*3]);minz=Math.min(minz,t.P[i*3+2]);maxz=Math.max(maxz,t.P[i*3+2]);miny=Math.min(miny,t.P[i*3+1]);maxy=Math.max(maxy,t.P[i*3+1]);}
+  const sc=Math.min(560/(maxx-minx||1),400/(maxz-minz||1)); const ox=30-minx*sc, oz=20-minz*sc;
+  g.lineWidth=2;
+  for(let i=0;i<t.N;i++){const j=(i+1)%t.N; const h=(t.P[i*3+1]-miny)/(maxy-miny||1); g.strokeStyle=`hsl(${200-h*160},90%,${45+h*20}%)`; g.beginPath(); g.moveTo(t.P[i*3]*sc+ox,t.P[i*3+2]*sc+oz); g.lineTo(t.P[j*3]*sc+ox,t.P[j*3+2]*sc+oz); g.stroke();}
+  g.fillStyle='#fff'; g.fillRect(t.P[0]*sc+ox-4,t.P[2]*sc+oz-4,8,8);
+  // altitude profile
+  g.strokeStyle='#8f8'; g.beginPath(); for(let i=0;i<t.N;i++){const x=30+i/t.N*560,y=500-(t.P[i*3+1]-miny)/(maxy-miny||1)*70; i?g.lineTo(x,y):g.moveTo(x,y);} g.stroke();
+  g.fillStyle='#888'; g.fillText(`y ${miny.toFixed(0)}..${maxy.toFixed(0)}`,30,430);
+}
+</script>

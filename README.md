@@ -7,6 +7,7 @@ playing in-hub. Currently featuring:
 | ---- | ------ | ------ |
 | **APEX — The Cretaceous Chase** | `games/apex/` | Canvas 2D (procedural art + audio) |
 | **Neon Run — Midnight Express** | `games/neon-run/` | Three.js 3D Endless Runner |
+| **Nova Circuit — Anti-Gravity Combat Racing** | `games/nova-circuit/` | Three.js 3D racer, procedural tracks, online relay |
 | **Cyberstrike — Laser Blaster** | `games/cyberstrike/` | React + Tailwind + Vite Combat Typing |
 | **Typestorm — Neon Blitz** | `games/typestorm/` | React + Tailwind + Vite High-Speed Typing |
 | **Letters on the Wind — Post Boy's Day** | `games/ghibli-style-delivery-game/` | React + Tailwind + Vite Delivery Expedition |
@@ -49,7 +50,9 @@ npm test
 ```
 
 Runs the APEX simulation headlessly (movement, herd stamina, bite cone, waves,
-game-over, pause, collision) plus a boot test of its real entry point.
+game-over, pause, collision) plus a boot test of its real entry point, then the
+Nova Circuit suite (`node --test`: track geometry, race sim, weapons, netcode,
+relay server and save data).
 
 ## Adding a game
 
