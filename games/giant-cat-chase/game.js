@@ -30,6 +30,8 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x2a1838, 70, 300);
@@ -196,6 +198,15 @@
       mesh(BOX, tailMat, 0.65, 0.78, 2.22, 0.4, 0.22, 0.05, g),
     ];
     if (isPlayer) {
+      // headlight beams: additive translucent cones reaching ahead
+      const beamMat = new THREE.MeshBasicMaterial({ color: 0xfff0b0, transparent: true, opacity: 0.13, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+      for (const bx of [-0.6, 0.6]) {
+        const beam = new THREE.Mesh(CONE, beamMat);
+        beam.scale.set(1.6, 9, 1.6);
+        beam.rotation.x = Math.PI / 2;
+        beam.position.set(bx, 0.7, -6.7);
+        g.add(beam);
+      }
       // spoiler + neon side strips
       mesh(BOX, dark, -0.8, 1.6, 1.95, 0.08, 0.5, 0.08, g);
       mesh(BOX, dark, 0.8, 1.6, 1.95, 0.08, 0.5, 0.08, g);
@@ -371,6 +382,33 @@
 
   // ---------- Decor ----------
   const BUILD_COLS = [0x2a2a48, 0x3d2c4f, 0x23324a, 0x4a2f3d, 0x2e3b3a, 0x505070];
+  // Window-grid textures: a few palettes of lit / dark windows on a facade
+  function makeWindowTex(base, litChance, litColors) {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const g = c.getContext('2d');
+    g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+    const cols = 4, rows = 4, cw = 256 / cols, ch = 256 / rows;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const lit = Math.random() < litChance;
+      g.fillStyle = lit ? litColors[Math.floor(Math.random() * litColors.length)] : 'rgba(10,10,20,0.55)';
+      g.fillRect(x * cw + cw * 0.22, y * ch + ch * 0.28, cw * 0.56, ch * 0.44);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    return t;
+  }
+  const WIN_TEXS = [
+    makeWindowTex('#2a2a48', 0.35, ['#ffd27a', '#ffb457', '#fff1c4']),
+    makeWindowTex('#3d2c4f', 0.3, ['#ff7ab8', '#ffd27a', '#8bf0ff']),
+    makeWindowTex('#23324a', 0.4, ['#8bf0ff', '#ffe9a0', '#9bd4ff']),
+  ];
+  function disposeGroup(g) {
+    g.traverse((o) => {
+      if (o.material && o.material.map && o.material.map.dispose && o.userData.ownTex) o.material.map.dispose();
+      if (o.material && o.userData.ownMat) o.material.dispose();
+    });
+  }
   const WIN_MAT = mat(0xffd27a, { emissive: 0xffb050, emissiveIntensity: 0.8 });
   const TRUNK_MAT = mat(0x4a2d1a);
   const LEAF_MATS = [mat(0x2f6b33), mat(0x3f7c3a), mat(0x7a4a22)];
@@ -744,10 +782,13 @@
         const w = rand(6, 10), d = rand(6, 11), h = rand(8, 42);
         const x = side * rand(15, 24);
         const g = new THREE.Group();
-        const b = mesh(BOX, mat(pick(BUILD_COLS)), 0, h / 2, 0, w, h, d, g, false);
-        for (let i = 0; i < 3; i++) {
-          mesh(BOX, WIN_MAT, side * -0.1 * 0, 3 + i * 4.2, 0, w + 0.02, 0.8, d * 0.8 + 0.02, g);
-        }
+        const tex = WIN_TEXS[Math.floor(Math.random() * WIN_TEXS.length)].clone();
+        tex.repeat.set(Math.max(1, Math.round(w / 3)), Math.max(1, Math.round(h / 3)));
+        tex.needsUpdate = true;
+        const bm = new THREE.MeshLambertMaterial({ map: tex, color: pick(BUILD_COLS) });
+        const b = mesh(BOX, bm, 0, h / 2, 0, w, h, d, g, false);
+        b.material.map = tex;
+        b.userData.ownTex = true; b.userData.ownMat = true;
         g.position.set(x, 0, z);
         scene.add(g); decor.push({ z, group: g });
       }
@@ -813,7 +854,7 @@
   function clearWorld() {
     for (const o of obs) scene.remove(o.group);
     obs.length = 0;
-    for (const d of decor) scene.remove(d.group);
+    for (const d of decor) { scene.remove(d.group); disposeGroup(d.group); }
     decor.length = 0;
     for (const p of debris) scene.remove(p.m);
     debris.length = 0;
@@ -847,6 +888,7 @@
     for (let i = decor.length - 1; i >= 0; i--) {
       if (decor[i].z > S.carZ + 40) {
         scene.remove(decor[i].group);
+        disposeGroup(decor[i].group);
         decor.splice(i, 1);
       }
     }
