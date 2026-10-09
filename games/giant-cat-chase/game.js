@@ -39,7 +39,7 @@
   scene.add(new THREE.HemisphereLight(0xffd3a0, 0x2a2040, 0.85));
   const sun = new THREE.DirectionalLight(0xffb070, 0.95);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(2048, 2048);
   const sc = sun.shadow.camera;
   sc.left = -40; sc.right = 40; sc.top = 40; sc.bottom = -40; sc.near = 1; sc.far = 160;
   sun.shadow.bias = -0.0008;
@@ -62,6 +62,30 @@
     return t;
   }
   scene.background = makeSkyTexture();
+
+  let starField = null;
+  // Moon and starfield (not fogged, placed far down the -Z horizon)
+  const moon = new THREE.Mesh(new THREE.CircleGeometry(16, 40),
+    new THREE.MeshBasicMaterial({ color: 0xfff1d0, fog: false, transparent: true, opacity: 0.95 }));
+  scene.add(moon);
+  const moonHalo = new THREE.Mesh(new THREE.CircleGeometry(34, 40),
+    new THREE.MeshBasicMaterial({ color: 0xffd9a0, fog: false, transparent: true, opacity: 0.12 }));
+  scene.add(moonHalo);
+  {
+    const n = 500, arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const e = Math.random() * 0.9 + 0.05;             // elevation (0 = horizon)
+      const r = 480;
+      arr[i * 3] = Math.cos(a) * r * Math.cos(e);
+      arr[i * 3 + 1] = Math.sin(e) * r;
+      arr[i * 3 + 2] = Math.sin(a) * r * Math.cos(e);
+    }
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+    starField = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xfff6e0, size: 2.2, fog: false, sizeAttenuation: false, transparent: true, opacity: 0.8 }));
+    scene.add(starField);
+  }
 
   // Road texture: asphalt + lane markings (64x256 = 40 world units of length)
   function makeRoadTexture() {
@@ -143,7 +167,7 @@
   // ---------- Car model (faces -Z) ----------
   function buildCar(color, isPlayer) {
     const g = new THREE.Group();
-    const body = mat(color);
+    const body = new THREE.MeshPhongMaterial({ color, shininess: 110, specular: 0x666666 });
     const dark = mat(0x1b1b24);
     const glass = mat(0x1d3550, { emissive: 0x06101c });
     mesh(BOX, body, 0, 0.62, 0, 1.9, 0.72, 4.4, g, true);
@@ -184,75 +208,163 @@
   }
 
   // ---------- Giant cat (faces -Z; origin at its belly center) ----------
-  const CAT_ORANGE = 0xe8892b, CAT_STRIPE = 0x6e3510, CAT_CREAM = 0xffe2b8;
+  // Procedural tabby fur texture: orange base, wavy dark stripes, speckles.
+  function makeFurTexture() {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 512;
+    const g = c.getContext('2d');
+    g.fillStyle = '#e8892b';
+    g.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 4000; i++) {
+      g.fillStyle = Math.random() < 0.5 ? 'rgba(255,190,110,0.25)' : 'rgba(120,55,15,0.18)';
+      g.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
+    }
+    // stripes: wavy vertical bands that wrap around the body
+    g.lineCap = 'round';
+    for (let row = 0; row < 8; row++) {
+      for (let k = 0; k < 6; k++) {
+        const x0 = (k * 90 + row * 37 + Math.random() * 30) % 512;
+        const y0 = row * 64 + Math.random() * 20;
+        g.strokeStyle = 'rgba(96,44,12,0.85)';
+        g.lineWidth = 9 + Math.random() * 9;
+        g.beginPath();
+        g.moveTo(x0, y0);
+        g.quadraticCurveTo(x0 + 18, y0 + 26, x0 - 4, y0 + 52);
+        g.stroke();
+      }
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    return t;
+  }
+  const FUR_TEX = makeFurTexture();
+  const furMat = new THREE.MeshLambertMaterial({ map: FUR_TEX, color: 0xffffff });
+  const furMatSoft = new THREE.MeshLambertMaterial({ map: FUR_TEX, color: 0xffd7a8 });
+  const creamMat = mat(0xffe9c6);
+  const pinkMat = mat(0xff8fa6);
+  const noseMat = new THREE.MeshPhongMaterial({ color: 0xff6b8a, shininess: 60 });
+  const eyeWhite = new THREE.MeshPhongMaterial({ color: 0xf4f4e8, shininess: 90 });
+  const irisMat = new THREE.MeshPhongMaterial({ color: 0x9dff3a, emissive: 0x4a8a00, emissiveIntensity: 0.6, shininess: 120 });
+  const pupilMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+  const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const darkLineMat = mat(0x2a1208);
+  const whiskerMat = new THREE.MeshBasicMaterial({ color: 0xf8f0e0, transparent: true, opacity: 0.85 });
+
+  // Tapered limb/tail segment along Z (length along local Z)
+  function limb(parent, rTop, rBot, len, x, y, z, m) {
+    const g = new THREE.Mesh(CYL, m || furMat);
+    g.geometry = CYL;
+    g.scale.set(1, 1, 1);
+    g.position.set(x, y, z);
+    g.rotation.x = Math.PI / 2;
+    g.scale.set(rBot, len, rTop);
+    g.castShadow = true;
+    parent.add(g);
+    return g;
+  }
+
   function buildCat() {
     const root = new THREE.Group();
-    const o = mat(CAT_ORANGE), s = mat(CAT_STRIPE), c = mat(CAT_CREAM);
-    const body = mesh(SPH, o, 0, 6.0, 0, 4.2, 3.9, 6.6, root, true);
-    mesh(SPH, c, 0, 4.4, -0.2, 3.4, 2.2, 5.8, root, true);
-    // stripes on back
-    for (let i = -2; i <= 2; i++) {
-      mesh(BOX, s, 0, 8.8, i * 1.7 + 0.3, 1.8, 0.9, 0.4, root, true);
-    }
-    // head
+
+    // Torso: chest, belly, haunches
+    mesh(SPH, furMat, 0, 6.2, -2.6, 4.6, 4.3, 3.9, root, true);   // chest / shoulders
+    mesh(SPH, furMat, 0, 6.0, 0.0, 4.4, 4.0, 6.0, root, true);    // mid body
+    mesh(SPH, furMat, 0, 6.6, 4.2, 5.0, 4.8, 4.0, root, true);    // haunches
+    mesh(SPH, creamMat, 0, 4.2, -0.6, 3.1, 2.1, 5.6, root, true); // belly fluff
+    mesh(SPH, furMat, 0, 9.2, 0.5, 3.6, 1.4, 4.2, root, true);    // spine ridge
+
+    // Head group (pivot for bob/turn)
     const head = new THREE.Group();
-    head.position.set(0, 10.2, -7.0);
+    head.position.set(0, 10.6, -7.4);
     root.add(head);
-    mesh(SPH, o, 0, 0, 0, 3.4, 3.1, 3.0, head, true);
+    mesh(SPH, furMat, 0, 0, 0, 3.6, 3.2, 3.3, head, true);        // skull
+    mesh(SPH, furMat, 0, 0.9, -0.6, 3.0, 2.6, 2.6, head, true);   // brow mass
+    mesh(SPH, furMatSoft, -2.35, -0.9, -1.4, 1.5, 1.2, 1.5, head, true); // cheek ruff
+    mesh(SPH, furMatSoft, 2.35, -0.9, -1.4, 1.5, 1.2, 1.5, head, true);
+    mesh(SPH, creamMat, 0, -1.25, -3.3, 2.2, 1.45, 1.6, head, true);     // muzzle
+    mesh(SPH, creamMat, -1.05, -1.4, -3.4, 1.0, 0.8, 1.0, head);
+    mesh(SPH, creamMat, 1.05, -1.4, -3.4, 1.0, 0.8, 1.0, head);
+    // nose (rounded triangle)
+    const nose = mesh(SPH, noseMat, 0, -0.6, -4.9, 0.58, 0.45, 0.4, head);
+    nose.rotation.x = Math.PI / 2;
+    // mouth + smile lines
+    mesh(BOX, darkLineMat, 0, -1.85, -4.55, 0.12, 0.12, 0.6, head);
     for (const sx of [-1, 1]) {
-      const ear = mesh(CONE, o, sx * 2.0, 3.1, 0.2, 1.1, 2.6, 1.0, head, true);
-      ear.rotation.z = -sx * 0.25;
-      mesh(CONE, mat(0xffa0a0), sx * 2.0, 3.0, 0.6, 0.55, 1.6, 0.4, head);
+      const m1 = mesh(BOX, darkLineMat, sx * 0.7, -2.2, -4.2, 1.5, 0.12, 0.12, head);
+      m1.rotation.z = sx * -0.35;
+      mesh(SPH, pinkMat, sx * 0.4, -2.5, -4.25, 0.5, 0.5, 0.5, head); // tongue hint (mostly hidden)
     }
-    mesh(SPH, c, 0, -1.2, -2.9, 1.9, 1.3, 1.5, head, true); // muzzle
-    mesh(SPH, mat(0xff6b8a), 0, -0.9, -4.4, 0.42, 0.34, 0.35, head);
-    mesh(BOX, mat(0x2a0f0a), 0, -1.9, -4.2, 0.9, 0.08, 0.1, head);
-    const eyeMat = mat(0xc8ff3d, { emissive: 0xa6ff00, emissiveIntensity: 1.2 });
+
+    // Eyes: white sclera, green iris, slit pupil, glint; brows for an angry look
     for (const sx of [-1, 1]) {
-      mesh(SPH, eyeMat, sx * 1.45, 0.6, -2.5, 0.8, 0.62, 0.45, head);
-      mesh(SPH, mat(0x000000), sx * 1.45, 0.6, -2.85, 0.28, 0.6, 0.22, head);
-      // forehead stripes
-      mesh(BOX, s, sx * 0.9, 2.2, -2.0, 0.22, 0.9, 0.2, head);
-      mesh(BOX, s, sx * 0.0, 2.5, -2.0, 0.22, 0.9, 0.2, head);
-      // whiskers
-      for (const wy of [-0.9, -1.4]) {
-        const wh = mesh(BOX, mat(0xffffff), sx * 2.6, wy, -4.0, 4.2, 0.05, 0.05, head);
-        wh.rotation.y = sx * 0.15;
+      mesh(SPH, eyeWhite, sx * 1.5, 0.7, -2.6, 0.95, 0.8, 0.55, head);
+      mesh(SPH, irisMat, sx * 1.5, 0.7, -2.95, 0.66, 0.66, 0.3, head);
+      mesh(SPH, pupilMat, sx * 1.5, 0.7, -3.12, 0.24, 0.62, 0.2, head);
+      mesh(SPH, glintMat, sx * 1.5 + sx * 0.18, 1.0, -3.18, 0.13, 0.13, 0.1, head);
+      const brow = mesh(BOX, darkLineMat, sx * 1.5, 1.85, -2.5, 1.6, 0.36, 0.5, head);
+      brow.rotation.z = -sx * 0.35;
+      // forehead stripes (M-shape)
+      mesh(BOX, darkLineMat, sx * 0.85, 2.7, -2.7, 0.3, 1.1, 0.25, head).rotation.z = sx * 0.3;
+    }
+    mesh(BOX, darkLineMat, 0, 3.0, -2.8, 0.3, 1.0, 0.25, head);
+    // Ears: outer fur + pink inner
+    for (const sx of [-1, 1]) {
+      const ear = mesh(CONE, furMat, sx * 2.0, 3.3, 0.1, 1.2, 2.9, 1.1, head, true);
+      ear.rotation.z = -sx * 0.22;
+      const inner = mesh(CONE, pinkMat, sx * 2.0, 3.0, -0.25, 0.6, 1.8, 0.5, head);
+      inner.rotation.z = -sx * 0.22;
+    }
+    // Whiskers
+    for (const sx of [-1, 1]) {
+      for (const [wy, rz] of [[-1.0, 0.1], [-1.5, 0], [-2.0, -0.12]]) {
+        const w = mesh(CYL, whiskerMat, sx * 3.6, wy, -4.0, 0.04, 0.04, 0.04, head);
+        w.scale.set(0.04, 5.0, 0.04);
+        w.rotation.set(0, 0, Math.PI / 2 + sx * (0.12 + rz));
+        w.rotation.order = 'ZYX';
+        w.rotation.y = sx * 0.2;
+        w.rotation.z = Math.PI / 2 + sx * 0.1 + rz;
       }
     }
     root.userData.head = head;
 
-    // legs (pivot at hip, swing around X)
+    // Legs: thigh/shin cylinders, paw with toe beans; pivot at hip
     root.userData.legs = [];
-    for (const [lx, lz] of [[-2.4, -3.8], [2.4, -3.8], [-2.4, 3.6], [2.4, 3.6]]) {
+    for (const [lx, lz, back] of [[-2.5, -3.6, false], [2.5, -3.6, false], [-2.8, 3.4, true], [2.8, 3.4, true]]) {
       const pivot = new THREE.Group();
-      pivot.position.set(lx, 5.2, lz);
+      pivot.position.set(lx, 5.4, lz);
       root.add(pivot);
-      mesh(BOX, o, 0, -2.4, 0, 1.6, 4.8, 1.6, pivot, true);
-      mesh(BOX, c, 0, -4.9, -0.35, 1.7, 0.9, 2.2, pivot, true);
+      mesh(SPH, furMat, 0, -1.6, 0, back ? 1.9 : 1.5, back ? 2.6 : 2.0, back ? 2.2 : 1.7, pivot, true); // thigh
+      const shin = mesh(CYL, furMat, 0, -3.6, 0, 1.0, 3.6, 1.0, pivot, true);
+      shin.rotation.set(0, 0, 0);
+      const paw = mesh(SPH, creamMat, 0, -5.4, -0.5, 1.45, 0.95, 1.9, pivot, true);
+      for (const tx of [-0.55, 0, 0.55]) mesh(SPH, pinkMat, tx, -5.6, -1.8, 0.28, 0.24, 0.28, pivot);
       root.userData.legs.push(pivot);
     }
-    // tail: nested chain
+
+    // Tail: chain of tapered segments, stripes via fur texture
     const tailRoot = new THREE.Group();
-    tailRoot.position.set(0, 7.0, 6.2);
+    tailRoot.position.set(0, 7.2, 6.4);
     root.add(tailRoot);
     let parent = tailRoot;
     root.userData.tail = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       const seg = new THREE.Group();
-      seg.position.set(0, 0.2, i === 0 ? 0 : 1.6);
+      seg.position.set(0, 0.1, i === 0 ? 0 : 1.7);
       parent.add(seg);
-      const r = 1.1 - i * 0.1;
-      mesh(SPH, i % 2 ? s : o, 0, 0, 0.6, r, r, 1.4, seg, true);
+      const r = 1.05 - i * 0.09;
+      limb(seg, r, r * 1.05, 1.8, 0, 0, 0.9, i % 3 === 2 ? furMatSoft : furMat);
       root.userData.tail.push(seg);
       parent = seg;
     }
-    // paws: bigger swipe paw (separate, world-space)
+    const tip = mesh(SPH, furMat, 0, 0.2, 14.0 - 13.2, 0.5, 0.5, 0.5, parent);
+    tip.visible = true;
+
+    // Swipe paw (world-space)
     const swipe = new THREE.Group();
-    const palm = mesh(BOX, o, 0, 0, 0, 3.8, 1.4, 3.6, swipe, true);
-    mesh(SPH, c, 0, -0.2, -2.0, 3.8, 1.6, 1.6, swipe, true);
-    for (const tx of [-1.2, 0, 1.2]) mesh(SPH, c, tx, 0.2, -2.1, 0.55, 0.5, 0.5, swipe);
-    mesh(SPH, c, 0, 0.3, 0, 1.0, 1.0, 1.0, swipe);
+    mesh(SPH, furMat, 0, 0, 0, 2.4, 1.0, 2.3, swipe, true);
+    mesh(SPH, creamMat, 0, -0.1, -1.6, 2.6, 1.1, 1.2, swipe, true);
+    for (const tx of [-1.1, -0.35, 0.35, 1.1]) mesh(SPH, pinkMat, tx * 1.2, -0.2, -2.9, 0.55, 0.45, 0.5, swipe);
+    mesh(SPH, creamMat, 0, 0.3, 0, 1.0, 0.7, 1.0, swipe, true);
     root.userData.swipe = swipe;
     return root;
   }
@@ -264,6 +376,16 @@
   const LEAF_MATS = [mat(0x2f6b33), mat(0x3f7c3a), mat(0x7a4a22)];
   const LAMP_MAT = mat(0xffd590, { emissive: 0xffc070, emissiveIntensity: 1.0 });
   const POLE_MAT = mat(0x3a3a48);
+  const GLOW_TEX = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    const grd = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0, 'rgba(255,220,150,1)');
+    grd.addColorStop(0.25, 'rgba(255,170,80,0.55)');
+    grd.addColorStop(1, 'rgba(255,120,40,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, 128, 128);
+    return new THREE.CanvasTexture(c);
+  })();
 
   // ---------- Obstacles ----------
   const obs = [];          // gameplay objects (solids, ramps, pits, decals, coins, balls, traffic)
@@ -644,6 +766,10 @@
         mesh(CYL, POLE_MAT, 0, 3.4, 0, 0.18, 6.8, 0.18, g);
         mesh(BOX, POLE_MAT, side * -0.8, 6.8, 0, 1.8, 0.2, 0.2, g);
         mesh(BOX, LAMP_MAT, side * -1.6, 6.6, 0, 0.7, 0.3, 0.4, g);
+        const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW_TEX, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+        glow.scale.set(5, 5, 1);
+        glow.position.set(side * -1.6, 6.4, 0);
+        g.add(glow);
         g.position.set(x, 0, z);
         scene.add(g); decor.push({ z, group: g });
       }
@@ -1174,7 +1300,9 @@
     const shk = S.shake * 0.4 + Math.max(0, 1 - S.gap / 25) * 0.25;
     const nx = (Math.random() - 0.5) * shk, ny = (Math.random() - 0.5) * shk;
     camTarget.set(S.carX * 0.55 + nx, 1.9 + S.carY * 0.5 + ny, S.carZ - 12);
-    camPos.set(S.carX * 0.55 + nx * 0.5, 5.9 + S.carY * 0.4 + ny * 0.5, S.carZ + 11.5);
+    // When the cat is close, rise above it so its body doesn't fill the view
+    const close = clamp((26 - S.gap) / 14, 0, 1);
+    camPos.set(S.carX * 0.55 + nx * 0.5, 5.9 + close * 9 + S.carY * 0.4 + ny * 0.5, S.carZ + 11.5);
     if (!camInit) {
       camera.position.copy(camPos);
       camInit = true;
@@ -1193,6 +1321,10 @@
     sun.target.updateMatrixWorld();
     sc.updateProjectionMatrix();
 
+    // Sky follows the car so the stars and moon stay overhead
+    starField.position.set(S.carX, 0, S.carZ);
+    moon.position.set(S.carX + 90, 120, S.carZ - 420);
+    moonHalo.position.set(S.carX + 90, 120, S.carZ - 421);
     // Road & grass follow
     roadMesh.position.set(0, 0, S.carZ);
     grassMesh.position.set(0, -0.05, S.carZ);
