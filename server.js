@@ -43,6 +43,8 @@ const server = http.createServer((req, res) => {
     filePath = path.join(ROOT, 'games', 'apex', 'index.html');
   } else if (reqUrl === '/games/ghibli-style-delivery-game' || reqUrl === '/games/ghibli-style-delivery-game/') {
     filePath = path.join(ROOT, 'games', 'ghibli-style-delivery-game', 'play.html');
+  } else if (reqUrl === '/games/giant-cat-chase' || reqUrl === '/games/giant-cat-chase/') {
+    filePath = path.join(ROOT, 'games', 'giant-cat-chase', 'index.html');
   } else if (reqUrl === '/games/time-echo' || reqUrl === '/games/time-echo/') {
     filePath = path.join(ROOT, 'games', 'time-echo', 'index.html');
   }

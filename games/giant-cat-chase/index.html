@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Giant Cat Chase — Highway Escape</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#120a1c;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden;user-select:none}
+#game{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+.top{position:fixed;top:22px;left:28px;right:28px;display:flex;align-items:center;justify-content:space-between;pointer-events:none;z-index:3}
+.brand{font-size:19px;font-weight:900;letter-spacing:3px;text-shadow:0 2px 8px #000}
+.brand b{color:#ff9b2f}
+.tag{font-size:9px;letter-spacing:2px;color:#e7c9a8;margin-top:6px}
+#back{pointer-events:auto;text-decoration:none;color:#ff9b2f;border:1px solid #ff9b2f70;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:bold;letter-spacing:1px;background:#1b0f22d0}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(90deg,#120a1cf0 0%,#1a0e2480 55%,#120a1c20 100%);z-index:4}
+.overlay.hidden,.hidden{display:none!important}
+.card{width:100%;max-width:1040px}
+.eyebrow{color:#ff9b2f;font-size:11px;font-weight:bold;letter-spacing:3px;display:flex;align-items:center;gap:12px}
+.eyebrow:before{content:'';height:1px;width:30px;background:#ff9b2f}
+h1{font-size:clamp(54px,8.5vw,110px);line-height:.9;letter-spacing:-4px;margin:24px 0;font-weight:900;font-style:italic;text-shadow:0 6px 24px #000}
+h1 span{color:#ff9b2f}
+p{color:#dcc7b5;font-size:15px;line-height:1.7;max-width:420px}
+.primary{margin-top:20px;border:0;background:#ff9b2f;color:#2a1305;padding:18px 28px;min-width:235px;text-align:left;font-weight:800;border-radius:10px;box-shadow:0 6px 0 #a35a18;cursor:pointer;font-size:15px;transition:transform .15s}
+.primary:hover{transform:translateY(-3px);background:#ffb867}
+.primary span{float:right;font-size:20px;margin-left:28px}
+.secondary{background:transparent;border:1px solid #ffffff30;color:#e8d6c6;padding:14px 22px;border-radius:10px;cursor:pointer;margin-left:10px}
+.keys{display:flex;flex-wrap:wrap;gap:22px;margin-top:34px;color:#b9a08a;font-size:11px}
+.key{display:block;color:#fff3e6;margin-bottom:8px;font-size:12px;letter-spacing:1px}
+.key i{font-style:normal;background:#ffffff14;border:1px solid #ffffff28;padding:6px 9px;border-radius:5px;margin-right:3px}
+.summary{display:flex;gap:34px;margin:24px 0;flex-wrap:wrap}
+.summary strong{display:block;font-size:34px;margin-top:8px}
+.summary small{font-size:10px;letter-spacing:2px;color:#c9b09c}
+#hud{position:fixed;top:92px;left:28px;right:28px;display:none;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:2}
+.label{font-size:9px;letter-spacing:2px;color:#e7c9a8;margin-bottom:5px}
+.score{font-size:38px;font-weight:800;text-shadow:0 2px 8px #000}
+.speed{font-size:30px;font-weight:800;color:#fff3e6;text-shadow:0 2px 8px #000}
+.speed small{font-size:12px;color:#e7c9a8;letter-spacing:2px}
+.coins{color:#ffd166;font-size:22px;font-weight:bold;text-shadow:0 2px 8px #000}
+.hearts{font-size:22px;letter-spacing:4px;color:#ff4d6d;text-shadow:0 2px 8px #000}
+.bar{width:220px;height:10px;background:#00000080;border:1px solid #ffffff30;border-radius:6px;overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#ff4d2e,#ff9b2f);transition:width .2s}
+.bar.nitro>i{background:linear-gradient(90deg,#3ddcff,#8bf0ff)}
+#pause{pointer-events:auto;border:1px solid #ffffff35;background:#1b0f22aa;color:white;padding:10px 14px;border-radius:10px;cursor:pointer}
+#mirror{position:fixed;top:92px;left:50%;transform:translateX(-50%);width:300px;height:130px;border:3px solid #2a1a10;border-radius:8px;box-shadow:0 6px 18px #000a;display:none;z-index:2;pointer-events:none}
+#mirror:after{content:'REAR CAM';position:absolute;bottom:-20px;left:0;right:0;text-align:center;font-size:9px;letter-spacing:3px;color:#e7c9a8}
+#warn{position:fixed;top:36%;left:0;right:0;text-align:center;font-size:34px;font-weight:900;color:#ff4d2e;text-shadow:0 0 18px #000,0 2px 6px #000;letter-spacing:3px;opacity:0;pointer-events:none;z-index:3;transition:opacity .15s}
+#toast{position:fixed;top:24%;left:0;right:0;text-align:center;color:#ffd166;font-weight:bold;font-size:22px;pointer-events:none;text-shadow:0 2px 8px #000;opacity:0;transition:opacity .25s;z-index:3}
+#flash{position:fixed;inset:0;background:#ff2a1a;opacity:0;pointer-events:none;z-index:1;transition:opacity .4s}
+.bottom{position:fixed;bottom:18px;left:28px;right:28px;display:flex;justify-content:space-between;color:#c9a88a;font-size:10px;letter-spacing:2px;pointer-events:none;z-index:2;text-shadow:0 1px 4px #000}
+#mobileHint{position:fixed;bottom:44px;left:0;right:0;text-align:center;color:#e7c9a8;font-size:11px;display:none;pointer-events:none;z-index:2}
+@media(max-width:700px){.top{top:14px;left:14px;right:14px}.brand{font-size:15px}.tag{display:none}#hud{top:70px;left:14px;right:14px}.score{font-size:28px}.speed{font-size:22px}.bar{width:130px}#mirror{width:200px;height:90px;top:70px}#mobileHint{display:block}h1{letter-spacing:-2px}.overlay{background:#120a1ce0}.bottom{display:none}}
+</style></head>
+<body>
+<canvas id="game"></canvas>
+<header class="top">
+  <div style="display:flex;align-items:center;gap:16px">
+    <a href="../../index.html" id="arena-back-btn" style="pointer-events:auto;text-decoration:none;color:#ff9b2f;border:1px solid #ff9b2f70;border-radius:20px;padding:6px 14px;font-size:11px;font-weight:bold;letter-spacing:1px;background:#1b0f22d0">◀ ARENA LOBBY</a>
+    <div><div class="brand">GIANT CAT <b>CHASE</b></div><div class="tag">HIGHWAY ESCAPE · DO NOT LOOK BACK</div></div>
+  </div>
+</header>
+
+<div id="hud">
+  <div>
+    <div class="label">POINTS</div>
+    <div class="score" id="score">0000</div>
+    <div class="label" style="margin-top:14px">CAT GAP</div>
+    <div class="bar" id="gapBar"><i id="gapFill"></i></div>
+    <div class="label" style="margin-top:14px">NITRO <span style="opacity:.7">[SHIFT / X]</span></div>
+    <div class="bar nitro" id="nitroBar"><i id="nitroFill"></i></div>
+  </div>
+  <div style="text-align:right">
+    <div class="coins">◈ <span id="coins">0</span></div>
+    <div class="hearts" id="hearts">♥♥♥</div>
+    <div class="speed" style="margin-top:10px"><span id="speed">0</span> <small>KM/H</small></div>
+    <button id="pause" aria-label="Pause game" style="margin-top:12px">Ⅱ</button>
+  </div>
+</div>
+<div id="mirror"></div>
+<div id="warn">PAW INCOMING — CHANGE LANE!</div>
+<div id="toast"></div>
+<div id="flash"></div>
+<div id="mobileHint">SWIPE ← → LANES · ↑ JUMP · ↓ BRAKE · TAP = NITRO</div>
+<div class="bottom"><span>DODGE · JUMP · RAMP · AVOID THE PITS</span><span>THE CAT IS RIGHT BEHIND YOU</span></div>
+
+<section class="overlay" id="start">
+  <div class="card">
+    <div class="eyebrow">A GIANT CAT HAS NOTICED YOU</div>
+    <h1>KEEP<br><span>RUNNING.</span></h1>
+    <p>A kilometre-tall tabby is chasing you down the highway. Weave through traffic, barrels, boulders and pits, hit the ramps and don't let it get its paw on you.</p>
+    <button class="primary" id="play">START ENGINE <span>↗</span></button>
+    <div class="keys">
+      <div><span class="key"><i>←</i> <i>→</i> / A D</span>Change lane</div>
+      <div><span class="key"><i>↑</i> / SPACE</span>Jump</div>
+      <div><span class="key"><i>↓</i> / S</span>Brake (cat gains on you)</div>
+      <div><span class="key"><i>SHIFT</i> / X</span>Nitro boost</div>
+      <div><span class="key"><i>ESC</i> / P</span>Pause · <i>M</i> mute</div>
+    </div>
+  </div>
+</section>
+
+<section class="overlay hidden" id="paused">
+  <div class="card">
+    <div class="eyebrow">TAKE A BREATH</div>
+    <h1>PAUSED<span>.</span></h1>
+    <p>The cat is waiting. Patiently. Menacingly.</p>
+    <button class="primary" id="resume">KEEP RUNNING <span>↗</span></button>
+  </div>
+</section>
+
+<section class="overlay hidden" id="end">
+  <div class="card">
+    <div class="eyebrow" id="endEyebrow">GAME OVER</div>
+    <h1 id="endTitle">CAUGHT<span>.</span></h1>
+    <p id="reason">The giant cat caught up with you.</p>
+    <div class="summary">
+      <div><small>DISTANCE</small><strong id="finalScore">0</strong></div>
+      <div><small>COINS</small><strong id="finalCoins" style="color:#ffd166">0</strong></div>
+      <div><small>CLOSE CALLS</small><strong id="finalClose" style="color:#8bf0ff">0</strong></div>
+      <div><small>BEST POINTS</small><strong id="best" style="color:#ff9b2f">0</strong></div>
+    </div>
+    <button class="primary" id="again">RUN IT BACK <span>↗</span></button>
+    <button class="secondary" id="home">Back to city</button>
+  </div>
+</section>
+
+<script src="vendor/three.min.js"></script>
+<script src="game.js"></script>
+<script>if(window.self!==window.top){const b=document.getElementById('arena-back-btn');if(b)b.style.display='none';}</script>
+</body></html>

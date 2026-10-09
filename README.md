@@ -11,6 +11,7 @@ playing in-hub. Currently featuring:
 | **Typestorm — Neon Blitz** | `games/typestorm/` | React + Tailwind + Vite High-Speed Typing |
 | **Letters on the Wind — Post Boy's Day** | `games/ghibli-style-delivery-game/` | React + Tailwind + Vite Delivery Expedition |
 | **Time Echo — Chronology Lab** | `games/time-echo/` | HTML5 Canvas Temporal Puzzle Platformer |
+| **Giant Cat Chase — Highway Escape** | `games/giant-cat-chase/` | Three.js 3D Chase Runner |
 
 ## Run
 
