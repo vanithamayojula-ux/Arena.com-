@@ -12,7 +12,7 @@
   const JUMP_VY = 12.5;
   const RAMP_H = 2.0, RAMP_HL = 4.5;
   const PIT_HL = 4.6;
-  const HP_MAX = 4;
+  const HP_MAX = 5;
   const GAP_START = 42, GAP_MAX = 85;
   const BEST_KEY = 'giantcat_best_v1';
 
@@ -733,6 +733,11 @@
     { f: 'pit', w: 1 }, { f: 'jumpy', w: 1 }, { f: 'mixed', w: 1 },
   ];
   function pickPattern(d) {
+    // Gentle opening: only the easiest patterns for the first 400 units
+    if (-spawnZ < 400) {
+      const easy = ['coins', 'cones', 'slalom', 'barrier', 'tires'];
+      return easy[Math.floor(Math.random() * easy.length)];
+    }
     // More dangerous patterns unlock with distance
     const pool = PATTERNS.filter((p) => {
       if (['boulders', 'pit'].includes(p.f)) return d > 0.12;
@@ -848,7 +853,7 @@
     while (spawnZ > S.carZ - 300) {
       const f = pickPattern(d);
       const len = pats[f](spawnZ);
-      spawnZ -= len + rand(60, 90) - d * 4;
+      spawnZ -= len + rand(85, 120) - d * 4;
       spawnCount++;
     }
     while (decorZ > S.carZ - 300) {
