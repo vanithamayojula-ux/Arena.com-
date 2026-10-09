@@ -1176,8 +1176,8 @@
     <div class="section-header">
       <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
       <div class="gate-filters">
-        <button class="filter-btn active" data-filter="all">ALL GATES (6)</button>
-        <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
+        <button class="filter-btn active" data-filter="all">ALL GATES (7)</button>
+        <button class="filter-btn" data-filter="predator">PREDATOR & 3D (3)</button>
         <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
         <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
       </div>
@@ -1413,6 +1413,44 @@
         </div>
       </article>
 
+      <!-- GATE 7: GIANT CAT CHASE (RANK A / 3D CHASE) -->
+      <article class="gate-card" data-category="predator" data-title="Giant Cat Chase Highway Escape 3D">
+        <div class="gate-thumbnail">
+          <img src="games/giant-cat-chase/screenshots/giant-cat-chase.png" alt="Giant Cat Chase Highway Escape" onerror="this.style.display='none'">
+          <span class="rank-badge badge-a">RANK A</span>
+          <span class="gate-type-tag">RED GATE // GIANT CAT CHASE</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Giant Cat Chase: Highway Escape
+          </h3>
+          <p class="gate-desc">
+            Floor it down a neon highway with a kilometre-tall tabby on your tail. Dodge traffic, barrels, boulders and pits, hit the ramps, and don't let the paw swipe catch you.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:#ff9b2f;">DANGER RATING</span>
+              <span style="color:#ff9b2f;">HIGH (78%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s" style="width:78%; background: linear-gradient(90deg, #c2410c, #ff9b2f);"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>Arrows / WASD • Space Jump • Shift Nitro</span>
+              <span>FEAT: 17 OBSTACLE TYPES</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('giant-cat-chase')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/giant-cat-chase/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
     </div>
   </section>
 
@@ -1490,6 +1528,7 @@
           <option value="typestorm">[RANK A] Typestorm: Neon Blitz</option>
           <option value="letters-wind">[RANK A] Letters on the Wind: Post Boy</option>
           <option value="time-echo">[RANK S] Time Echo: Chronology Lab</option>
+          <option value="giant-cat-chase">[RANK A] Giant Cat Chase: Highway Escape</option>
         </select>
       </div>
 
@@ -1508,7 +1547,7 @@
   <!-- Footer -->
   <footer>
     <p>⚔️ <strong>ARISE PLAY</strong> — Solo Leveling Red Gate System Arcade.</p>
-    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, and Time Echo.</p>
+    <p style="margin-top: 8px; color: #9f8694;">Featuring APEX: The Cretaceous Chase, Neon Run, Cyberstrike, Typestorm, Letters on the Wind, Time Echo, and Giant Cat Chase.</p>
   </footer>
 
   <!-- System UI Scripts & Ambient Red Embers -->
@@ -1570,6 +1609,10 @@
       'time-echo': {
         name: '[RANK S: RED GATE] Time Echo: Chronology Lab',
         url: 'games/time-echo/index.html'
+      },
+      'giant-cat-chase': {
+        name: '[RANK A: RED GATE] Giant Cat Chase: Highway Escape',
+        url: 'games/giant-cat-chase/index.html'
       }
     };
 
