@@ -1557,5 +1557,5 @@
   S = freshState();
   S.catPosZ = S.carZ + S.gap;
   spawnAhead();
-  window.__giantCat = { get state() { return state; }, get S() { return S; } };
+  window.__giantCat = { get state() { return state; }, get S() { return S; }, get obs() { return obs.map((o) => o.tag || o.kind); } };
 })();
