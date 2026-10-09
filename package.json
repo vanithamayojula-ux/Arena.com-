@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "prebuild": "node tools/build-games.mjs",
     "build": "node tools/build-games.mjs",
     "test": "node games/apex/tests/boot.test.mjs && node games/apex/tests/game.test.mjs"
   },
