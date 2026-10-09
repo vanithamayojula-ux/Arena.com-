@@ -126,13 +126,47 @@
   roadMesh.receiveShadow = true;
   scene.add(roadMesh);
 
+  function makeGrassTexture() {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const g = c.getContext('2d');
+    g.fillStyle = '#3a5e30'; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 1400; i++) {
+      const l = 40 + Math.random() * 30;
+      g.fillStyle = `hsla(${95 + Math.random() * 30},${40 + Math.random() * 25}%,${l}%,0.55)`;
+      g.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 3 + Math.random() * 5);
+    }
+    for (let i = 0; i < 40; i++) {
+      g.fillStyle = 'rgba(20,40,20,0.25)';
+      g.beginPath(); g.arc(Math.random() * 256, Math.random() * 256, 6 + Math.random() * 14, 0, Math.PI * 2); g.fill();
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(75, 100);
+    return t;
+  }
+  const grassTex = makeGrassTexture();
   const grassMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(600, ROAD_LEN),
-    new THREE.MeshLambertMaterial({ color: 0x2d4a2c })
+    new THREE.MeshLambertMaterial({ map: grassTex })
   );
   grassMesh.rotation.x = -Math.PI / 2;
   grassMesh.position.y = -0.05;
   scene.add(grassMesh);
+  // Sidewalks + curbs on both sides of the road (follow the car)
+  const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x6d6876 });
+  const curbMat = new THREE.MeshLambertMaterial({ color: 0xc9c2b8 });
+  const sidewalks = [];
+  for (const side of [-1, 1]) {
+    const sw = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.18, ROAD_LEN), sidewalkMat);
+    sw.position.set(side * 7.2, 0.09, 0);
+    sw.receiveShadow = true;
+    scene.add(sw);
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.32, ROAD_LEN), curbMat);
+    curb.position.set(side * 6.0, 0.16, 0);
+    scene.add(curb);
+    sidewalks.push(sw, curb);
+  }
 
   // Shared geometries / materials
   const BOX = new THREE.BoxGeometry(1, 1, 1);
@@ -612,9 +646,9 @@
   };
   pats.cones = (z) => {
     const l = Math.floor(Math.random() * 3);
-    const n = 6 + Math.floor(Math.random() * 4);
+    const n = 4 + Math.floor(Math.random() * 3);
     for (let i = 0; i < n; i++) addObs(obsBuilders.cone(LANES[l], z - i * 2.6));
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.2) {
       const l2 = (l + 1) % 3;
       for (let i = 0; i < 4; i++) addObs(obsBuilders.cone(LANES[l2], z - 4 - i * 2.6));
     }
@@ -622,7 +656,7 @@
   };
   pats.slalom = (z) => {
     let l = Math.floor(Math.random() * 3);
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {
       addObs(obsBuilders.cone(LANES[l], z - i * 3.8));
       l = clamp(l + (Math.random() < 0.5 ? -1 : 1), 0, 2);
     }
@@ -632,8 +666,8 @@
     const open = Math.floor(Math.random() * 3);
     for (let l = 0; l < 3; l++) {
       if (l === open) continue;
-      if (Math.random() < 0.85) addObs(obsBuilders.barrel(LANES[l], z));
-      if (Math.random() < 0.5) addObs(obsBuilders.barrel(LANES[l], z - 5));
+      if (Math.random() < 0.7) addObs(obsBuilders.barrel(LANES[l], z));
+      if (Math.random() < 0.2) addObs(obsBuilders.barrel(LANES[l], z - 5));
     }
     return 12;
   };
@@ -676,20 +710,20 @@
   pats.trucks = (z) => {
     const open = Math.floor(Math.random() * 3);
     addObs(obsBuilders.truck(LANES[(open + 1) % 3], z));
-    if (Math.random() < 0.6) addObs(obsBuilders.truck(LANES[(open + 2) % 3], z - 34));
+    if (Math.random() < 0.3) addObs(obsBuilders.truck(LANES[(open + 2) % 3], z - 34));
     if (Math.random() < 0.5) addObs(obsBuilders.coin(LANES[open], z - 4));
     return 18;
   };
   pats.traffic = (z) => {
     const ls = freeLanes();
-    const n = 2 + Math.floor(Math.random() * 2);
+    const n = 1 + Math.floor(Math.random() * 2);
     for (let i = 0; i < n; i++) addObs(obsBuilders.traffic(LANES[ls[i]], z - i * 14 - Math.random() * 4));
     return 16 + n * 14;
   };
   pats.oil = (z) => {
     const ls = freeLanes();
     addObs(obsBuilders.oil(LANES[ls[0]], z));
-    if (Math.random() < 0.6) addObs(obsBuilders.oil(LANES[ls[1]], z - 14));
+    if (Math.random() < 0.35) addObs(obsBuilders.oil(LANES[ls[1]], z - 14));
     return 18;
   };
   pats.potholes = (z) => {
@@ -737,7 +771,6 @@
     addObs(obsBuilders.barrel(LANES[ls[0]], z));
     addObs(obsBuilders.boulder(LANES[ls[1]], z - 12));
     addObs(obsBuilders.cone(LANES[ls[2]], z - 6));
-    addObs(obsBuilders.cone(LANES[ls[2]], z - 9));
     return 20;
   };
 
@@ -754,9 +787,9 @@
   const PATTERNS = [
     { f: 'coins', w: 4 }, { f: 'cones', w: 4 }, { f: 'slalom', w: 2 }, { f: 'barrels', w: 3 },
     { f: 'crates', w: 3 }, { f: 'tires', w: 2 }, { f: 'barrier', w: 3 }, { f: 'fence', w: 2 },
-    { f: 'logs', w: 2 }, { f: 'boulders', w: 2 }, { f: 'trucks', w: 2 }, { f: 'traffic', w: 4 },
+    { f: 'logs', w: 2 }, { f: 'boulders', w: 2 }, { f: 'trucks', w: 2 }, { f: 'traffic', w: 3 },
     { f: 'oil', w: 2 }, { f: 'potholes', w: 2 }, { f: 'yarn', w: 1 }, { f: 'ramp', w: 2 },
-    { f: 'pit', w: 2 }, { f: 'jumpy', w: 2 }, { f: 'mixed', w: 3 },
+    { f: 'pit', w: 2 }, { f: 'jumpy', w: 2 }, { f: 'mixed', w: 2 },
   ];
   function pickPattern(d) {
     // More dangerous patterns unlock with distance
@@ -789,6 +822,13 @@
         const b = mesh(BOX, bm, 0, h / 2, 0, w, h, d, g, false);
         b.material.map = tex;
         b.userData.ownTex = true; b.userData.ownMat = true;
+        if (Math.random() < 0.45) {
+          const col = pick([0xff3d7f, 0x3ddcff, 0xffb020, 0x7dff6a, 0xff6ad5]);
+          const sign = mesh(BOX, mat(col, { emissive: col, emissiveIntensity: 1.1 }),
+            -side * (w / 2 + 0.15), rand(h * 0.3, h * 0.7), rand(-d * 0.25, d * 0.25),
+            0.2, rand(1.2, 2.2), rand(3, 5), g);
+          sign.userData.sign = true;
+        }
         g.position.set(x, 0, z);
         scene.add(g); decor.push({ z, group: g });
       }
@@ -867,7 +907,7 @@
     while (spawnZ > S.carZ - 300) {
       const f = pickPattern(d);
       const len = pats[f](spawnZ);
-      spawnZ -= len + rand(8, 22) - d * 6;
+      spawnZ -= len + rand(26, 44) - d * 4;
       spawnCount++;
     }
     while (decorZ > S.carZ - 300) {
@@ -1370,6 +1410,8 @@
     // Road & grass follow
     roadMesh.position.set(0, 0, S.carZ);
     grassMesh.position.set(0, -0.05, S.carZ);
+    for (const o of sidewalks) o.position.z = S.carZ;
+    grassTex.offset.y = ((-S.carZ - ROAD_LEN / 2) / 8) % 1;
     roadTex.offset.y = ((-S.carZ - ROAD_LEN / 2) / 40) % 1;
     // Pit/ramp visuals are placed in world coords already
     // Fog & sky: fog tracks distance nicely
