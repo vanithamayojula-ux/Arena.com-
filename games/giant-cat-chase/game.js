@@ -559,15 +559,6 @@
       mesh(BOX, mat(0xfff0a0, { emissive: 0xfff0a0, emissiveIntensity: 1 }), 1.0, 1.0, -5.0, 0.4, 0.3, 0.05, g);
       return makeSolid({ x, z, group: g, hw: 1.6, hl: 4.8, h: 3.9, f: 0.4, gapLoss: 8, hp: 1, tag: 'truck' });
     },
-    traffic(x, z) {
-      const col = pick([0x3a7bd5, 0xeeeeee, 0x44aa55, 0xdd3344, 0x8844cc, 0xffaa22, 0x222230]);
-      const g = buildCar(col, false);
-      g.position.set(0, 0, 0);
-      const o = makeSolid({ x, z, group: g, hw: CAR_HW, hl: CAR_HL, h: 1.8, f: 0.6, gapLoss: 5, hp: 1, tag: 'traffic' });
-      o.v = rand(28, 46);
-      o.kind = 'traffic';
-      return o;
-    },
     yarn(x, z) {
       const g = new THREE.Group();
       mesh(SPH, mat(0xff6fb5, { emissive: 0x330011 }), 0, 1.4, 0, 1.4, 1.4, 1.4, g, true);
@@ -646,7 +637,7 @@
   };
   pats.cones = (z) => {
     const l = Math.floor(Math.random() * 3);
-    const n = 4 + Math.floor(Math.random() * 3);
+    const n = 3 + Math.floor(Math.random() * 2);
     for (let i = 0; i < n; i++) addObs(obsBuilders.cone(LANES[l], z - i * 2.6));
     if (Math.random() < 0.2) {
       const l2 = (l + 1) % 3;
@@ -666,7 +657,7 @@
     const open = Math.floor(Math.random() * 3);
     for (let l = 0; l < 3; l++) {
       if (l === open) continue;
-      if (Math.random() < 0.7) addObs(obsBuilders.barrel(LANES[l], z));
+      if (Math.random() < 0.5) addObs(obsBuilders.barrel(LANES[l], z));
       if (Math.random() < 0.2) addObs(obsBuilders.barrel(LANES[l], z - 5));
     }
     return 12;
@@ -699,12 +690,12 @@
   };
   pats.logs = (z) => {
     const open = Math.floor(Math.random() * 3);
-    for (let l = 0; l < 3; l++) if (l !== open && Math.random() < 0.8) addObs(obsBuilders.log(LANES[l], z));
+    for (let l = 0; l < 3; l++) if (l !== open && Math.random() < 0.5) addObs(obsBuilders.log(LANES[l], z));
     return 8;
   };
   pats.boulders = (z) => {
     const open = Math.floor(Math.random() * 3);
-    for (let l = 0; l < 3; l++) if (l !== open && Math.random() < 0.8) addObs(obsBuilders.boulder(LANES[l], z));
+    for (let l = 0; l < 3; l++) if (l !== open && Math.random() < 0.6) addObs(obsBuilders.boulder(LANES[l], z));
     return 10;
   };
   pats.trucks = (z) => {
@@ -713,12 +704,6 @@
     if (Math.random() < 0.3) addObs(obsBuilders.truck(LANES[(open + 2) % 3], z - 34));
     if (Math.random() < 0.5) addObs(obsBuilders.coin(LANES[open], z - 4));
     return 18;
-  };
-  pats.traffic = (z) => {
-    const ls = freeLanes();
-    const n = 1 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < n; i++) addObs(obsBuilders.traffic(LANES[ls[i]], z - i * 14 - Math.random() * 4));
-    return 16 + n * 14;
   };
   pats.oil = (z) => {
     const ls = freeLanes();
@@ -787,7 +772,7 @@
   const PATTERNS = [
     { f: 'coins', w: 4 }, { f: 'cones', w: 4 }, { f: 'slalom', w: 2 }, { f: 'barrels', w: 3 },
     { f: 'crates', w: 3 }, { f: 'tires', w: 2 }, { f: 'barrier', w: 3 }, { f: 'fence', w: 2 },
-    { f: 'logs', w: 2 }, { f: 'boulders', w: 2 }, { f: 'trucks', w: 2 }, { f: 'traffic', w: 3 },
+    { f: 'logs', w: 2 }, { f: 'boulders', w: 2 }, { f: 'trucks', w: 2 },
     { f: 'oil', w: 2 }, { f: 'potholes', w: 2 }, { f: 'yarn', w: 1 }, { f: 'ramp', w: 2 },
     { f: 'pit', w: 2 }, { f: 'jumpy', w: 2 }, { f: 'mixed', w: 2 },
   ];
@@ -798,10 +783,10 @@
       if (['ramp', 'jumpy', 'logs', 'fence'].includes(p.f)) return d > 0.05;
       return true;
     });
-    const total = pool.reduce((s, p) => s + p.w * (['trucks', 'traffic', 'boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1), 0);
+    const total = pool.reduce((s, p) => s + p.w * (['trucks', 'boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1), 0);
     let r = Math.random() * total;
     for (const p of pool) {
-      const w = p.w * (['trucks', 'traffic', 'boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1);
+      const w = p.w * (['trucks', 'boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1);
       if ((r -= w) <= 0) return p.f;
     }
     return 'coins';
@@ -907,7 +892,7 @@
     while (spawnZ > S.carZ - 300) {
       const f = pickPattern(d);
       const len = pats[f](spawnZ);
-      spawnZ -= len + rand(26, 44) - d * 4;
+      spawnZ -= len + rand(44, 66) - d * 4;
       spawnCount++;
     }
     while (decorZ > S.carZ - 300) {
@@ -1221,7 +1206,7 @@
         continue;
       }
       if (o.kind === 'ramp' || o.kind === 'pit') continue;
-      // solid-like (solid, traffic, ball)
+      // solid-like (solid, ball)
       const dx = Math.abs(S.carX - o.x) - (CAR_HW + o.hw);
       const dz = Math.abs(S.carZ - o.z) - (CAR_HL + o.hl);
       if (dx < 0 && dz < 0) {
