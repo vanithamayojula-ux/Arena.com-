@@ -70,7 +70,7 @@ const hullFS = `
   float aaLine(float x, float w){ float fw = fwidth(x)+1e-5; return 1.0 - smoothstep(w, w+fw*1.5, abs(x)); }
   void main(){
     float v = vUv.y;
-    vec3 col = uBase*0.7*(0.6+0.8*hash21(vec2(floor(v/30.0), floor(vUv.x*3.0))));
+    vec3 col = uBase*0.9*(0.6+0.8*hash21(vec2(floor(v/30.0), floor(vUv.x*3.0))));
     float stripe = aaLine(fract(v/30.0+0.5)-0.5, 0.03);
     col += uGrid*stripe*0.5*(0.6+0.4*sin(uTime*2.0+floor(v/30.0)));
     col += uGrid*aaLine(vUv.x-0.5,0.01)*0.3;
@@ -719,7 +719,7 @@ export function buildWorld(track, quality = 1) {
         const f = track.sample(si * track.ds);
         const d = randDir();
         const r = sc.near + (sc.far - sc.near) * Math.pow(R(), 1.5);
-        const size = sc.min + (sc.max - sc.min) * Math.pow(R(), 2.2);
+        const size = Math.min(r < sc.near + 160 ? 34 : sc.max, sc.min + (sc.max - sc.min) * Math.pow(R(), 2.2));
         const rad = sc.type === 'ring' ? size : size * (sc.type === 'rock' ? 1 : 1.3);
         const p = [f.P[0] + d[0] * r, f.P[1] + d[1] * r, f.P[2] + d[2] * r];
         if (!grid.clear(p, sc.near * 0.7 + rad, -1, 0)) continue;

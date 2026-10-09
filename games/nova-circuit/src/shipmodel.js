@@ -121,6 +121,7 @@ export function buildShip(typeId, liveryIdx) {
   const lv = LIVERIES[liveryIdx % LIVERIES.length];
   const root = new THREE.Group();
   const model = new THREE.Group();
+  model.scale.setScalar(1.15);
   root.add(model);
 
   const body = new THREE.MeshPhongMaterial({ color: lv.a, shininess: 90, specular: 0x99aabb, flatShading: true });
