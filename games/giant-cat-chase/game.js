@@ -540,39 +540,6 @@
       mesh(ICO, mat(0x5a5560), 0.8, 0.5, 0.6, 0.6, 0.6, 0.6, g);
       return makeSolid({ x, z, group: g, hw: 1.35, hl: 1.35, h: s * 2.0, f: 0.4, gapLoss: 8, hp: 1, tag: 'boulder' });
     },
-    truck(x, z) {
-      const g = new THREE.Group();
-      const col = pick([0x2e8bd6, 0xe0b23a, 0x3fb06b, 0xd0503a]);
-      mesh(BOX, mat(col), 0, 2.0, 1.2, 3.1, 3.4, 7.0, g, true);
-      mesh(BOX, mat(0xdde6ef), 0, 1.6, 4.72, 2.9, 1.2, 0.04, g);
-      mesh(BOX, mat(0x253040), 0, 2.2, -3.4, 2.9, 1.6, 2.6, g, true); // cab
-      mesh(BOX, mat(0x1d3550, { emissive: 0x08162a }), 0, 2.6, -4.72, 2.7, 1.0, 0.1, g);
-      mesh(BOX, mat(0x111111), -1.1, 0.4, -3.4, 0.3, 0.9, 0.9, g);
-      for (const wz of [-2.4, 3.6, 5.0]) {
-        for (const wx of [-1.25, 1.25]) {
-          const w = mesh(CYL, mat(0x101010), wx, 0.6, wz, 0.6, 0.4, 0.6, g);
-          w.rotation.z = Math.PI / 2;
-        }
-      }
-      // headlights
-      mesh(BOX, mat(0xfff0a0, { emissive: 0xfff0a0, emissiveIntensity: 1 }), -1.0, 1.0, -5.0, 0.4, 0.3, 0.05, g);
-      mesh(BOX, mat(0xfff0a0, { emissive: 0xfff0a0, emissiveIntensity: 1 }), 1.0, 1.0, -5.0, 0.4, 0.3, 0.05, g);
-      return makeSolid({ x, z, group: g, hw: 1.6, hl: 4.8, h: 3.9, f: 0.4, gapLoss: 8, hp: 1, tag: 'truck' });
-    },
-    yarn(x, z) {
-      const g = new THREE.Group();
-      mesh(SPH, mat(0xff6fb5, { emissive: 0x330011 }), 0, 1.4, 0, 1.4, 1.4, 1.4, g, true);
-      const r1 = mesh(TORUS, mat(0xffd1e8), 0, 1.4, 0, 1.4, 1.4, 1.4, g);
-      r1.rotation.x = Math.PI / 2;
-      const r2 = mesh(TORUS, mat(0xffe9f4), 0, 1.4, 0, 1.4, 1.4, 1.4, g);
-      r2.rotation.y = Math.PI / 2;
-      const o = makeSolid({ x, z, group: g, hw: 1.2, hl: 1.2, h: 2.8, f: 0.45, gapLoss: 7, hp: 1, tag: 'yarn' });
-      o.kind = 'ball';
-      o.vx = (Math.random() < 0.5 ? -1 : 1) * rand(5, 9);
-      o.group.position.x = o.vx > 0 ? -6 : 6;
-      o.x = o.group.position.x;
-      return o;
-    },
     oil(x, z) {
       const g = new THREE.Group();
       const d = mesh(CIRC, mat(0x0c0a16, { transparent: true, opacity: 0.9 }), 0, 0.03, 0, 2.2, 2.2, 1, g);
@@ -698,13 +665,6 @@
     for (let l = 0; l < 3; l++) if (l !== open && Math.random() < 0.6) addObs(obsBuilders.boulder(LANES[l], z));
     return 10;
   };
-  pats.trucks = (z) => {
-    const open = Math.floor(Math.random() * 3);
-    addObs(obsBuilders.truck(LANES[(open + 1) % 3], z));
-    if (Math.random() < 0.3) addObs(obsBuilders.truck(LANES[(open + 2) % 3], z - 34));
-    if (Math.random() < 0.5) addObs(obsBuilders.coin(LANES[open], z - 4));
-    return 18;
-  };
   pats.oil = (z) => {
     const ls = freeLanes();
     addObs(obsBuilders.oil(LANES[ls[0]], z));
@@ -716,11 +676,7 @@
     for (let i = 0; i < 2; i++) addObs(obsBuilders.pothole(LANES[ls[i]], z - i * 9));
     return 16;
   };
-  pats.yarn = (z) => {
-    addObs(obsBuilders.yarn(0, z));
-    return 14;
-  };
-  // Ramp, then a pit the ramp can carry you over (or a truck to fly over, depending on jump)
+  // Ramp, then a pit the ramp can carry you over
   pats.ramp = (z) => {
     const l = Math.floor(Math.random() * 3);
     const ramp = { kind: 'ramp', x: LANES[l], z, hl: RAMP_HL, H: RAMP_H, group: makeRampMesh(LANES[l], z), dead: false, tag: 'ramp' };
@@ -770,23 +726,23 @@
   }
 
   const PATTERNS = [
-    { f: 'coins', w: 4 }, { f: 'cones', w: 4 }, { f: 'slalom', w: 2 }, { f: 'barrels', w: 3 },
-    { f: 'crates', w: 3 }, { f: 'tires', w: 2 }, { f: 'barrier', w: 3 }, { f: 'fence', w: 2 },
-    { f: 'logs', w: 2 }, { f: 'boulders', w: 2 }, { f: 'trucks', w: 2 },
-    { f: 'oil', w: 2 }, { f: 'potholes', w: 2 }, { f: 'yarn', w: 1 }, { f: 'ramp', w: 2 },
-    { f: 'pit', w: 2 }, { f: 'jumpy', w: 2 }, { f: 'mixed', w: 2 },
+    { f: 'coins', w: 4 }, { f: 'cones', w: 2 }, { f: 'slalom', w: 2 }, { f: 'barrels', w: 2 },
+    { f: 'crates', w: 2 }, { f: 'tires', w: 1 }, { f: 'barrier', w: 2 }, { f: 'fence', w: 1 },
+    { f: 'logs', w: 1 }, { f: 'boulders', w: 1 }, 
+    { f: 'oil', w: 1 }, { f: 'potholes', w: 1 }, { f: 'ramp', w: 2 },
+    { f: 'pit', w: 1 }, { f: 'jumpy', w: 1 }, { f: 'mixed', w: 1 },
   ];
   function pickPattern(d) {
     // More dangerous patterns unlock with distance
     const pool = PATTERNS.filter((p) => {
-      if (['trucks', 'boulders', 'yarn', 'pit'].includes(p.f)) return d > 0.12;
+      if (['boulders', 'pit'].includes(p.f)) return d > 0.12;
       if (['ramp', 'jumpy', 'logs', 'fence'].includes(p.f)) return d > 0.05;
       return true;
     });
-    const total = pool.reduce((s, p) => s + p.w * (['trucks', 'boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1), 0);
+    const total = pool.reduce((s, p) => s + p.w * (['boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1), 0);
     let r = Math.random() * total;
     for (const p of pool) {
-      const w = p.w * (['trucks', 'boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1);
+      const w = p.w * (['boulders', 'pit', 'mixed', 'jumpy', 'fence'].includes(p.f) ? 1 + d : 1);
       if ((r -= w) <= 0) return p.f;
     }
     return 'coins';
@@ -892,7 +848,7 @@
     while (spawnZ > S.carZ - 300) {
       const f = pickPattern(d);
       const len = pats[f](spawnZ);
-      spawnZ -= len + rand(44, 66) - d * 4;
+      spawnZ -= len + rand(60, 90) - d * 4;
       spawnCount++;
     }
     while (decorZ > S.carZ - 300) {
@@ -1206,7 +1162,7 @@
         continue;
       }
       if (o.kind === 'ramp' || o.kind === 'pit') continue;
-      // solid-like (solid, ball)
+      // solid-like (solid)
       const dx = Math.abs(S.carX - o.x) - (CAR_HW + o.hw);
       const dz = Math.abs(S.carZ - o.z) - (CAR_HL + o.hl);
       if (dx < 0 && dz < 0) {
