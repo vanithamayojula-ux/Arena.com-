@@ -1137,7 +1137,7 @@
 
       <div class="quest-progress-box">
         <span>GATES ENTERED TODAY:</span>
-        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 6 GATES CLEARED</strong>
+        <strong id="questProgress" style="color: var(--neon-red); font-size: 13px;">0 / 7 GATES CLEARED</strong>
       </div>
 
       <div class="penalty-warning">
@@ -1176,8 +1176,9 @@
     <div class="section-header">
       <h2 class="section-title">ACTIVE <span>RED GATES</span></h2>
       <div class="gate-filters">
-        <button class="filter-btn active" data-filter="all">ALL GATES (6)</button>
+        <button class="filter-btn active" data-filter="all">ALL GATES (7)</button>
         <button class="filter-btn" data-filter="predator">PREDATOR & 3D (2)</button>
+        <button class="filter-btn" data-filter="racing">RACING & COMBAT (1)</button>
         <button class="filter-btn" data-filter="typing">COMBAT TYPING (2)</button>
         <button class="filter-btn" data-filter="chronos">TEMPORAL & EXPEDITION (2)</button>
       </div>
@@ -1255,6 +1256,44 @@
               [ ENTER GATE ]
             </button>
             <a href="games/neon-run/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
+              NEW TAB ↗
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- GATE: NOVA CIRCUIT (RANK S / RED GATE) -->
+      <article class="gate-card" data-category="racing" data-title="Nova Circuit Anti-Gravity Combat Racing Space Racer Multiplayer">
+        <div class="gate-thumbnail">
+          <img src="games/nova-circuit/screenshots/race.png" alt="Nova Circuit anti-gravity racing gameplay">
+          <span class="rank-badge badge-s">RANK S</span>
+          <span class="gate-type-tag">RED GATE // 3D COMBAT RACER</span>
+        </div>
+        <div class="gate-info">
+          <h3 class="gate-title">
+            Nova Circuit: Anti-Gravity Combat Racing
+          </h3>
+          <p class="gate-desc">
+            A Rank-S velocity trial. Boost through loops and corkscrews on four spectacular circuits, lock missiles onto rivals, grab power-ups and fight for the championship. Split-screen and online for up to 6 pilots.
+          </p>
+          <div class="gate-stats">
+            <div class="stat-bar-header">
+              <span style="color:var(--neon-red);">DANGER RATING</span>
+              <span style="color:var(--neon-red);">EXTREME (99%)</span>
+            </div>
+            <div class="danger-level-bar">
+              <div class="danger-fill-s"></div>
+            </div>
+            <div class="stat-bar-header" style="color: #cbd5e1; margin-top: 4px;">
+              <span>A / D Steer • Shift Boost • Space Fire</span>
+              <span>ENGINE: THREE.JS 3D</span>
+            </div>
+          </div>
+          <div class="gate-actions">
+            <button class="btn-enter-gate btn-enter-red" onclick="launchGate('nova-circuit')">
+              [ ENTER GATE ]
+            </button>
+            <a href="games/nova-circuit/index.html" class="btn-enter-gate btn-portal-window" target="_blank">
               NEW TAB ↗
             </a>
           </div>
@@ -1486,6 +1525,7 @@
         <select class="gate-switcher" id="gateSwitcher" onchange="switchGate(this.value)">
           <option value="apex">[RANK S] APEX: The Cretaceous Chase</option>
           <option value="neon-run">[RANK S] Neon Run: Midnight Express</option>
+          <option value="nova-circuit">[RANK S] Nova Circuit: Combat Racing</option>
           <option value="cyberstrike">[RANK A] Cyberstrike: Laser Blaster</option>
           <option value="typestorm">[RANK A] Typestorm: Neon Blitz</option>
           <option value="letters-wind">[RANK A] Letters on the Wind: Post Boy</option>
@@ -1555,6 +1595,10 @@
         name: '[RANK S: RED GATE] Neon Run: Midnight Express',
         url: 'games/neon-run/index.html'
       },
+      'nova-circuit': {
+        name: '[RANK S: RED GATE] Nova Circuit: Anti-Gravity Combat Racing',
+        url: 'games/nova-circuit/index.html'
+      },
       'cyberstrike': {
         name: '[RANK A: RED GATE] Cyberstrike: Laser Blaster',
         url: 'games/cyberstrike/play.html'
@@ -1593,7 +1637,7 @@
 
       // Update Daily Quest Progress
       gatesEnteredCount++;
-      const progressText = Math.min(gatesEnteredCount, 6) + ' / 6 GATES CLEARED';
+      const progressText = Math.min(gatesEnteredCount, 7) + ' / 7 GATES CLEARED';
       document.getElementById('questProgress').textContent = progressText;
       document.getElementById('playerClearedCount').textContent = gatesEnteredCount;
       document.getElementById('playerScoreCount').textContent = (gatesEnteredCount * 3500) + ' PTS';
